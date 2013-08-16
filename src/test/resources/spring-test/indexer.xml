@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd
+       ">
+
+  <context:property-placeholder/>
+
+  <!-- Context that houses JAX-RS Resources that compose the API
+      as well as som utility gear. -->
+
+  <context:annotation-config/>
+
+  <!-- ActiveMQ queue to listen for events -->
+  <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic">
+    <constructor-arg value="fedora" />
+  </bean>
+
+  <!-- fcrepo 4 repository to retrieve metadata from -->
+  <bean class="org.fcrepo.indexer.RepositoryProfile">
+    <property name="repositoryURL" value="http://localhost:${test.port:8080}/res
+t" />
+  </bean>
+
+  <!-- sparql-update indexer -->
+<!--
+  <bean id="sparqlUpdate" class="org.fcrepo.indexer.sparql.SparqlUpdateIndexer">
+    <property name="updateURL" value="http://localhost:${test.port:8080}/openrdf-sesame/test" />
+    <property name="updateProperty" value="update"/>
+    <property name="subjectPrefix" value="http://foo.edu/object/"/>
+  </bean>
+-->
+
+  <!-- file serializer -->
+  <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
+    <property name="path" value="/tmp/"/>
+  </bean>
+
+  <!-- Message Driven POJO (MDP) that manages individual indexers -->
+  <bean id="indexerGroup" class="org.fcrepo.indexer.solr.IndexerGroup" />
+    <property name="repositoryURL" value="http://localhost:${test.port:8080}/rest" />
+    <property name="indexers">
+      <set>
+        <ref bean="fileSerializer"/>
+<!--
+        <ref bean="sparqlUpdate"/>
+-->
+      </set>
+    </property>
+  </bean>  <!-- and this is the message listener container -->
+  <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    <property name="connectionFactory" ref="connectionFactory"/>
+    <property name="destination" ref="destination"/>
+    <property name="messageListener" ref="indexerGroup" />
+    <property name="sessionTransacted" value="true"/>
+  </bean>
+
+</beans>
