@@ -6,12 +6,11 @@
 
     <groupId>fcrepo-jms-indexer-pluggable</groupId>
     <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
-    <version>4.0-SNAPSHOT</version>
 
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0-SNAPSHOT</version>
+    <version>4.0.0-alpha-2-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -150,19 +149,24 @@
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-legacy-api</artifactId>
-      <version>4.0-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-http-commons</artifactId>
-      <version>4.0-SNAPSHOT</version>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-kernel</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms</artifactId>
-      <version>4.0-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
