@@ -18,6 +18,7 @@ package org.fcrepo.indexer;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -81,6 +82,9 @@ public class IndexerGroup implements MessageListener {
         for (Iterator it = indexers.iterator(); it.hasNext();) {
             Object o = it.next();
             if (o instanceof Indexer) {
+                if (this.indexers == null) {
+                    this.indexers = new HashSet<Indexer>();
+                }
                 this.indexers.add( (Indexer)o );
             }
         }
