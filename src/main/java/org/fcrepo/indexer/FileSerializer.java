@@ -68,7 +68,6 @@ public class FileSerializer implements Indexer {
      * Remove the object from the index.
     **/
     public void remove(String pid) throws IOException {
-        // write empty file
-        update( pid, "" );
+        update(pid,""); // empty update
     }
 }
