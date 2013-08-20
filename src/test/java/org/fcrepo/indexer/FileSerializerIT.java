@@ -2,6 +2,7 @@
 package org.fcrepo.indexer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -27,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"/spring-test/master.xml"})
+@ContextConfiguration({"/spring-test/test-container.xml"})
 public class FileSerializerIT {
 
     protected static final int SERVER_PORT = Integer.parseInt(System
@@ -48,7 +49,6 @@ public class FileSerializerIT {
 
     private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmssSSS");
 
-    @Inject
     private FileSerializer fileSerializer;
     private File fileSerializerPath;
 
@@ -58,6 +58,7 @@ public class FileSerializerIT {
 
     @Before
     public void setup() {
+        fileSerializer = new FileSerializer();
         fileSerializerPath = new File("./target/test-classes/fileSerializer."
                 + fmt.format(new Date()) );
         fileSerializer.setPath( fileSerializerPath.getAbsolutePath() );
@@ -72,6 +73,10 @@ public class FileSerializerIT {
         // file should exist and contain triple starting with URI
         //File fileSerializerPath = new File(
         //        "./target/test-classes/fileSerializer");
+        File[] files = fileSerializerPath.listFiles();
+        assertNotNull(files);
+        assertTrue("files[] should not be empty", files.length > 0);
+
         File f = fileSerializerPath.listFiles()[0];
         assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
                 f.getName().startsWith(TEST_PID) );
