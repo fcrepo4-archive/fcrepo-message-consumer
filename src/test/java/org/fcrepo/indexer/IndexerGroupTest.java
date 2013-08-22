@@ -56,6 +56,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
+import javax.inject.Inject;
+
 import org.apache.abdera.Abdera;
 import org.apache.abdera.model.Entry;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -82,12 +84,15 @@ public class IndexerGroupTest {
 
     private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmssSSS");
 
-    private File fileSerializerPath;
     private Connection connection;
 
+    @Inject
     private IndexerGroup indexerGroup;
-
+    @Inject
+    private SparqlIndexer sparqlIndexer;
+    @Inject
     private FileSerializer fileSerializer;
+    private File fileSerializerPath;
 
     private static TextMessage getMessage(String operation)
             throws JMSException {
@@ -111,21 +116,10 @@ public class IndexerGroupTest {
         return msg;
     }
 
-    public IndexerGroupTest() throws JMSException {
-        // http client
+    @Before
+    public void setup() {
         client = new DefaultHttpClient(connectionManager);
-
-        // setup indexer
-        fileSerializer = new FileSerializer();
-        fileSerializerPath = new File("./target/test-classes/fileSerializer/");
-        fileSerializer.setPath( fileSerializerPath.getAbsolutePath() );
-
-        // indexer group
-		HashSet<Indexer> indexerSet = new HashSet<Indexer>();
-        indexerGroup = new IndexerGroup();
-        indexerSet.add( fileSerializer );
-        indexerGroup.setIndexers( indexerSet );
-        indexerGroup.setRepositoryURL( serverAddress );
+        fileSerializerPath = new File(fileSerializer.getPath());
     }
 
     @Test
@@ -136,10 +130,10 @@ public class IndexerGroupTest {
         assertEquals(201, response.getStatusLine().getStatusCode());
 
         try {
-          Thread.sleep(1000); // wait for message to be processed
+          Thread.sleep(1500); // wait for message to be processed
         } catch ( Exception ex ) { }
 
-        // file should exist and contain triple starting with URI
+        // file should exist and contain data
         File[] files = fileSerializerPath.listFiles();
         assertNotNull(files);
         assertTrue("There should be 1 file", files.length == 1);
@@ -148,6 +142,10 @@ public class IndexerGroupTest {
         assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
                 f.getName().startsWith(TEST_PID) );
         assertTrue("File size too small: " + f.length(), f.length() > 500);
+
+        // triples should exist in the triplestore
+        assertTrue("Triples should exist",
+                sparqlIndexer.countTriples(TEST_PID) > 0 );
     }
 
     @Test
@@ -158,14 +156,14 @@ public class IndexerGroupTest {
         assertEquals(204, response.getStatusLine().getStatusCode());
 
         // create update message and send to indexer group
-        Message updateMessage = getMessage("purgeObject");
-        indexerGroup.onMessage( updateMessage );
+        Message deleteMessage = getMessage("purgeObject");
+        indexerGroup.onMessage( deleteMessage );
 
         try {
-          Thread.sleep(1000); // wait for message to be processed
+          Thread.sleep(3000); // wait for message to be processed
         } catch ( Exception ex ) { }
 
-        // file should exist and contain triple starting with URI
+        // two files should exist: one empty and one with data
         File[] files = fileSerializerPath.listFiles();
         assertNotNull(files);
         assertTrue("There should be 2 files", files.length == 2);
@@ -179,5 +177,9 @@ public class IndexerGroupTest {
         assertTrue("Filename doesn't match: " + f2.getAbsolutePath(),
                 f2.getName().startsWith(TEST_PID) );
         assertTrue("File size should be 0: " + f2.length(), f2.length() == 0);
+
+        // triples should not exist in the triplestore
+        assertTrue("Triples should not exist",
+                sparqlIndexer.countTriples(TEST_PID) == 0 );
     }
 }

@@ -43,6 +43,12 @@ public class FileSerializer implements Indexer {
             this.path.mkdirs();
         }
     }
+    /**
+     * Return path where files are written.
+    **/
+    public String getPath() {
+        return path.getAbsolutePath();
+    }
 
     /**
      * Create or update an index entry for the object.
