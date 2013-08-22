@@ -12,4 +12,6 @@
     <property name="configLocation" value="classpath:web.xml" />
   </bean>
 
+  <import resource="classpath:/spring-test/indexer-core.xml"/>
+
 </beans>
