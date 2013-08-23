@@ -11,3 +11,5 @@ ObjectStore/
 .cache
 .DS_Store
 *~
+transaction.log
+velocity.log
