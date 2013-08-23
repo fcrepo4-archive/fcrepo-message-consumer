@@ -20,9 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import static org.apache.abdera.model.Text.Type.TEXT;
@@ -32,8 +29,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -42,12 +37,9 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -60,11 +52,10 @@ import javax.inject.Inject;
 
 import org.apache.abdera.Abdera;
 import org.apache.abdera.model.Entry;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
-public class IndexerGroupTest {
+public class IndexerGroupIT {
 
     protected static final int SERVER_PORT = Integer.parseInt(System
             .getProperty("test.port", "8080"));
@@ -76,9 +67,6 @@ public class IndexerGroupTest {
             new PoolingClientConnectionManager();
 
     protected static HttpClient client;
-
-    final private Logger logger = LoggerFactory
-            .getLogger(IndexerGroupTest.class);
 
     private static String TEST_PID = "changeme_1001";
 
@@ -160,7 +148,7 @@ public class IndexerGroupTest {
         indexerGroup.onMessage( deleteMessage );
 
         try {
-          Thread.sleep(3000); // wait for message to be processed
+          Thread.sleep(5000); // wait for message to be processed
         } catch ( Exception ex ) { }
 
         // two files should exist: one empty and one with data
