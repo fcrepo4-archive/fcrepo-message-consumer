@@ -99,7 +99,8 @@ public class SparqlIndexer implements Indexer {
             add.addTriple( triples.nextStatement().asTriple() );
         }
 
-        // send udpate to server
+        // send update to server
+        logger.debug("Sending update request for pid: {}", pid);
         exec( new UpdateRequest(new UpdateDataInsert(add)) );
     }
 

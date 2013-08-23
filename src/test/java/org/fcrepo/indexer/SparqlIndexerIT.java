@@ -16,62 +16,83 @@
 
 package org.fcrepo.indexer;
 
-import java.io.IOException;
-import java.util.Iterator;
-
 import javax.inject.Inject;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
-
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
 public class SparqlIndexerIT {
+
+    private static final int SERVER_PORT =
+            Integer.parseInt(System.getProperty("test.port", "8080"));
+
+    private static final String serverAddress = "http://localhost:" +
+            SERVER_PORT + "/rest/objects";
+
     @Inject
     private SparqlIndexer sparqlIndexer;
-    String fooN3 =
+    private static final String fooN3 =
         "@prefix fcrepo: <http://fcrepo.org/repository#> .\n" +
         "@prefix fedora: <http://fcrepo.org/repository/rest-api#> .\n" +
-        "<http://localhost:8080/rest/objects/foo>\n" +
+                "<" + serverAddress + "/foo>\n" +
         " fcrepo:hasChild\n" +
-        "   <http://localhost:8080/rest/objects/foo/barDS> ;\n" +
+        "   <" + serverAddress + "/foo/barDS> ;\n" +
         " fcrepo:hasParent\n" +
-        "   <http://localhost:8080/rest/objects> ;\n" +
+        "   <" + serverAddress + "> ;\n" +
         " fcrepo:uuid\n" +
         "   \"feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\" .\n" +
-        "<http://localhost:8080/rest/objects/foo/barDS>\n" +
+        "<" + serverAddress + "/foo/barDS>\n" +
         " fcrepo:hasContent\n" +
-        "   <http://localhost:8080/rest/objects/foo/barDS/fcr:content> ;\n" +
+        "   <" + serverAddress + "/foo/barDS/fcr:content> ;\n" +
         " fcrepo:hasParent\n" +
-        "   <http://localhost:8080/rest/objects/foo> ;\n" +
+        "   <" + serverAddress + "/foo> ;\n" +
         " fcrepo:uuid\n" +
         "   \"d26efce7-1b30-42eb-9236-0e62171e1d6e\" .\n" +
-        "<http://localhost:8080/rest/objects/foo/barDS/fcr:content>\n" +
+        "<" + serverAddress + "/foo/barDS/fcr:content>\n" +
         " fcrepo:isContentOf\n" +
-        "   <http://localhost:8080/rest/objects/foo/barDS> ;\n" +
+        "   <" + serverAddress + "/foo/barDS> ;\n" +
         " fedora:digest\n" +
         "   <urn:sha1:b3eab5058657e177f05a39f94944c39086951eab> .\n";
 
     @Test
-    public void indexerTest() throws IOException {
+    public void indexerTest() throws Exception {
         // add object
         sparqlIndexer.update("foo",fooN3);
 
+        waitForTriples(3);
+
         // triples should be present in the triplestore
-        assertTrue("Triples should be present",
-                sparqlIndexer.countTriples("foo") > 0 );
+        assertEquals("Triples should be present",
+                     3, sparqlIndexer.countTriples("foo"));
 
         // remove object
         sparqlIndexer.remove("foo");
+
+        waitForTriples(0);
 
         // triples should not be present in the triplestore
         assertTrue("Triples should not be present",
                 sparqlIndexer.countTriples("foo") == 0 );
     }
+
+    private void waitForTriples(int expectTriples) throws InterruptedException {
+        long elapsed = 0;
+        long restingWait = 500;
+        long maxWait = 15000; // 15 seconds
+
+        int count = sparqlIndexer.countTriples("foo");
+        while ((count != expectTriples) && (elapsed < maxWait)) {
+            Thread.sleep(restingWait);
+            count = sparqlIndexer.countTriples("foo");
+
+            elapsed += restingWait;
+        }
+    }
+
 }
