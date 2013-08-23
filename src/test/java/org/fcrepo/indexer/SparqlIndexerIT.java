@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
-public class SparqlIndexerTest {
+public class SparqlIndexerIT {
     @Inject
     private SparqlIndexer sparqlIndexer;
     String fooN3 =
