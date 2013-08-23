@@ -41,16 +41,20 @@ public class FusekiContainerWrapper extends ContainerWrapper {
     final private Logger logger = LoggerFactory
             .getLogger(FusekiContainerWrapper.class);
 
-    protected static final int MGT_PORT =
+
+    private static final int FUSEKI_PORT =
+            Integer.parseInt(System.getProperty("test.fuseki.port", "3030"));
+
+    private static final int MGT_PORT =
             Integer.parseInt(System.getProperty("test.mgt.port", "3031"));
 
-    protected static final String serverAddress = "http://localhost:" +
+    private static final String serverAddress = "http://localhost:" +
             MGT_PORT + "/mgt";
 
-    protected final PoolingClientConnectionManager connectionManager =
+    private final PoolingClientConnectionManager connectionManager =
             new PoolingClientConnectionManager();
 
-    protected static HttpClient client;
+    private static HttpClient client;
 
     @PostConstruct
     public void start() throws Exception {
@@ -76,6 +80,7 @@ public class FusekiContainerWrapper extends ContainerWrapper {
         public void run() {
             FusekiCmd.main("--update",
                            "--mem",
+                           "--port=" + FUSEKI_PORT,
                            "--mgtPort=" + MGT_PORT,
                            "/test");
         }

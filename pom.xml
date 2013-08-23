@@ -310,8 +310,40 @@
       </plugin>
 
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.8</version>
+        <!-- reserve ports for integration tests -->
+        <configuration>
+          <portNames>
+            <portName>test.port</portName>
+            <portName>test.mgt.port</portName>
+            <portName>test.fuseki.port</portName>
+          </portNames>
+        </configuration>
+        <executions>
+          <execution>
+            <id>reserve-port</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <!-- export ports for integration tests to system.evnv-->
+          <systemPropertyVariables>
+            <test.port>${test.port}</test.port>
+            <test.mgt.port>${test.mgt.port}</test.mgt.port>
+            <test.fuseki.port>${test.fuseki.port}</test.fuseki.port>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
     </plugins>
   </build>
