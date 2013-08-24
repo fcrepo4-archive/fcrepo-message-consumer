@@ -22,6 +22,9 @@ import java.io.IOException;
  * Main interface for individual indexers to implement.  Each type of
  * destination (Solr, triplestore, files, etc.) should have its own
  * implementation.
+ *
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
 **/
 public interface Indexer {
     /**
