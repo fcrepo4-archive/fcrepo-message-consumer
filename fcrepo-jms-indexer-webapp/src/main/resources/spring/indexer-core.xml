@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <!-- sparql-update indexer -->
+  <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
+
+    <!-- base URL for triplestore subjects, PID will be appended -->
+    <property name="prefix" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest/"/>
+
+    <!-- fuseki -->
+    <property name="queryBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/query"/>
+    <property name="updateBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/update"/>
+    <property name="formUpdates">
+      <value type="java.lang.Boolean">false</value>
+    </property>
+
+    <!-- sesame -->
+    <!--
+    <property name="queryBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test"/>
+    <property name="updateBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test/statements"/>
+    <property name="formUpdates">
+      <value type="java.lang.Boolean">true</value>
+    </property>
+    -->
+  </bean>
+
+  <!-- file serializer -->
+  <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
+    <property name="path" value="${file.serializer.dir:/tmp/fileSerializer/}"/>
+  </bean>
+
+  <!-- Message Driven POJO (MDP) that manages individual indexers -->
+  <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
+    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest/" />
+    <property name="indexers">
+      <set>
+        <ref bean="fileSerializer"/>
+        <ref bean="sparqlUpdate"/>
+      </set>
+    </property>
+  </bean>
+
+</beans>

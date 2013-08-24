@@ -27,6 +27,10 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
+ */
 public class FileSerializerTest {
     private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmssSSS");
     private FileSerializer serializer;

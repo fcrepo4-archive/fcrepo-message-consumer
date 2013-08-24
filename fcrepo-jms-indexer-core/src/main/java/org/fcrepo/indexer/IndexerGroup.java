@@ -43,6 +43,9 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 /**
  * MessageListener implementation that retrieves objects from the repository and
  * invokes one or more indexers to index the content.
+ *
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
 **/
 public class IndexerGroup implements MessageListener {
     private Parser atomParser = new Abdera().getParser();
@@ -107,6 +110,7 @@ public class IndexerGroup implements MessageListener {
                 final String xml = ((TextMessage) message).getText();
                 Document<Entry> doc = atomParser.parse(new StringReader(xml));
                 Entry entry = doc.getRoot();
+                // FIXME: This pid logic does not work with path: /rest/a/b/c
                 final String pid = entry.getCategories("xsd:string").get(0)
                         .getTerm();
 
