@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Indexes triples from Fedora into a triplestore using SPARQL Update.
+ *
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
 **/
 public class SparqlIndexer implements Indexer {
     private String prefix;

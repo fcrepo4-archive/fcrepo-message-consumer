@@ -53,6 +53,10 @@ import javax.inject.Inject;
 import org.apache.abdera.Abdera;
 import org.apache.abdera.model.Entry;
 
+/**
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
 public class IndexerGroupIT {

@@ -25,6 +25,10 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
 public class SparqlIndexerIT {

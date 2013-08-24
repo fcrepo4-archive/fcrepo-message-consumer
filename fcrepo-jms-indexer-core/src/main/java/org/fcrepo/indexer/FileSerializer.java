@@ -27,6 +27,9 @@ import org.apache.commons.io.IOUtils;
 /**
  * Basic Indexer implementation that writes object content to timestamped files
  * on disk.
+ *
+ * @author Esmé Cowles
+ *         Date: Aug 19, 2013
 **/
 public class FileSerializer implements Indexer {
 
