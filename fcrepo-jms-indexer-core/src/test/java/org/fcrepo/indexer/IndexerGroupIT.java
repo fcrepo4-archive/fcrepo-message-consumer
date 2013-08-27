@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import static org.apache.abdera.model.Text.Type.TEXT;
 
 import java.io.File;
@@ -37,9 +36,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-
 import org.iq80.leveldb.util.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -47,7 +46,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.jms.Message;
 import javax.jms.TextMessage;
-
 import javax.inject.Inject;
 
 import org.apache.abdera.Abdera;
@@ -180,6 +178,44 @@ public class IndexerGroupIT {
         assertTrue("Triples should not exist",
                 sparqlIndexer.countTriples(pid) == expectedTriples);
     }
+    
+    
+    //Test should fail because IndexGroup.java just uses repositoryURL + pid, not the full path, to retrieve node
+    @Test
+    @Ignore
+    public void indexerGroupUpdateTestingFullPath() throws Exception {
+    	  // create update message and send to indexer group
+        final String pid = "test_pid_10";
+        final String SUFFIX = "/a/b/c/";        
+       
+        // create dummy object
+        final HttpPost method = new HttpPost(serverAddress + SUFFIX +  pid);
+        final HttpResponse response = client.execute(method);
+        assertEquals(201, response.getStatusLine().getStatusCode());
+
+        FilenameFilter filter = prefixFileFilter(pid);
+        waitForFiles(1, filter); // wait for message to be processed
+
+        // file should exist and contain data
+        File[] files = fileSerializerPath.listFiles(filter);
+        assertNotNull(files);
+        assertTrue("There should be 1 file", files.length == 1);
+
+        File f = files[0];
+        assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
+                   f.getName().startsWith(pid));
+        assertTrue("File size too small: " + f.length(), f.length() > 500);
+
+        final int expectedTriples = 4;
+        waitForTriples(expectedTriples, pid);
+
+        // triples should exist in the triplestore
+        assertTrue("Triples should exist",
+                sparqlIndexer.countTriples(pid) == expectedTriples);
+
+    }
+    	
+    
 
     private void waitForFiles(int expectedFiles, FilenameFilter filter) throws InterruptedException {
         long elapsed = 0;
