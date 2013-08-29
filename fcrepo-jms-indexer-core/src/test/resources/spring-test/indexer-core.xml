@@ -10,7 +10,7 @@
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
     <!-- base URL for triplestore subjects, PID will be appended -->
-    <property name="prefix" value="http://localhost:${test.port:8080}/rest/objects/"/>
+    <property name="prefix" value="http://localhost:${test.port:8080}"/>
 
     <!-- fuseki -->
     <property name="queryBase" value="http://localhost:${test.fuseki.port:3030}/test/query"/>
@@ -36,7 +36,7 @@
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://localhost:${test.port:8080}/rest/objects/" />
+    <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
       <set>
         <ref bean="fileSerializer"/>
