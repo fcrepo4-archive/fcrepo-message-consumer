@@ -67,13 +67,13 @@ public class SparqlIndexerIT {
     @Test
     public void indexerTest() throws Exception {
         // add object
-        sparqlIndexer.update("foo",fooN3);
+        sparqlIndexer.update(serverAddress + "/foo",fooN3);
 
         waitForTriples(3);
 
         // triples should be present in the triplestore
         assertEquals("Triples should be present",
-                     3, sparqlIndexer.countTriples("foo"));
+                     3, sparqlIndexer.countTriples(serverAddress + "/foo"));
 
         // remove object
         sparqlIndexer.remove("foo");

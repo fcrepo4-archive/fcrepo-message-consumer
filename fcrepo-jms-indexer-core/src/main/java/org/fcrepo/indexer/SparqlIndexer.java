@@ -91,7 +91,6 @@ public class SparqlIndexer implements Indexer {
         remove(pid);
 
         // parse content into a model
-        String subject = prefix + pid;
         Model model = ModelFactory.createDefaultModel();
         model.read( new StringReader(content), null, "N3");
 
@@ -111,8 +110,7 @@ public class SparqlIndexer implements Indexer {
      * Perform a DESCRIBE query for triples about the Fedora object and remove
      * all triples with subjects starting with the same subject.
     **/
-    public void remove( String pid ) {
-        String subject = prefix + pid;
+    public void remove( String subject ) {
 
         // find triples/quads to delete
         String describeQuery = "DESCRIBE <" + subject + ">";
@@ -176,7 +174,7 @@ public class SparqlIndexer implements Indexer {
     **/
     public int countTriples(String pid) {
         // perform describe query
-        String describeQuery = "DESCRIBE <" + prefix + pid + ">";
+        String describeQuery = "DESCRIBE <" + pid + ">";
         QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
         Iterator<Triple> results = qexec.execDescribeTriples();
 

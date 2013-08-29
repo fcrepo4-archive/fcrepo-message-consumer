@@ -30,6 +30,7 @@ import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
 import org.apache.abdera.Abdera;
+import org.apache.abdera.model.Category;
 import org.apache.abdera.model.Document;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.parser.Parser;
@@ -43,10 +44,10 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
 /**
  * MessageListener implementation that retrieves objects from the repository and
  * invokes one or more indexers to index the content.
- *
+ * 
  * @author Esmé Cowles
  *         Date: Aug 19, 2013
-**/
+ **/
 public class IndexerGroup implements MessageListener {
     private Parser atomParser = new Abdera().getParser();
     private String repositoryURL;
@@ -56,7 +57,7 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Default constructor.
-    **/
+     **/
     public IndexerGroup() {
         PoolingClientConnectionManager p = new PoolingClientConnectionManager();
         p.setDefaultMaxPerRoute(5);
@@ -66,21 +67,21 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Set repository URL.
-    **/
+     **/
     public void setRepositoryURL(String repositoryURL) {
         this.repositoryURL = repositoryURL;
     }
 
     /**
      * Get repository URL.
-    **/
+     **/
     public String getRepositoryURL() {
         return repositoryURL;
     }
 
     /**
      * Set indexers for this group.
-    **/
+     **/
     public void setIndexers(Set indexers) {
         for (Iterator it = indexers.iterator(); it.hasNext();) {
             Object o = it.next();
@@ -88,21 +89,34 @@ public class IndexerGroup implements MessageListener {
                 if (this.indexers == null) {
                     this.indexers = new HashSet<Indexer>();
                 }
-                this.indexers.add( (Indexer)o );
+                this.indexers.add((Indexer) o);
             }
         }
     }
 
     /**
      * Get indexers set for this group.
-    **/
+     **/
     public Set<Indexer> getIndexers() {
         return indexers;
     }
 
     /**
+     * Extract node path from Atom category list
+     * @return Node path or repositoryUrl if it's not found
+     */
+    private String getPath(java.util.List<Category> categories) {
+        for (Category c : categories) {
+            if (c.getLabel().equals("path")) {
+                return repositoryURL + c.getTerm();
+            }
+        }
+        return repositoryURL;
+    }
+
+    /**
      * Handle a JMS message representing an object update or deletion event.
-    **/
+     **/
     public void onMessage(Message message) {
         try {
             if (message instanceof TextMessage) {
@@ -110,20 +124,19 @@ public class IndexerGroup implements MessageListener {
                 final String xml = ((TextMessage) message).getText();
                 Document<Entry> doc = atomParser.parse(new StringReader(xml));
                 Entry entry = doc.getRoot();
-                // FIXME: This pid logic does not work with path: /rest/a/b/c
-                final String pid = entry.getCategories("xsd:string").get(0)
-                        .getTerm();
-
                 // if the object is updated, fetch current content
                 String content = null;
                 if (!"purgeObject".equals(entry.getTitle())) {
-                    HttpGet get = new HttpGet(repositoryURL + pid);
+                    HttpGet get = new HttpGet(
+                            getPath(entry.getCategories("xsd:string")));
                     HttpResponse response = httpclient.execute(get);
-                    content = IOUtils.toString(
-                        response.getEntity().getContent(),
-                        Charset.forName("UTF-8")
-                    );
+                    content = IOUtils.toString(response.getEntity()
+                            .getContent(), Charset.forName("UTF-8"));
                 }
+                //pid represents the full path. Alternative would be to send path separately in all calls
+                //String pid = getPath(entry.getCategories("xsd:string")).replace("//objects", "/objects");
+                String pid = getPath(entry.getCategories("xsd:string"));
+
 
                 // call each registered indexer
                 for (Indexer indexer : indexers) {

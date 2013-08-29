@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Basic Indexer implementation that writes object content to timestamped files
@@ -60,7 +61,7 @@ public class FileSerializer implements Indexer {
         // timestamped filename
         String fn = pid + "." + fmt.format( new Date() );
         if ( fn.indexOf("/") != -1 ) {
-            fn = fn.replaceAll("/","_");
+            fn = StringUtils.substringAfterLast(fn, "/");
         }
 
         // write content to disk
