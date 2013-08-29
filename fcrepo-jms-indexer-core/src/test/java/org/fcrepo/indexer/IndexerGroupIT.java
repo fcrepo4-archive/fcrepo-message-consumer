@@ -38,7 +38,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.iq80.leveldb.util.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -62,8 +61,8 @@ public class IndexerGroupIT {
     private static final int SERVER_PORT = Integer.parseInt(System
             .getProperty("test.port", "8080"));
 
-    private static final String serverAddress = "http://localhost:" +
-            SERVER_PORT + "/rest/objects/";
+    private static final String serverAddress = "http://localhost:"
+            + SERVER_PORT + "/";
 
     private final PoolingClientConnectionManager connectionManager =
             new PoolingClientConnectionManager();
@@ -83,9 +82,9 @@ public class IndexerGroupIT {
         Abdera abdera = new Abdera();
 
         Entry entry = abdera.newEntry();
-        entry.setTitle(operation, TEXT)
-                .setBaseUri("http://localhost:" + SERVER_PORT + "/rest");
+        entry.setTitle(operation, TEXT).setBaseUri(serverAddress);
         entry.addCategory("xsd:string", pid, "fedora-types:pid");
+        entry.addCategory("xsd:string", "/" + pid, "path");
         entry.setContent("contentds");
         StringWriter writer = new StringWriter();
         entry.writeTo(writer);
@@ -129,11 +128,11 @@ public class IndexerGroupIT {
 
         final int expectedTriples = 4;
         waitForTriples(expectedTriples, pid);
-
+        
         // triples should exist in the triplestore
         assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(pid) == expectedTriples);
-    }
+                sparqlIndexer.countTriples(serverAddress + pid) == expectedTriples);
+    }    
 
     @Test
     public void indexerGroupDeleteTest() throws Exception {
@@ -147,7 +146,7 @@ public class IndexerGroupIT {
         final HttpDelete method = new HttpDelete(serverAddress + pid);
         final HttpResponse response = client.execute(method);
         assertEquals(204, response.getStatusLine().getStatusCode());
-
+        
         // create update message and send to indexer group
         Message deleteMessage = getMessage("purgeObject", pid);
         indexerGroup.onMessage( deleteMessage );
@@ -157,7 +156,7 @@ public class IndexerGroupIT {
 
         // two files should exist: one empty and one with data
         File[] files = fileSerializerPath.listFiles(filter);
-
+        
         assertNotNull(files);
         assertEquals(2, files.length);
 
@@ -173,20 +172,17 @@ public class IndexerGroupIT {
 
         final int expectedTriples = 0;
         waitForTriples(expectedTriples, pid);
-
+        
         // triples should not exist in the triplestore
         assertTrue("Triples should not exist",
-                sparqlIndexer.countTriples(pid) == expectedTriples);
-    }
+                sparqlIndexer.countTriples(serverAddress + pid) == expectedTriples);
+    }    
     
-    
-    //Test should fail because IndexGroup.java just uses repositoryURL + pid, not the full path, to retrieve node
     @Test
-    @Ignore
     public void indexerGroupUpdateTestingFullPath() throws Exception {
     	  // create update message and send to indexer group
         final String pid = "test_pid_10";
-        final String SUFFIX = "/a/b/c/";        
+        final String SUFFIX = "a/b/c/";        
        
         // create dummy object
         final HttpPost method = new HttpPost(serverAddress + SUFFIX +  pid);
@@ -205,18 +201,15 @@ public class IndexerGroupIT {
         assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
                    f.getName().startsWith(pid));
         assertTrue("File size too small: " + f.length(), f.length() > 500);
-
+        
         final int expectedTriples = 4;
-        waitForTriples(expectedTriples, pid);
-
+        waitForTriples(expectedTriples, SUFFIX + pid);
+        
         // triples should exist in the triplestore
         assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(pid) == expectedTriples);
-
+                sparqlIndexer.countTriples(serverAddress + SUFFIX + pid) == expectedTriples);
     }
     	
-    
-
     private void waitForFiles(int expectedFiles, FilenameFilter filter) throws InterruptedException {
         long elapsed = 0;
         long restingWait = 500;
@@ -233,7 +226,7 @@ public class IndexerGroupIT {
 
     private void waitForTriples(int expectTriples, String pid) throws InterruptedException {
         long elapsed = 0;
-        long restingWait = 500;
+        long restingWait = 1500;
         long maxWait = 15000; // 15 seconds
 
         int count = sparqlIndexer.countTriples(pid);
