@@ -7,7 +7,15 @@ This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves the
 
 ## Running the indexer
 
-We should have both a stand-alone mode where the indexer is run separately from the repository, and a bundled mode where the indexer is deployed with the repository.
+In the simplest case, the indexer can be configurd in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/futures/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
+
+For production deployment, it is more typical to run the indexer on a separate machine.  So we also have a stand-alone mode where the indexer is run as its own webapp:
+
+```xml
+$ git clone https://github.com/futures/fcrepo-jms-indexer-pluggable.git
+$ cd fcrepo-jms-indexer-pluggable/fcrepo-jms-indexer-webapp
+$ mvn -D jetty.port=9999 install jetty:run
+```
 
 ## Configuring the indexer
 
@@ -75,12 +83,12 @@ Currently, the tests work with either Jena Fuseki or Sesame triplestores/SPARQL 
 ### Fuseki
 Fuseki is the easiest to setup -- just download it from http://www.apache.org/dist/jena/binaries/, unpack and start ```fuseki-server```:
 
-    ``` sh
-    curl -O http://www.apache.org/dist/jena/binaries/jena-fuseki-0.2.7-distribution.tar.gz
-    tar xvfz jena-fuseki-0.2.7-distribution.tar.gz
-    cd jena-fuseki-0.2.7
-    ./fuseki-server --update --mem /test
-    ```
+``` sh
+curl -O http://www.apache.org/dist/jena/binaries/jena-fuseki-0.2.7-distribution.tar.gz
+tar xvfz jena-fuseki-0.2.7-distribution.tar.gz
+cd jena-fuseki-0.2.7
+./fuseki-server --update --mem /test
+```
 
 ### Sesame
 
