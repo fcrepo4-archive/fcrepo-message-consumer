@@ -7,7 +7,9 @@ This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves the
 
 ## Running the indexer
 
-We should have both a stand-alone mode where the indexer is run separately from the repository, and a bundled mode where the indexer is deployed with the repository.
+In the simplest case, the indexer can be configurd in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/futures/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
+
+For production deployment, it is more typical to run the indexer on a separate machine.  So we also have a stand-alone mode where the indexer is run as its own webapp.
 
 ## Configuring the indexer
 
