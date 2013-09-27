@@ -3,9 +3,11 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:solr="http://www.springframework.org/schema/data/solr"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-       http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
+       http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd
+       http://www.springframework.org/schema/data/solr http://www.springframework.org/schema/data/solr/spring-solr-1.0.xsd">
 
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
@@ -33,14 +35,32 @@
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
+  
+
+  <bean id="solrServerFactory" class="org.fcrepo.indexer.SolrServerFactory">
+  	<property  name="embedded">
+  		<value type="java.lang.Boolean">true</value>
+  	</property>
+  	<property name="solrTestHome" value="./target/test-classes/solrIndexer"/>
+  </bean>
+  
+  <!-- Solr Indexer -->
+  <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
+  	<property name="solrServerFactory">
+  		<ref bean="solrServerFactory"/>
+  	</property>
+  </bean>
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
       <set>
+      	<ref bean="fileSerializer"/>
+      	<!-- 
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
+        -->
       </set>
     </property>
   </bean>
