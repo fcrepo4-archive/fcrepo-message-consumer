@@ -167,6 +167,33 @@
       <version>0.2.7</version>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+		<groupId>org.apache.solr</groupId>
+		<artifactId>solr-solrj</artifactId>
+		<version>4.4.0</version>
+		 <scope>test</scope>
+	</dependency>
+	
+	<dependency>
+	    <groupId>org.apache.solr</groupId>
+	    <artifactId>solr-core</artifactId>
+	    <version>4.4.0</version>
+	    <exclusions>
+	        <exclusion>
+	            <artifactId>jdk.tools</artifactId>
+	            <groupId>jdk.tools</groupId>
+	        </exclusion>
+	    </exclusions>
+	    <scope>test</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.lucene</groupId>
+		<artifactId>lucene-core</artifactId>
+		<scope>test</scope>
+	</dependency>
+	
 
   </dependencies>
 
