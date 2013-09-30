@@ -56,11 +56,9 @@
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
       <set>
-      	<ref bean="fileSerializer"/>
-      	<!-- 
+      	<ref bean="solrIndexer"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
-        -->
       </set>
     </property>
   </bean>
