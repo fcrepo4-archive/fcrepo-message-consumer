@@ -1,13 +1,8 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
-<<<<<<< HEAD
-import javax.annotation.PostConstruct;
-=======
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
->>>>>>> upstream/master
 
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
