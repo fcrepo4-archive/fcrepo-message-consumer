@@ -130,8 +130,9 @@ public class IndexerGroup implements MessageListener {
                     HttpGet get = new HttpGet(
                             getPath(entry.getCategories("xsd:string")));
                     HttpResponse response = httpclient.execute(get);
-                    content = response.getEntity()
-                            .getContent().toString();
+                    content = IOUtils.toString(
+                            response.getEntity().getContent(),
+                            Charset.forName("UTF-8"));
                 }
                 //pid represents the full path. Alternative would be to send path separately in all calls
                 //String pid = getPath(entry.getCategories("xsd:string")).replace("//objects", "/objects");

@@ -150,16 +150,6 @@
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel</artifactId>
       <version>${project.version}</version>
-      <exclusions>
-      	<exclusion>
-      		<groupId>commons-io</groupId>
-      		<artifactId>commons-io</artifactId>
-      	</exclusion>
-      	<exclusion>
-      		<groupId>commons-codec</groupId>
-      		<artifactId>commons-codec</artifactId>
-      	</exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
@@ -186,39 +176,17 @@
     <dependency>
 		<groupId>org.apache.solr</groupId>
 		<artifactId>solr-solrj</artifactId>
-		<version>4.4.0</version>
 	</dependency>
 	
 	<dependency>
 	    <groupId>org.apache.solr</groupId>
 	    <artifactId>solr-core</artifactId>
-	    <version>4.4.0</version>
-	    <exclusions>
-	        <exclusion>
-	            <groupId>jdk.tools</groupId>
-	            <artifactId>jdk.tools</artifactId>
-	        </exclusion>
-	        <exclusion>
-	            <groupId>org.apache.zookeeper</groupId>
-	            <artifactId>zookeeper</artifactId>
-	        </exclusion>
-	        <exclusion>
-	            <groupId>commons-codec</groupId>
-	            <artifactId>commons-codec</artifactId>
-	        </exclusion>
-	        <exclusion>
-	            <groupId>commons-fileupload</groupId>
-	            <artifactId>commons-fileupload</artifactId>
-	        </exclusion>
-	    </exclusions>
 	</dependency>
 	
 	<dependency>
 	   <groupId>org.apache.zookeeper</groupId>
        <artifactId>zookeeper</artifactId>
-       <version>3.4.5</version>
 	</dependency>
-	
 	
 	<dependency>
 		<groupId>org.apache.lucene</groupId>
@@ -227,30 +195,6 @@
 	</dependency>
 	
     
-    <dependency>
-		<groupId>org.apache.solr</groupId>
-		<artifactId>solr-solrj</artifactId>
-		<version>4.4.0</version>
-	</dependency>
-	
-	<dependency>
-	    <groupId>org.apache.solr</groupId>
-	    <artifactId>solr-core</artifactId>
-	    <version>4.4.0</version>
-	    <exclusions>
-	        <exclusion>
-	            <artifactId>jdk.tools</artifactId>
-	            <groupId>jdk.tools</groupId>
-	        </exclusion>
-	    </exclusions>
-	</dependency>
-	
-	<dependency>
-		<groupId>org.apache.lucene</groupId>
-		<artifactId>lucene-core</artifactId>
-	</dependency>
-	
-
   </dependencies>
 
   <build>
@@ -270,7 +214,6 @@
               <goal>enforce</goal>
             </goals>
             <configuration>
-              <fail>false</fail>
               <rules>
                 <DependencyConvergence />
                 <bannedDependencies>
