@@ -60,7 +60,7 @@ public class FileSerializer implements Indexer {
     public void update(String pid, String content) throws IOException {
         // timestamped filename
         String fn = pid + "." + fmt.format( new Date() );
-        if ( fn.indexOf("/") != -1 ) {
+        if ( fn.indexOf('/') != -1 ) {
             fn = StringUtils.substringAfterLast(fn, "/");
         }
 
@@ -78,6 +78,7 @@ public class FileSerializer implements Indexer {
      * Remove the object from the index.
     **/
     public void remove(String pid) throws IOException {
-        update(pid,""); // empty update
+        // empty update
+        update(pid,"");
     }
 }
