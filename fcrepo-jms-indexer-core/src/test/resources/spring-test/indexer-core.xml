@@ -41,7 +41,7 @@
   	<property  name="embedded">
   		<value type="java.lang.Boolean">true</value>
   	</property>
-  	<property name="solrTestHome" value="./target/test-classes/solrIndexer"/>
+  	<property name="solrTestHome" value="./target/test-classes/"/>
   </bean>
   
   <!-- Solr Indexer -->
