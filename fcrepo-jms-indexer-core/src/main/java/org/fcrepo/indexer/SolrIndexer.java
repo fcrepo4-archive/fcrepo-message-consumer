@@ -26,8 +26,10 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 /**
+ * A Solr Indexer (stub) implementation that adds some basic information to
+ * a Solr index server.
  * @author walter
- *
+ * 
  */
 public class SolrIndexer implements Indexer {
 
@@ -36,14 +38,16 @@ public class SolrIndexer implements Indexer {
     private SolrServer solrServer;
 
     /**
-     * 
+     * Initially instancing a Solr server instance
      */
     @PostConstruct
     public void instantiateSolrServer() {
         this.solrServer = getSolrServerFactory().getSolrServer();
     }
 
-    /* (non-Javadoc)
+    /**
+     * Implementation of the update method overriding org.fcrepo.indexer.Indexer
+     * for the Solr indexer implementation
      * @see org.fcrepo.indexer.Indexer#update(java.lang.String, java.lang.String)
      */
     @Override
@@ -59,7 +63,9 @@ public class SolrIndexer implements Indexer {
         }
     }
 
-    /* (non-Javadoc)
+    /**
+     * Implementation of the remove method overriding org.fcrepo.indexer.Indexer
+     * for the Solr indexer implementation
      * @see org.fcrepo.indexer.Indexer#remove(java.lang.String)
      */
     @Override
@@ -73,15 +79,19 @@ public class SolrIndexer implements Indexer {
     }
 
     /**
-     * @return SolrServerFactory instance. Needed for generating
+     * Delivers an instance of the SolrServerFactory, which produces Solr
+     * server instances
+     * @return SolrServerFactory instance, which itself produces Solr server instances
      */
     public SolrServerFactory getSolrServerFactory() {
         return solrServerFactory;
     }
 
     /**
-     * @param solrServerFactory (SolrServerFactory) a factory for generating
-     * SOLR instances
+     * Sets an instance of the SolrServerFactory, which produces Solr
+     * server instances
+     * @param solrServerFactory (SolrServerFactory) an instance of the
+     * SolrServerFactory, which itself produces Solr server instances
      */
     public void setSolrServerFactory(SolrServerFactory solrServerFactory) {
         this.solrServerFactory = solrServerFactory;

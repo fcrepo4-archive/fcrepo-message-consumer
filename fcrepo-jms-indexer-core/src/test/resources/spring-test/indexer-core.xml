@@ -36,7 +36,7 @@
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
   
-
+  <!-- Factory for instancing a (embedded) Solr server -->
   <bean id="solrServerFactory" class="org.fcrepo.indexer.SolrServerFactory">
   	<property  name="embedded">
   		<value type="java.lang.Boolean">true</value>
