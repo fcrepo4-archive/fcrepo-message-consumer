@@ -36,12 +36,12 @@
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
   
-
+  <!-- Factory for instancing a (embedded) Solr server -->
   <bean id="solrServerFactory" class="org.fcrepo.indexer.SolrServerFactory">
   	<property  name="embedded">
   		<value type="java.lang.Boolean">true</value>
   	</property>
-  	<property name="solrTestHome" value="./target/test-classes/solrIndexer"/>
+  	<property name="solrTestHome" value="./target/test-classes/"/>
   </bean>
   
   <!-- Solr Indexer -->
@@ -56,11 +56,9 @@
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
       <set>
-      	<ref bean="fileSerializer"/>
-      	<!-- 
+      	<ref bean="solrIndexer"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
-        -->
       </set>
     </property>
   </bean>
