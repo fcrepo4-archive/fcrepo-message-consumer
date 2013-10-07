@@ -27,7 +27,7 @@ import org.apache.solr.common.SolrInputDocument;
 /**
  * A Solr Indexer (stub) implementation that adds some basic information to
  * a Solr index server.
- * @author walter
+ * @author walter, Max Planck Digital Library
  * 
  */
 public class SolrIndexer implements Indexer {
