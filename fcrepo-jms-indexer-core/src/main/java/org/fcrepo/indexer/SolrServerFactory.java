@@ -28,7 +28,6 @@ import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.core.CoreContainer;
 import org.apache.solr.core.CoreContainer.Initializer;
-//import org.fcrepo.jms.legacy.LegacyMethod;
 import org.slf4j.Logger;
 import org.xml.sax.SAXException;
 
