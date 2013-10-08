@@ -18,7 +18,7 @@ package org.fcrepo.indexer;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
+
 import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,13 +40,9 @@ import org.xml.sax.SAXException;
 public class SolrServerFactory {
 
     private static final Logger LOGGER = getLogger(SolrServerFactory.class);
-
     private boolean embedded = false;
-
-    private String solrServerUrl;
-
-    private String solrTestHome;
-
+    private String solrServerUrl;//TODO @Ye this is url of standalone Solr server, should be read from a user configurable file
+    private String solrTestHome; 
     private String solrTestConfig;
 
     /**
@@ -87,7 +83,7 @@ public class SolrServerFactory {
     }
 
     /**
-     * Setter method for embedded. Embedded describes whether an embedded or a 
+     * Setter method for embedded. Embedded describes whether an embedded or a
      * standalone server instance should be created
      * 
      * @param embedded if a embedded server instance should be requested
