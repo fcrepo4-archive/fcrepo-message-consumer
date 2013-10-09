@@ -24,7 +24,8 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * A Solr Indexer (stub) implementation that adds some basic information to
  * a Solr index server.
@@ -36,7 +37,7 @@ public class SolrIndexer implements Indexer {
     private SolrServerFactory solrServerFactory;
 
     private SolrServer solrServer;
-
+    final private Logger logger = LoggerFactory.getLogger(SolrIndexer.class);
     /**
      * Initially instancing a Solr server instance
      */
@@ -57,7 +58,11 @@ public class SolrIndexer implements Indexer {
             inputDoc.addField("id", pid);
             inputDoc.addField("content", doc);
             UpdateResponse resp = solrServer.add(inputDoc);
-            solrServer.commit();
+            if(resp.getStatus()==0){
+            	logger.debug("update request was successful for pid: {}", pid);
+            	solrServer.commit();
+            }
+            else{logger.debug("update request has error, code: {} for pid: {}", resp.getStatus(),pid);}
         } catch (SolrServerException e) {
             throw new IOException(e);
         }
@@ -71,7 +76,12 @@ public class SolrIndexer implements Indexer {
     @Override
     public void remove(String pid) throws IOException {
         try {
-            solrServer.deleteById(pid);
+        	UpdateResponse resp =solrServer.deleteById(pid);
+            if(resp.getStatus()==0){
+            	logger.debug("remove request was successful for pid: {}", pid);
+            	solrServer.commit();
+            }
+            else{logger.debug("remove request has error, code: {} for pid: {}", resp.getStatus(),pid);}
         } catch (SolrServerException e) {
             throw new IOException(e);
         }
