@@ -58,7 +58,9 @@ public class SolrServerFactory {
                 Initializer initializer = new CoreContainer.Initializer();
                 CoreContainer cc = initializer.initialize();
                 embeddedSolrServer = new EmbeddedSolrServer(cc, "");
-            } catch (IOException | ParserConfigurationException | SAXException e) {
+            } catch (IOException | ParserConfigurationException
+                    | SAXException e)
+            {
 
                 LOGGER.error("Couldn't initialize CoreContainer", e);
             }

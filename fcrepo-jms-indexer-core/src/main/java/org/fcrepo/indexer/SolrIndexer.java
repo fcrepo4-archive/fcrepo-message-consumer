@@ -51,16 +51,15 @@ public class SolrIndexer implements Indexer {
      * for the Solr indexer implementation
      * @see org.fcrepo.indexer.Indexer#update(java.lang.String, java.lang.String)
      */
-    @Override
     public void update(String pid, String doc) throws IOException {
         try {
             SolrInputDocument inputDoc = new SolrInputDocument();
             inputDoc.addField("id", pid);
             inputDoc.addField("content", doc);
             UpdateResponse resp = solrServer.add(inputDoc);
-            if(resp.getStatus()==0){
-            	logger.debug("update request was successful for pid: {}", pid);
-            	solrServer.commit();
+            if (resp.getStatus() == 0) {
+               logger.debug("update request was successful for pid: {}", pid);
+               solrServer.commit();
             }
             else{logger.debug("update request has error, code: {} for pid: {}", resp.getStatus(),pid);}
         } catch (SolrServerException e) {
@@ -73,11 +72,10 @@ public class SolrIndexer implements Indexer {
      * for the Solr indexer implementation
      * @see org.fcrepo.indexer.Indexer#remove(java.lang.String)
      */
-    @Override
-    public void remove(String pid) throws IOException {
+	public void remove(String pid) throws IOException {
         try {
-        	UpdateResponse resp =solrServer.deleteById(pid);
-            if(resp.getStatus()==0){
+        	UpdateResponse resp = solrServer.deleteById(pid);
+            if (resp.getStatus() == 0) {
             	logger.debug("remove request was successful for pid: {}", pid);
             	solrServer.commit();
             }
