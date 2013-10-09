@@ -17,12 +17,8 @@
 package org.fcrepo.indexer;
 
 import static org.slf4j.LoggerFactory.getLogger;
-
-
 import java.io.IOException;
-
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -41,9 +37,8 @@ public class SolrServerFactory {
 
     private static final Logger LOGGER = getLogger(SolrServerFactory.class);
     private boolean embedded = false;
-    private String solrServerUrl;//TODO @Ye this is url of standalone Solr server, should be read from a user configurable file
+    private String solrServerUrl;//TODO @Ye this is url of standalone Solr server, should be read from a user configurable file,e.g,indexer-core.xml
     private String solrTestHome; 
-    private String solrTestConfig;
 
     /**
      * Returns a SolrServer instance for indexing purpose
@@ -110,22 +105,6 @@ public class SolrServerFactory {
         this.solrTestHome = solrTestHome;
     }
 
-    /**
-     * Getter method for solr test configuration file path
-     * 
-     * @return solrTestConfig file path
-     */
-    public String getSolrTestConfig() {
-        return solrTestConfig;
-    }
 
-    /**
-     * Setter method for solr test configuration file path
-     * 
-     * @param solrTestConfig file path
-     */
-    public void setSolrTestConfig(String solrTestConfig) {
-        this.solrTestConfig = solrTestConfig;
-    }
 
 }
