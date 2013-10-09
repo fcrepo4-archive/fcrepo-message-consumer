@@ -36,7 +36,7 @@ public class SolrIndexer implements Indexer {
 
     private SolrServerFactory solrServerFactory;
 
-    private SolrServer solrServer;
+    SolrServer solrServer;
     final private Logger logger = LoggerFactory.getLogger(SolrIndexer.class);
     /**
      * Initially instancing a Solr server instance
