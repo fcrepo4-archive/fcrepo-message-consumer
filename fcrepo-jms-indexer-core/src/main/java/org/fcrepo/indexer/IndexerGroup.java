@@ -41,6 +41,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
  * MessageListener implementation that retrieves objects from the repository and
  * invokes one or more indexers to index the content.
@@ -49,6 +53,7 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager;
  *         Date: Aug 19, 2013
  **/
 public class IndexerGroup implements MessageListener {
+    private final Logger logger = LoggerFactory.getLogger(IndexerGroup.class);
     private Parser atomParser = new Abdera().getParser();
     private String repositoryURL;
     private Set<Indexer> indexers;
@@ -130,12 +135,13 @@ public class IndexerGroup implements MessageListener {
                     HttpGet get = new HttpGet(
                             getPath(entry.getCategories("xsd:string")));
                     HttpResponse response = httpclient.execute(get);
-                    content = IOUtils.toString(
-                            response.getEntity().getContent(),
-                            Charset.forName("UTF-8"));
+                    content = IOUtils.toString(response.getEntity()
+                            .getContent(), Charset.forName("UTF-8"));
                 }
-                //pid represents the full path. Alternative would be to send path separately in all calls
-                //String pid = getPath(entry.getCategories("xsd:string")).replace("//objects", "/objects");
+                // pid represents the full path. Alternative would be to send
+                // path separately in all calls
+                // String pid = getPath(entry.getCategories("xsd:string"))
+                //        .replace("//objects", "/objects");
                 String pid = getPath(entry.getCategories("xsd:string"));
 
 
@@ -148,14 +154,14 @@ public class IndexerGroup implements MessageListener {
                             indexer.update(pid, content);
                         }
                     } catch (Exception innerex) {
-                        innerex.printStackTrace();
+                        logger.warn("Error indexing {}, {}", pid, innerex);
                     }
                 }
             }
         } catch (JMSException e) {
-            e.printStackTrace();
+            logger.warn("Error processing JMS event", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Error retrieving object from repository", e);
         }
     }
 }

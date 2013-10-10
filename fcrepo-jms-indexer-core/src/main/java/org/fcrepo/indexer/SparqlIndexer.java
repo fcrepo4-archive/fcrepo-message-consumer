@@ -50,7 +50,7 @@ public class SparqlIndexer implements Indexer {
     private String updateBase;
     private boolean formUpdates = false;
 
-    final private Logger logger = LoggerFactory.getLogger(SparqlIndexer.class);
+    private final Logger logger = LoggerFactory.getLogger(SparqlIndexer.class);
 
     /**
      * Set URI prefix for building triplestore subjects.  The fedora PID will
@@ -114,8 +114,7 @@ public class SparqlIndexer implements Indexer {
 
         // find triples/quads to delete
         String describeQuery = "DESCRIBE <" + subject + ">";
-        QueryEngineHTTP qexec = new QueryEngineHTTP(
-            queryBase, describeQuery );
+        QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
         Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
@@ -126,8 +125,7 @@ public class SparqlIndexer implements Indexer {
             // add subject uri, if it is part of this object
             if ( triple.getSubject().isURI() ) {
                 String uri = ((Node_URI)triple.getSubject()).getURI();
-                if ( uri.equals(subject) || uri.startsWith(subject + "/") ||
-                        uri.startsWith(subject + "#") ) {
+                if ( matches(subject, uri) ) {
                     uris.add(uri);
                 }
             }
@@ -135,8 +133,7 @@ public class SparqlIndexer implements Indexer {
             // add object uri, if it is part of this object
             if ( triple.getObject().isURI() ) {
                 String uri = ((Node_URI)triple.getObject()).getURI();
-                if ( uri.equals(subject) || uri.startsWith(subject + "/") ||
-                        uri.startsWith(subject + "#") ) {
+                if ( matches(subject, uri) ) {
                     uris.add(uri);
                 }
             }
@@ -153,6 +150,16 @@ public class SparqlIndexer implements Indexer {
 
         // send updates
         exec( del );
+    }
+
+    /**
+     * Determine whether uri2 is a sub-URI of uri1, defined as uri1 starting
+     * with uri2, plus an option suffix starting with a hash (#) or slash (/)
+     * suffix.
+    **/
+    private boolean matches( String uri1, String uri2 ) {
+        return uri1.equals(uri2) || uri1.startsWith(uri2 + "/")
+            || uri1.startsWith(uri2 + "#");
     }
 
     private void exec( UpdateRequest update ) {
@@ -181,7 +188,7 @@ public class SparqlIndexer implements Indexer {
         // count triples
         int triples = 0;
         while ( results.hasNext() ) {
-            Triple t = results.next();
+            results.next();
             triples++;
         }
         qexec.close();
