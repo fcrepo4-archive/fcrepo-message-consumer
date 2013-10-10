@@ -38,19 +38,16 @@
   
   <!-- Factory for instancing a (embedded) Solr server -->
   <bean id="solrServerFactory" class="org.fcrepo.indexer.SolrServerFactory">
-  	<property  name="embedded">
-  		<value type="java.lang.Boolean">true</value>
-  	</property>
-  	<property name="solrTestHome" value="./target/test-classes/"/>
+  	<constructor-arg name="embedded" type="java.lang.Boolean" value="true"/>
+	<constructor-arg name="solrServerUrlOrSolrTestHome" type="java.lang.String" value="./target/test-classes/"/>
   </bean>
   
   <!-- Solr Indexer -->
   <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
-  	<property name="solrServerFactory">
-  		<ref bean="solrServerFactory"/>
-  	</property>
+  	 <constructor-arg ref="solrServerFactory"/>
   </bean>
-
+  <bean id="solrServerFactory" class="org.fcrepo.indexer.solrServerFactory"></bean>
+  
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />

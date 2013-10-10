@@ -31,20 +31,31 @@ import org.slf4j.LoggerFactory;
  * a Solr index server.
  * @author walter
  * 
- */
+**/
 public class SolrIndexer implements Indexer {
-
     private SolrServerFactory solrServerFactory;
-
-    SolrServer solrServer;
-    final private Logger logger = LoggerFactory.getLogger(SolrIndexer.class);
+	private SolrServer solrServer;
+    private Logger logger = 
+    		LoggerFactory.getLogger
+    		(SolrIndexer.class);
+	
+    /**
+	 * @param solrServerFactory
+	 */
+	public SolrIndexer(SolrServerFactory solrServerFactory) {
+		this.solrServerFactory = solrServerFactory;
+	}
     /**
      * Initially instancing a Solr server instance
      */
     @PostConstruct
     public void instantiateSolrServer() {
-        this.solrServer = getSolrServerFactory().getSolrServer();
+        this.solrServer = solrServerFactory.getSolrServer();
     }
+    
+    public final SolrServer getSolrServer() {
+		return solrServer;
+	}
 
     /**
      * Implementation of the update method overriding org.fcrepo.indexer.Indexer
@@ -84,25 +95,6 @@ public class SolrIndexer implements Indexer {
             throw new IOException(e);
         }
 
-    }
-
-    /**
-     * Delivers an instance of the SolrServerFactory, which produces Solr
-     * server instances
-     * @return SolrServerFactory instance, which itself produces Solr server instances
-     */
-    public SolrServerFactory getSolrServerFactory() {
-        return solrServerFactory;
-    }
-
-    /**
-     * Sets an instance of the SolrServerFactory, which produces Solr
-     * server instances
-     * @param solrServerFactory (SolrServerFactory) an instance of the
-     * SolrServerFactory, which itself produces Solr server instances
-     */
-    public void setSolrServerFactory(SolrServerFactory solrServerFactory) {
-        this.solrServerFactory = solrServerFactory;
     }
 
 }

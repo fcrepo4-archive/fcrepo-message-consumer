@@ -17,8 +17,11 @@
 package org.fcrepo.indexer;
 
 import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.IOException;
+
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -35,11 +38,20 @@ import org.xml.sax.SAXException;
  */
 public class SolrServerFactory {
 
-    private static final Logger LOGGER = getLogger(SolrServerFactory.class);
-    private boolean embedded = false;
-    private String solrServerUrl;//TODO @Ye this is url of standalone Solr server, should be read from a user configurable file,e.g,indexer-core.xml
-    private String solrTestHome; 
-
+	private static final Logger LOGGER = getLogger(SolrServerFactory.class);
+    private boolean embedded;
+    private String solrServerUrlOrSolrTestHome; 
+    
+    /**
+	 * @param embedded
+	 * @param solrServerUrl
+	 * @param solrTestHome
+	 */
+	public SolrServerFactory(boolean embedded,
+			String solrServerUrlOrSolrTestHome) {
+		this.embedded = embedded;
+		this.solrServerUrlOrSolrTestHome = solrServerUrlOrSolrTestHome;
+	}
     /**
      * Returns a SolrServer instance for indexing purpose
      * 
@@ -47,14 +59,14 @@ public class SolrServerFactory {
      * be created
      */
     public SolrServer getSolrServer() {
-        if (!isEmbedded()) {
-            return new HttpSolrServer(solrServerUrl);
+        if (!this.embedded) {
+            return new HttpSolrServer(solrServerUrlOrSolrTestHome);
 
         } else {
             EmbeddedSolrServer embeddedSolrServer = null;
             try {
                 // trying to set up a new embedded instance
-                System.setProperty("solr.solr.home", solrTestHome);
+                System.setProperty("solr.solr.home", solrServerUrlOrSolrTestHome);
                 Initializer initializer = new CoreContainer.Initializer();
                 CoreContainer cc = initializer.initialize();
                 embeddedSolrServer = new EmbeddedSolrServer(cc, "");
@@ -68,45 +80,4 @@ public class SolrServerFactory {
         }
 
     }
-
-    /**
-     * Describes whether a embedded or a standalone server instance should be
-     * created
-     * 
-     * @return true if embedded version is enabled
-     */
-    public boolean isEmbedded() {
-        return embedded;
-    }
-
-    /**
-     * Setter method for embedded. Embedded describes whether an embedded or a
-     * standalone server instance should be created
-     * 
-     * @param embedded if a embedded server instance should be requested
-     */
-    public void setEmbedded(boolean embedded) {
-        this.embedded = embedded;
-    }
-
-    /**
-     * Getter method for the solrTestHome path
-     * 
-     * @return solrTestHome path
-     */
-    public String getSolrTestHome() {
-        return solrTestHome;
-    }
-
-    /**
-     * Setter method for the solrTestHome path
-     * 
-     * @param solrTestHome
-     */
-    public void setSolrTestHome(String solrTestHome) {
-        this.solrTestHome = solrTestHome;
-    }
-
-
-
 }

@@ -19,24 +19,35 @@ import org.slf4j.LoggerFactory;
 
 public class SolrIndexerTest {
 	private SolrIndexer indexer;
+	private SolrServerFactory solrServerFactory;
 	private SolrServer server;
-	final private Logger logger = LoggerFactory.getLogger(SolrServerFactoryTest.class);
+	private boolean embedded = true;
+    private String solrServerUrlOrSolrTestHome="./target/test-classes/";
+	final private Logger logger = LoggerFactory.getLogger(SolrIndexerTest.class);
 	@Before
 	public void setUp() throws Exception {
-		indexer=new SolrIndexer();
-		//hack to get server instance
-		System.setProperty("solr.solr.home", "./target/test-classes/");
-		Initializer initializer = new CoreContainer.Initializer();
-        CoreContainer cc = initializer.initialize();
-        server = new EmbeddedSolrServer(cc, "");
-        indexer.solrServer=server;
+		solrServerFactory=new SolrServerFactory(embedded,solrServerUrlOrSolrTestHome);
+		indexer=new SolrIndexer(solrServerFactory);
+		indexer.instantiateSolrServer();
+		server=indexer.getSolrServer();
 	}
 
 	@Test
-	public void testUpdate() throws IOException, SolrServerException {
-		indexer.update("123", "some content");
+	public void testUpdate()  {
+		try {
+			indexer.update("123", "some content");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		SolrParams params = new SolrQuery("content");
-        QueryResponse response = server.query(params);
+        QueryResponse response = null;
+		try {
+			response = server.query(params);
+		} catch (SolrServerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         assertEquals("123", response.getResults().get(0).get("id"));
 		
 	}
