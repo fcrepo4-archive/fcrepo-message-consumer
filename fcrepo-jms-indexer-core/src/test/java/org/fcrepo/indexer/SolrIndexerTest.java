@@ -1,17 +1,14 @@
 package org.fcrepo.indexer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.core.CoreContainer;
-import org.apache.solr.core.CoreContainer.Initializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,23 +30,11 @@ public class SolrIndexerTest {
 	}
 
 	@Test
-	public void testUpdate()  {
-		try {
-			indexer.update("123", "some content");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void testUpdate()  throws IOException, SolrServerException {
+		indexer.update("123", "some content");
 		SolrParams params = new SolrQuery("content");
-        QueryResponse response = null;
-		try {
-			response = server.query(params);
-		} catch (SolrServerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        QueryResponse response = server.query(params);
         assertEquals("123", response.getResults().get(0).get("id"));
-		
 	}
 
 	@Test
