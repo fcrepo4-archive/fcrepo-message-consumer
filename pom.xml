@@ -7,11 +7,12 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0.0-alpha-2-SNAPSHOT</version>
+    <version>4.0.0-alpha-3-SNAPSHOT</version>
   </parent>
 
   <groupId>org.fcrepo</groupId>
   <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
+  <version>4.0.0-alpha-2-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Fedora JMS Indexer</description>
   <packaging>pom</packaging>
