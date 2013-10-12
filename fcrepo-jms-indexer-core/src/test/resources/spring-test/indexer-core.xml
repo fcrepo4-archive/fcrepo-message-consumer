@@ -38,7 +38,7 @@
   
   <!-- Factory for instancing a (embedded) Solr server -->
   <bean id="solrServerFactory" class="org.fcrepo.indexer.SolrServerFactory">
-  	<constructor-arg name="embedded" type="java.lang.Boolean" value="true"/>
+  	<constructor-arg name="embedded" value="true"/>
 	<constructor-arg name="solrServerUrlOrSolrTestHome" type="java.lang.String" value="./target/test-classes/"/>
   </bean>
   
@@ -46,7 +46,6 @@
   <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
   	 <constructor-arg ref="solrServerFactory"/>
   </bean>
-  <bean id="solrServerFactory" class="org.fcrepo.indexer.solrServerFactory"></bean>
   
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
