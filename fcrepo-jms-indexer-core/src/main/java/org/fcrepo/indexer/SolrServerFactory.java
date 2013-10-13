@@ -37,43 +37,40 @@ import org.xml.sax.SAXException;
  * @author walter
  */
 public class SolrServerFactory {
+    private static final Logger LOGGER = getLogger(SolrServerFactory.class);
+    private final boolean embedded;
+    private final String solrServerUrlOrSolrTestHome;
 
-	private static final Logger LOGGER = getLogger(SolrServerFactory.class);
-    private boolean embedded;
-    private String solrServerUrlOrSolrTestHome; 
-    
     /**
-	 * @param embedded
-	 * @param solrServerUrl
-	 * @param solrTestHome
-	 */
-	public SolrServerFactory(boolean embedded,
-			String solrServerUrlOrSolrTestHome) {
-		this.embedded = embedded;
-		this.solrServerUrlOrSolrTestHome = solrServerUrlOrSolrTestHome;
-	}
+     * @param embedded toggle embedded/standalone solr server
+     * @param solrServerUrlOrSolrTestHome input standalone solr server
+     *        url(solrServerUrl) or embedded server home(SolrTestHome)
+     */
+    public SolrServerFactory(final boolean embedded,
+            final String solrServerUrlOrSolrTestHome) {
+        this.embedded = embedded;
+        this.solrServerUrlOrSolrTestHome = solrServerUrlOrSolrTestHome;
+    }
     /**
      * Returns a SolrServer instance for indexing purpose
      * 
      * @return Solr server (SolrServer) instance or null if no instance could
      * be created
      */
-    public SolrServer getSolrServer() {
+    public final SolrServer getSolrServer() {
         if (!this.embedded) {
             return new HttpSolrServer(solrServerUrlOrSolrTestHome);
 
         } else {
             EmbeddedSolrServer embeddedSolrServer = null;
             try {
-                // trying to set up a new embedded instance
-                System.setProperty("solr.solr.home", solrServerUrlOrSolrTestHome);
-                Initializer initializer = new CoreContainer.Initializer();
-                CoreContainer cc = initializer.initialize();
+                System.setProperty("solr.solr.home",
+                        solrServerUrlOrSolrTestHome);
+                final Initializer initializer = new CoreContainer.Initializer();
+                final CoreContainer cc = initializer.initialize();
                 embeddedSolrServer = new EmbeddedSolrServer(cc, "");
             } catch (IOException | ParserConfigurationException
-                    | SAXException e)
-            {
-
+                    | SAXException e) {
                 LOGGER.error("Couldn't initialize CoreContainer", e);
             }
             return embeddedSolrServer;

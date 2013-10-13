@@ -26,54 +26,58 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
- * A Solr Indexer (stub) implementation that adds some basic information to
- * a Solr index server.
+ * A Solr Indexer (stub) implementation that adds some basic information to a
+ * Solr index server.
  * @author walter
- * 
-**/
+ * Date: Aug 19, 2013
+ **/
 public class SolrIndexer implements Indexer {
-    private SolrServerFactory solrServerFactory;
-	private SolrServer solrServer;
-    private Logger logger = 
-    		LoggerFactory.getLogger
-    		(SolrIndexer.class);
-	
+    private final SolrServerFactory solrServerFactory;
+    private SolrServer solrServer;
+    private final Logger logger =
+            LoggerFactory.getLogger(SolrIndexer.class);
+
     /**
-	 * @param solrServerFactory
-	 */
-	public SolrIndexer(SolrServerFactory solrServerFactory) {
-		this.solrServerFactory = solrServerFactory;
-	}
+     * @param solrServerFactory factory to give instance solr server
+     */
+    public SolrIndexer(final SolrServerFactory solrServerFactory) {
+        this.solrServerFactory = solrServerFactory;
+    }
     /**
      * Initially instancing a Solr server instance
      */
     @PostConstruct
-    public void instantiateSolrServer() {
+    public final void instantiateSolrServer() {
         this.solrServer = solrServerFactory.getSolrServer();
     }
-    
-    public final SolrServer getSolrServer() {
-		return solrServer;
-	}
 
     /**
-     * Implementation of the update method overriding org.fcrepo.indexer.Indexer
-     * for the Solr indexer implementation
-     * @see org.fcrepo.indexer.Indexer#update(java.lang.String, java.lang.String)
+     * @author Ye Cao
+     * @date 10.10.2013
+     * @return solr server instance
      */
-    public void update(String pid, String doc) throws IOException {
+    public final SolrServer getSolrServer() {
+        return solrServer;
+    }
+
+    @Override
+    public final void update(final String pid, final String doc)
+        throws IOException {
         try {
-            SolrInputDocument inputDoc = new SolrInputDocument();
+            final SolrInputDocument inputDoc = new SolrInputDocument();
             inputDoc.addField("id", pid);
             inputDoc.addField("content", doc);
-            UpdateResponse resp = solrServer.add(inputDoc);
+            final UpdateResponse resp = solrServer.add(inputDoc);
             if (resp.getStatus() == 0) {
-               logger.debug("update request was successful for pid: {}", pid);
-               solrServer.commit();
+                logger.debug("update request was successful for pid: {}", pid);
+                solrServer.commit();
+            } else {
+                logger.debug("update request has error, code: {} for pid: {}",
+                        resp.getStatus(), pid);
             }
-            else{logger.debug("update request has error, code: {} for pid: {}", resp.getStatus(),pid);}
-        } catch (SolrServerException e) {
+        } catch (final SolrServerException e) {
             throw new IOException(e);
         }
     }
@@ -81,17 +85,23 @@ public class SolrIndexer implements Indexer {
     /**
      * Implementation of the remove method overriding org.fcrepo.indexer.Indexer
      * for the Solr indexer implementation
+     * 
      * @see org.fcrepo.indexer.Indexer#remove(java.lang.String)
+     * @param pid jms msg id
+     * @throws IOException exception
      */
-	public void remove(String pid) throws IOException {
+    @Override
+    public final void remove(final String pid) throws IOException {
         try {
-        	UpdateResponse resp = solrServer.deleteById(pid);
+            final UpdateResponse resp = solrServer.deleteById(pid);
             if (resp.getStatus() == 0) {
-            	logger.debug("remove request was successful for pid: {}", pid);
-            	solrServer.commit();
+                logger.debug("remove request was successful for pid: {}", pid);
+                solrServer.commit();
+            } else {
+                logger.debug("remove request has error, code: {} for pid: {}",
+                        resp.getStatus(), pid);
             }
-            else{logger.debug("remove request has error, code: {} for pid: {}", resp.getStatus(),pid);}
-        } catch (SolrServerException e) {
+        } catch (final SolrServerException e) {
             throw new IOException(e);
         }
 
