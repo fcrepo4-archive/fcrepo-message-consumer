@@ -15,6 +15,8 @@
  */
 package org.fcrepo.indexer;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -23,7 +25,8 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.util.AbstractSolrTestCase;
+import org.apache.solr.core.CoreContainer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,24 +35,34 @@ import org.junit.Test;
  * @author yecao
  *
  */
-public class SolrIndexerTest extends AbstractSolrTestCase {
-
-    private final String solrHome = "./target/test-classes/solr";
+public class SolrIndexerIT {
 
     private SolrIndexer indexer;
 
     private SolrServer server;
+
+    // get hold of CoreConatiner in-order to shut down the server
+    private CoreContainer coreContainer;
+
     /**
      * @throws java.lang.Exception
      */
-    @Override
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        server =
-                new EmbeddedSolrServer(h.getCoreContainer(), h.getCore()
-                        .getName());
+        System.setProperty("solr.solr.home", "./target/test-classes/solr");
+        final CoreContainer.Initializer initializer =
+                new CoreContainer.Initializer();
+        coreContainer = initializer.initialize();
+        server = new EmbeddedSolrServer(coreContainer, "");
         indexer = new SolrIndexer(server);
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @After
+    public void tearDown() throws Exception {
+        // coreContainer.shutdown();
     }
 
     /**
@@ -81,16 +94,6 @@ public class SolrIndexerTest extends AbstractSolrTestCase {
         final SolrParams params = new SolrQuery("content");
         final QueryResponse response = server.query(params);
         assertEquals(0, response.getResults().getNumFound());
-    }
-
-    @Override
-    public String getSchemaFile() {
-        return solrHome + "/conf/schema.xml";
-    }
-
-    @Override
-    public String getSolrConfigFile() {
-        return solrHome + "/conf/solrconfig.xml";
     }
 
 }
