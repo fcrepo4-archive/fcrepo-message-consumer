@@ -17,6 +17,8 @@
     <spring.version>3.2.0.RELEASE</spring.version>
     <activemq.version>5.7.0</activemq.version>
     <abdera.version>1.1.3</abdera.version>
+    <!-- Solr version shoul match lucence version of modeshape -->
+    <solr.version>3.6.2</solr.version>
   </properties>
 
   <dependencies>
@@ -165,7 +167,47 @@
       <version>0.2.7</version>
       <scope>test</scope>
     </dependency>
-
+<!-- Start of Solr Indexer libs -->
+     <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${solr.version}</version>  
+         <exclusions>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion> 
+        <exclusion>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>wstx-asl</artifactId>
+        </exclusion>
+               <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+         </exclusions>                      
+      </dependency>
+           <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-core</artifactId>
+        <version>${solr.version}</version>   
+        <exclusions>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>        
+        </exclusions>      
+      </dependency>
+          
+<!-- End of Solr Indexer libs -->
   </dependencies>
 
   <build>
