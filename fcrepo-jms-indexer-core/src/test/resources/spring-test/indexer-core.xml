@@ -33,7 +33,29 @@
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
+  
+   <!-- Solr Indexer START-->
+  <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer"/>
 
+  <!--Standardalone Server  -->
+  <!--
+  <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
+    <constructor-arg index="0" value="http://localhost:1992/solr/" />
+  </bean>
+  -->
+
+    <!--Embedded Server  -->
+  <bean id="multiCore" class="org.apache.solr.core.CoreContainer">
+    <constructor-arg><value>./target/test-classes/solr</value></constructor-arg>
+    <constructor-arg><value>./target/test-classes/solr/solr.xml</value></constructor-arg>
+  </bean>
+
+  <bean id="solrServer" class="org.apache.solr.client.solrj.embedded.EmbeddedSolrServer">
+    <constructor-arg ref="multiCore" />
+    <constructor-arg value="sampleCoreName" />
+  </bean>
+   <!-- Solr Indexer END-->
+    
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
