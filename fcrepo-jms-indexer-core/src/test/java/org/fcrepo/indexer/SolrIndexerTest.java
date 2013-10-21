@@ -49,7 +49,7 @@ public class SolrIndexerTest {
      */
     @Before
     public void setUp() throws Exception {
-        System.setProperty("solr.solr.home", "./target/test-classes/");
+        System.setProperty("solr.solr.home", "./target/test-classes/solr");
         final CoreContainer.Initializer initializer =
                 new CoreContainer.Initializer();
         coreContainer = initializer.initialize();
