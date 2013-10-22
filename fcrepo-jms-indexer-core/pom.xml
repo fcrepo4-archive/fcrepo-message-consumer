@@ -211,6 +211,19 @@
         <artifactId>solr-test-framework</artifactId>
         <version>${solr.version}</version>   
         </dependency>
+        <!--  HttpClient are used for create standardalone SolrIndexer Server client.
+         They seem to be included with Solr 3.6.2?
+         Ver 4.2.5 aim to fit JENA included version -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.2.5</version>
+      </dependency>
+      <dependency>
+       <groupId>org.apache.httpcomponents</groupId>
+       <artifactId>httpmime</artifactId>
+       <version>4.2.5</version>
+      </dependency>
 <!-- End of Solr Indexer libs -->
   </dependencies>
 

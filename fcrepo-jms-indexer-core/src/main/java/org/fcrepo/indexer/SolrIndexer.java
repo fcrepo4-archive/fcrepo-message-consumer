@@ -23,6 +23,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yecao
@@ -33,16 +34,15 @@ public class SolrIndexer implements Indexer {
     private final SolrServer server;
 
     private final Logger logger = LoggerFactory.getLogger(SolrIndexer.class);
+
     /**
-     * @param server SolrServer
+     * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
      */
-    public SolrIndexer(final SolrServer server) {
-        this.server = server;
+    @Autowired
+    public SolrIndexer(final SolrServer solrServer) {
+        this.server = solrServer;
     }
 
-    /* (non-Javadoc)
-     * @see org.fcrepo.indexer.Indexer#update(java.lang.String, java.lang.String)
-     */
     @Override
     public void update(final String pid, final String doc) {
         try {
