@@ -69,7 +69,19 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
+<!--  HttpClient are used for create standardalone SolrIndexer Server client.
+         They are not included with Solr 3.6.2
+         use Ver 4.2.5 aim to meet JENA lib: jena-fuseki included version, but still httpmime is not found by classpath -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.2.5</version>
+      </dependency>
+      <dependency>
+       <groupId>org.apache.httpcomponents</groupId>
+       <artifactId>httpmime</artifactId>
+       <version>4.2.5</version>
+      </dependency>
   </dependencies>
 
   <build>

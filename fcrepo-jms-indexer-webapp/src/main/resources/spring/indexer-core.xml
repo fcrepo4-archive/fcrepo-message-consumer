@@ -30,14 +30,27 @@
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="${file.serializer.dir:./target/test-classes/fileSerializer/}"/>
   </bean>
-
+<!-- Solr Indexer -->
+  <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
+    <constructor-arg ref="solrServer" />
+  </bean>
+  <!--Standardalone Server  -->
+  <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
+     <constructor-arg index="0" value="http://localhost:${solr.port:8983}/solr/" />
+  </bean>
+  
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest" />
+    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/fcrepo-webapp-4.0.0-alpha-1/rest" />
     <property name="indexers">
       <set>
-        <ref bean="fileSerializer"/>
-        <ref bean="sparqlUpdate"/>
+      <!-- Comments other indexers to make solrIndexer error easy to find -->
+<!--         <ref bean="fileSerializer"/> -->
+<!--         <ref bean="sparqlUpdate"/> -->
+<!--Expect error: cannot resolve reference to bean 'solrServer' while setting constructor argument ....
+nested exception is java.lang.NoClassDefFoundError: org/apache/http/entity/mime/content/ContentBody
+   -->
+          <ref bean="solrIndexer"/>
       </set>
     </property>
   </bean>
