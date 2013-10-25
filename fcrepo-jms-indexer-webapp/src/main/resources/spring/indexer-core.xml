@@ -30,6 +30,16 @@
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="${file.serializer.dir:./target/test-classes/fileSerializer/}"/>
   </bean>
+  
+  <!-- Solr Indexer START-->
+    <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
+    <constructor-arg ref="solrServer" />
+    </bean>
+<!--Standardalone solr Server  -->
+  <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
+    <constructor-arg index="0" value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/" />
+  </bean>
+<!-- Solr Indexer END-->
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
@@ -38,6 +48,8 @@
       <set>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
+        <!--To enable solr Indexer, please uncomment line below  -->
+<!--         <ref bean="solrIndexer"/> -->
       </set>
     </property>
   </bean>
