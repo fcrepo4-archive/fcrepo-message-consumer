@@ -25,6 +25,9 @@ import java.util.Date;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Basic Indexer implementation that writes object content to timestamped files
  * on disk.
@@ -33,6 +36,8 @@ import org.apache.commons.lang.StringUtils;
  *         Date: Aug 19, 2013
 **/
 public class FileSerializer implements Indexer {
+
+    private final Logger logger = LoggerFactory.getLogger(FileSerializer.class);
 
     private static SimpleDateFormat fmt
         = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -69,6 +74,8 @@ public class FileSerializer implements Indexer {
         try {
             fw = new FileWriter( new File(path,fn) );
             IOUtils.write( content, fw );
+        } catch (IOException ex) {
+            logger.warn("Error writing file", ex);
         } finally {
             fw.close();
         }
