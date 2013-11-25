@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 import java.text.SimpleDateFormat;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,10 +39,9 @@ public class FileSerializerTest {
 
     @Before
     public void setup() {
-        path = new File("./target/test-classes/fileSerializer."
-                + fmt.format(new Date()) );
+        path = new File("./target/fileSerializer." + fmt.format(new Date()));
         serializer = new FileSerializer();
-        serializer.setPath( path.getAbsolutePath() );
+        serializer.setPath(path.getAbsolutePath());
     }
 
     @Test
@@ -52,15 +52,15 @@ public class FileSerializerTest {
     }
 
     @Test
-    public void updateTest() throws IOException {
+    public void updateTest() throws IOException, InterruptedException, ExecutionException {
         serializer.update("abc123","test content");
 
         // file should exist
-        File f = path.listFiles()[0];
+        final File f = path.listFiles()[0];
         assertTrue("Filename doesn't match", f.getName().startsWith("abc123"));
 
         // content should be 'test content'
-        String content = new String( Files.readAllBytes(f.toPath()) );
+        final String content = new String( Files.readAllBytes(f.toPath()) );
         assertEquals("Content doesn't match", content, "test content");
     }
 
@@ -70,11 +70,11 @@ public class FileSerializerTest {
         serializer.remove("def456");
 
         // file should exist
-        File f = path.listFiles()[0];
+        final File f = path.listFiles()[0];
         assertTrue("Filename doesn't match", f.getName().startsWith("def456"));
 
         // content should be ''
-        String content = new String( Files.readAllBytes(f.toPath()) );
+        final String content = new String( Files.readAllBytes(f.toPath()) );
         assertEquals("Content doesn't match", content, "");
     }
 }

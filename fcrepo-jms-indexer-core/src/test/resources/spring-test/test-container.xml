@@ -13,5 +13,6 @@
   </bean>
 
   <import resource="classpath:/spring-test/indexer-core.xml"/>
+  <import resource="classpath:/spring-test/indexer-events.xml"/>
 
 </beans>

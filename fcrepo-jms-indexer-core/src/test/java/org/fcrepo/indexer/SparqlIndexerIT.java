@@ -41,6 +41,7 @@ public class SparqlIndexerIT {
 
     @Inject
     private SparqlIndexer sparqlIndexer;
+
     private static final String fooN3 =
         "@prefix fcrepo: <http://fcrepo.org/repository#> .\n" +
         "@prefix fedora: <http://fcrepo.org/repository/rest-api#> .\n" +
@@ -85,10 +86,10 @@ public class SparqlIndexerIT {
                 sparqlIndexer.countTriples("foo") == 0 );
     }
 
-    private void waitForTriples(int expectTriples) throws InterruptedException {
+    private void waitForTriples(final int expectTriples) throws InterruptedException {
         long elapsed = 0;
-        long restingWait = 500;
-        long maxWait = 15000; // 15 seconds
+        final long restingWait = 500;
+        final long maxWait = 15000; // 15 seconds
 
         int count = sparqlIndexer.countTriples(serverAddress + "foo");
         while ((count != expectTriples) && (elapsed < maxWait)) {

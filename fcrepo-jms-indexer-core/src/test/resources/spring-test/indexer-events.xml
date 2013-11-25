@@ -14,6 +14,10 @@
       as well as som utility gear. -->
 
   <context:annotation-config/>
+  
+  <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    <property name="brokerURL" value="vm://localhost"/>
+  </bean>
 
   <!-- ActiveMQ queue to listen for events -->
   <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic">
