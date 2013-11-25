@@ -16,37 +16,43 @@
 
 package org.fcrepo.indexer;
 
+import static org.apache.commons.io.IOUtils.write;
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 
 /**
  * Basic Indexer implementation that writes object content to timestamped files
  * on disk.
  *
+ * @author ajs6f
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @date Aug 19, 2013
 **/
 public class FileSerializer implements Indexer {
 
-    private final Logger logger = LoggerFactory.getLogger(FileSerializer.class);
+    private static final Logger LOGGER = getLogger(FileSerializer.class);
 
-    private static SimpleDateFormat fmt
-        = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static SimpleDateFormat fmt =
+        new SimpleDateFormat("yyyyMMddHHmmss");
+
     private File path;
 
     /**
      * Set path to write files.
     **/
-    public void setPath( String pathName ) {
+    public void setPath( final String pathName ) {
         this.path = new File(pathName);
         if (!this.path.exists()) {
             this.path.mkdirs();
@@ -61,31 +67,45 @@ public class FileSerializer implements Indexer {
 
     /**
      * Create or update an index entry for the object.
+     * @return
     **/
-    public void update(String pid, String content) throws IOException {
+    @Override
+    public ListenableFuture<File> update(final String pid, final String content) throws IOException {
         // timestamped filename
-        String fn = pid + "." + fmt.format( new Date() );
-        if ( fn.indexOf('/') != -1 ) {
-            fn = StringUtils.substringAfterLast(fn, "/");
+        String fn = pid + "." + fmt.format(new Date());
+        if (fn.indexOf('/') != -1) {
+            fn = substringAfterLast(fn, "/");
         }
+        final File file = new File(path, fn);
+        return run(ListenableFutureTask.create(new Callable<File>() {
 
-        // write content to disk
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter( new File(path,fn) );
-            IOUtils.write( content, fw );
-        } catch (IOException ex) {
-            logger.warn("Error writing file", ex);
-        } finally {
-            fw.close();
-        }
+            @Override
+            public File call() {
+                // write content to disk
+                try (Writer fw = new FileWriter(file)) {
+                    write(content, fw);
+                } catch (final IOException ex) {
+                    LOGGER.error("Error writing file", ex);
+                }
+                return file;
+            }
+        }));
+
     }
+
 
     /**
      * Remove the object from the index.
     **/
-    public void remove(String pid) throws IOException {
+    @Override
+    public ListenableFuture<File> remove(final String pid) throws IOException {
         // empty update
-        update(pid,"");
+        return update(pid,"");
+    }
+
+    private static <T> ListenableFuture<T> run(
+        final ListenableFutureTask<T> task) {
+        task.run();
+        return task;
     }
 }

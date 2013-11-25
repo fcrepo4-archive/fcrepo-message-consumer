@@ -16,10 +16,13 @@
 
 package org.fcrepo.indexer;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Iterator;
-
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
@@ -35,7 +38,6 @@ import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -45,39 +47,31 @@ import org.slf4j.LoggerFactory;
  *         Date: Aug 19, 2013
 **/
 public class SparqlIndexer implements Indexer {
-    private String prefix;
+
     private String queryBase;
     private String updateBase;
     private boolean formUpdates = false;
 
-    private final Logger logger = LoggerFactory.getLogger(SparqlIndexer.class);
-
-    /**
-     * Set URI prefix for building triplestore subjects.  The fedora PID will
-     * be appended to this prefix.
-    **/
-    public void setPrefix( String s ) {
-        this.prefix = s;
-    }
+    private static final Logger LOGGER = getLogger(SparqlIndexer.class);
 
     /**
      * Set whether to use SPARQL Update or form updates.
     **/
-    public void setFormUpdates( boolean b ) {
+    public void setFormUpdates( final boolean b ) {
         this.formUpdates = b;
     }
 
     /**
      * Set base URL for SPARQL Query requests.
     **/
-    public void setQueryBase( String url ) {
+    public void setQueryBase( final String url ) {
         this.queryBase = url;
     }
 
     /**
      * Set base URL for SPARQL Update requests.
     **/
-    public void setUpdateBase( String url ) {
+    public void setUpdateBase( final String url ) {
         this.updateBase = url;
     }
 
@@ -86,45 +80,49 @@ public class SparqlIndexer implements Indexer {
      * the provided content.
      * @content RDF in N3 format.
     **/
-    public void update( String pid, String content ) {
+    @Override
+    public ListenableFuture<Void> update( final String pid, final String content ) {
+        LOGGER.debug("Received update for: {}", pid);
         // first remove old data
         remove(pid);
 
         // parse content into a model
-        Model model = ModelFactory.createDefaultModel();
+        final Model model = ModelFactory.createDefaultModel();
         model.read( new StringReader(content), null, "N3");
 
         // build a list of triples
-        StmtIterator triples = model.listStatements();
-        QuadDataAcc add = new QuadDataAcc();
+        final StmtIterator triples = model.listStatements();
+        final QuadDataAcc add = new QuadDataAcc();
         while ( triples.hasNext() ) {
             add.addTriple( triples.nextStatement().asTriple() );
         }
 
         // send update to server
-        logger.debug("Sending update request for pid: {}", pid);
-        exec( new UpdateRequest(new UpdateDataInsert(add)) );
+        LOGGER.debug("Sending update request for pid: {}", pid);
+        return exec(new UpdateRequest(new UpdateDataInsert(add)));
     }
 
     /**
      * Perform a DESCRIBE query for triples about the Fedora object and remove
      * all triples with subjects starting with the same subject.
     **/
-    public void remove( String subject ) {
+    @Override
+    public ListenableFuture<Void> remove( final String subject ) {
 
+        LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
-        String describeQuery = "DESCRIBE <" + subject + ">";
-        QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
-        Iterator<Triple> results = qexec.execDescribeTriples();
+        final String describeQuery = "DESCRIBE <" + subject + ">";
+        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
-        HashSet<String> uris = new HashSet<String>();
+        final HashSet<String> uris = new HashSet<String>();
         while ( results.hasNext() ) {
-            Triple triple = results.next();
+            final Triple triple = results.next();
 
             // add subject uri, if it is part of this object
             if ( triple.getSubject().isURI() ) {
-                String uri = ((Node_URI)triple.getSubject()).getURI();
+                final String uri = ((Node_URI)triple.getSubject()).getURI();
                 if ( matches(subject, uri) ) {
                     uris.add(uri);
                 }
@@ -132,7 +130,7 @@ public class SparqlIndexer implements Indexer {
 
             // add object uri, if it is part of this object
             if ( triple.getObject().isURI() ) {
-                String uri = ((Node_URI)triple.getObject()).getURI();
+                final String uri = ((Node_URI)triple.getObject()).getURI();
                 if ( matches(subject, uri) ) {
                     uris.add(uri);
                 }
@@ -141,15 +139,15 @@ public class SparqlIndexer implements Indexer {
         qexec.close();
 
         // build update commands
-        UpdateRequest del = new UpdateRequest();
-        for ( String uri : uris ) {
-            String cmd = "delete where { <" + uri + "> ?p ?o }";
-            logger.debug(cmd);
+        final UpdateRequest del = new UpdateRequest();
+        for ( final String uri : uris ) {
+            final String cmd = "delete where { <" + uri + "> ?p ?o }";
+            LOGGER.debug(cmd);
             del.add( cmd );
         }
 
         // send updates
-        exec( del );
+        return exec(del);
     }
 
     /**
@@ -157,33 +155,41 @@ public class SparqlIndexer implements Indexer {
      * with uri2, plus an option suffix starting with a hash (#) or slash (/)
      * suffix.
     **/
-    private boolean matches( String uri1, String uri2 ) {
+    private boolean matches( final String uri1, final String uri2 ) {
         return uri1.equals(uri2) || uri1.startsWith(uri2 + "/")
             || uri1.startsWith(uri2 + "#");
     }
 
-    private void exec( UpdateRequest update ) {
-        if ( formUpdates ) {
-            // form updates
-            UpdateProcessor proc = UpdateExecutionFactory.createRemoteForm(
-                update, updateBase );
-            proc.execute();
-        } else {
-            // normal SPARQL updates
-            UpdateProcessRemote proc = new UpdateProcessRemote(
-                update, updateBase, Context.emptyContext );
-            proc.execute();
-        }
+    private ListenableFuture<Void> exec(final UpdateRequest update) {
+        return ListenableFutureTask.create(new Runnable() {
+
+            @Override
+            public void run() {
+                if (formUpdates) {
+                    // form updates
+                    final UpdateProcessor proc =
+                        UpdateExecutionFactory.createRemoteForm(update,
+                                updateBase);
+                    proc.execute();
+                } else {
+                    // normal SPARQL updates
+                    final UpdateProcessRemote proc =
+                        new UpdateProcessRemote(update, updateBase,
+                                Context.emptyContext);
+                    proc.execute();
+                }
+            }
+        }, null);
     }
 
     /**
      * Count the number of triples in the triplestore for a Fedora object.
     **/
-    public int countTriples(String pid) {
+    public int countTriples(final String pid) {
         // perform describe query
-        String describeQuery = "DESCRIBE <" + pid + ">";
-        QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
-        Iterator<Triple> results = qexec.execDescribeTriples();
+        final String describeQuery = "DESCRIBE <" + pid + ">";
+        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // count triples
         int triples = 0;

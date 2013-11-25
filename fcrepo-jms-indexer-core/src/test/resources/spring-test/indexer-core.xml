@@ -9,8 +9,6 @@
 
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
-    <!-- base URL for triplestore subjects, PID will be appended -->
-    <property name="prefix" value="http://localhost:${test.port:8080}"/>
 
     <!-- fuseki -->
     <property name="queryBase" value="http://localhost:${test.fuseki.port:3030}/test/query"/>
@@ -19,30 +17,18 @@
       <value type="java.lang.Boolean">false</value>
     </property>
 
-    <!-- sesame -->
-    <!--
-    <property name="queryBase" value="http://localhost:8081/openrdf-sesame/repositories/test"/>
-    <property name="updateBase" value="http://localhost:8081/openrdf-sesame/repositories/test/statements"/>
-    <property name="formUpdates">
-      <value type="java.lang.Boolean">true</value>
-    </property>
-    -->
   </bean>
 
+  <!-- test indexer -->
+  <bean id="testIndexer" class="org.fcrepo.indexer.TestIndexer"/>
+  
   <!-- file serializer -->
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
-  
+
    <!-- Solr Indexer START-->
   <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer"/>
-
-  <!--Standardalone Server  -->
-  <!--
-  <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
-    <constructor-arg index="0" value="http://localhost:1992/solr/" />
-  </bean>
-  -->
 
     <!--Embedded Server  -->
   <bean id="multiCore" class="org.apache.solr.core.CoreContainer">
@@ -60,7 +46,8 @@
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
-      <set>
+      <set value-type="org.fcrepo.indexer.Indexer">
+        <ref bean="testIndexer"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
       </set>
