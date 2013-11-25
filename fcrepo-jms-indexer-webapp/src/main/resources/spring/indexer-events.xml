@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:c="http://www.springframework.org/schema/c"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-       ">
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
   <context:property-placeholder/>
 
-  <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="failover:tcp://${jms.host:localhost}:${jms.port:61616}"/>
-  </bean>
+  <bean id="connectionFactory"
+    class="org.apache.activemq.ActiveMQConnectionFactory"
+    p:brokerUrl="failover:vm://localhost"/>
+
+  <!-- the internal broker -->
+  <amq:broker id="internalBroker" persistent="false">
+    <amq:destinations>
+      <amq:topic name="fedora"/>
+    </amq:destinations>
+    <amq:transportConnectors>
+      <amq:transportConnector uri="vm://localhost"/>
+    </amq:transportConnectors>
+    <amq:networkConnectors>
+      <amq:networkConnector
+        uri="static:(failover:(tcp://${org.fcrepo.jms.brokerHost:0.0.0.0}:${org.fcrepo.jms.brokerPort:61617}))"
+      />
+    </amq:networkConnectors>
+  </amq:broker>
 
   <!-- ActiveMQ queue to listen for events -->
-  <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic">
-    <constructor-arg value="fedora" />
-  </bean>
+  <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic"
+    c:name="fedora"/>
 
   <!-- and this is the message listener container -->
-  <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
-    <property name="connectionFactory" ref="connectionFactory"/>
-    <property name="destination" ref="destination"/>
-    <property name="messageListener" ref="indexerGroup" />
-  </bean>
+  <bean id="jmsContainer"
+    class="org.springframework.jms.listener.DefaultMessageListenerContainer"
+    p:connectionFactory-ref="connectionFactory" p:destination-ref="destination"
+    p:messageListener-ref="indexerGroup"/>
 
 </beans>
