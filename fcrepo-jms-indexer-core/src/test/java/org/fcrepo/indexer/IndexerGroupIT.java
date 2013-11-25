@@ -120,7 +120,7 @@ public class IndexerGroupIT {
         // file should exist and contain data
         File[] files = fileSerializerPath.listFiles(filter);
         assertNotNull(files);
-        assertTrue("There should be 1 file", files.length == 1);
+        assertTrue("There should be at least 1 file", files.length > 0);
 
         File f = files[0];
         assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
@@ -192,7 +192,7 @@ public class IndexerGroupIT {
         // file should exist and contain data
         File[] files = fileSerializerPath.listFiles(filter);
         assertNotNull(files);
-        assertTrue("There should be 1 file", files.length == 1);
+        assertTrue("There should be at least 1 file", files.length > 0);
 
         File f = files[0];
         assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
