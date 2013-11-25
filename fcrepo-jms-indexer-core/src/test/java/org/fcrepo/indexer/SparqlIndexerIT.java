@@ -90,10 +90,10 @@ public class SparqlIndexerIT {
         long restingWait = 500;
         long maxWait = 15000; // 15 seconds
 
-        int count = sparqlIndexer.countTriples("foo");
+        int count = sparqlIndexer.countTriples(serverAddress + "foo");
         while ((count != expectTriples) && (elapsed < maxWait)) {
             Thread.sleep(restingWait);
-            count = sparqlIndexer.countTriples("foo");
+            count = sparqlIndexer.countTriples(serverAddress + "foo");
 
             elapsed += restingWait;
         }
