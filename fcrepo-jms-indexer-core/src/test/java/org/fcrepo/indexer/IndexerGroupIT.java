@@ -109,7 +109,8 @@ public class IndexerGroupIT {
 
     private void doIndexerGroupUpdateTest(final String pid) throws Exception {
         // create dummy object
-        final HttpPost method = new HttpPost(serverAddress + pid);
+        final String uri = serverAddress + pid;
+        final HttpPost method = new HttpPost(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(201, response.getStatusLine().getStatusCode());
 
@@ -126,24 +127,25 @@ public class IndexerGroupIT {
                    f.getName().startsWith(pid));
         assertTrue("File size too small: " + f.length(), f.length() > 500);
 
-        final int expectedTriples = 4;
-        waitForTriples(expectedTriples, pid);
+        final int expectedTriples = 6;
+        waitForTriples(expectedTriples, uri);
         
         // triples should exist in the triplestore
         assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(serverAddress + pid) == expectedTriples);
+                sparqlIndexer.countTriples(uri) == expectedTriples);
     }    
 
     @Test
     public void indexerGroupDeleteTest() throws Exception {
         // create and verify dummy object
         final String pid = "test_pid_5";
+        final String uri = serverAddress + pid;
         doIndexerGroupUpdateTest(pid);
 
         Thread.sleep(1200); // Let the creation event persist
 
         // delete dummy object
-        final HttpDelete method = new HttpDelete(serverAddress + pid);
+        final HttpDelete method = new HttpDelete(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(204, response.getStatusLine().getStatusCode());
         
@@ -171,21 +173,21 @@ public class IndexerGroupIT {
         assertTrue("File size should be 0: " + f2.length(), f2.length() == 0);
 
         final int expectedTriples = 0;
-        waitForTriples(expectedTriples, pid);
+        waitForTriples(expectedTriples, uri);
         
         // triples should not exist in the triplestore
         assertTrue("Triples should not exist",
-                sparqlIndexer.countTriples(serverAddress + pid) == expectedTriples);
+                sparqlIndexer.countTriples(uri) == expectedTriples);
     }    
     
     @Test
     public void indexerGroupUpdateTestingFullPath() throws Exception {
     	  // create update message and send to indexer group
-        final String pid = "test_pid_10";
-        final String SUFFIX = "a/b/c/";        
+    	final String pid = "test_pid_10";
+        final String uri = serverAddress + "a/b/c/" + pid;
        
         // create dummy object
-        final HttpPost method = new HttpPost(serverAddress + SUFFIX +  pid);
+        final HttpPost method = new HttpPost(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(201, response.getStatusLine().getStatusCode());
 
@@ -202,12 +204,12 @@ public class IndexerGroupIT {
                    f.getName().startsWith(pid));
         assertTrue("File size too small: " + f.length(), f.length() > 500);
         
-        final int expectedTriples = 4;
-        waitForTriples(expectedTriples, SUFFIX + pid);
+        final int expectedTriples = 6;
+        waitForTriples(expectedTriples, uri);
         
         // triples should exist in the triplestore
         assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(serverAddress + SUFFIX + pid) == expectedTriples);
+                sparqlIndexer.countTriples(uri) == expectedTriples);
     }
     	
     private void waitForFiles(int expectedFiles, FilenameFilter filter) throws InterruptedException {
