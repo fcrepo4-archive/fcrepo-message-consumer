@@ -127,12 +127,10 @@ public class IndexerGroupIT {
                    f.getName().startsWith(pid));
         assertTrue("File size too small: " + f.length(), f.length() > 500);
 
-        final int expectedTriples = 6;
-        waitForTriples(expectedTriples, uri);
+        waitForTriples(uri);
         
         // triples should exist in the triplestore
-        assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(uri) == expectedTriples);
+        assertTrue("Triples should exist", sparqlIndexer.countTriples(uri) > 0);
     }    
 
     @Test
@@ -172,12 +170,9 @@ public class IndexerGroupIT {
                 f2.getName().startsWith(pid) );
         assertTrue("File size should be 0: " + f2.length(), f2.length() == 0);
 
-        final int expectedTriples = 0;
-        waitForTriples(expectedTriples, uri);
-        
         // triples should not exist in the triplestore
         assertTrue("Triples should not exist",
-                sparqlIndexer.countTriples(uri) == expectedTriples);
+                sparqlIndexer.countTriples(uri) == 0);
     }    
     
     @Test
@@ -204,12 +199,10 @@ public class IndexerGroupIT {
                    f.getName().startsWith(pid));
         assertTrue("File size too small: " + f.length(), f.length() > 500);
         
-        final int expectedTriples = 6;
-        waitForTriples(expectedTriples, uri);
+        waitForTriples(uri);
         
         // triples should exist in the triplestore
-        assertTrue("Triples should exist",
-                sparqlIndexer.countTriples(uri) == expectedTriples);
+        assertTrue("Triples should exist", sparqlIndexer.countTriples(uri) > 0);
     }
     	
     private void waitForFiles(int expectedFiles, FilenameFilter filter) throws InterruptedException {
@@ -226,13 +219,13 @@ public class IndexerGroupIT {
         }
     }
 
-    private void waitForTriples(int expectTriples, String pid) throws InterruptedException {
+    private void waitForTriples(String pid) throws InterruptedException {
         long elapsed = 0;
         long restingWait = 1500;
         long maxWait = 15000; // 15 seconds
 
         int count = sparqlIndexer.countTriples(pid);
-        while ((count != expectTriples) && (elapsed < maxWait)) {
+        while ((count == 0) && (elapsed < maxWait)) {
             Thread.sleep(restingWait);
             count = sparqlIndexer.countTriples(pid);
 
