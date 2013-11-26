@@ -72,6 +72,7 @@ public class IndexerGroup implements MessageListener {
      * Default constructor.
      **/
     public IndexerGroup() {
+        LOGGER.debug("Creating IndexerGroup: {}", this);
         final PoolingClientConnectionManager p = new PoolingClientConnectionManager();
         p.setDefaultMaxPerRoute(5);
         p.closeIdleConnections(3, SECONDS);

@@ -97,14 +97,14 @@ public class IndexerGroupIT implements Listener {
         LOGGER.debug("Created object at: {}", pid);
 
         synchronized (indexerGroup) {
-            while (!updates.contains(pid)) {
+            while (!updates.contains(uri)) {
                 LOGGER.debug("Waiting for next notification from IndexerGroup...");
                 LOGGER.debug("Updates currently received for pids: {}", updates);
                 indexerGroup.wait(1000);
             }
         }
         assertTrue("Test indexer should have received an update message!", testIndexer
-                .receivedUpdate(pid));
+                .receivedUpdate(uri));
 
     }
 

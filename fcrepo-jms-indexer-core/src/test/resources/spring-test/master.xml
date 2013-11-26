@@ -10,7 +10,5 @@
     <import resource="classpath:/spring-test/rest.xml"/>
     <import resource="classpath:/spring-test/eventing.xml"/>
     <import resource="classpath:/spring-test/jms.xml"/>
-    <import resource="classpath:/spring-test/indexer-core.xml"/>
-    <import resource="classpath:/spring-test/indexer-events.xml"/>
     
 </beans>
