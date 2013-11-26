@@ -16,18 +16,15 @@
 
 package org.fcrepo.indexer;
 
-import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.apache.abdera.model.Text.Type.TEXT;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.StringWriter;
-import java.util.Arrays;
+import javax.jms.Message;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -36,20 +33,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.iq80.leveldb.util.FileUtils;
+import org.fcrepo.indexer.IndexerGroup.Listener;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.jms.Message;
-import javax.jms.TextMessage;
 import javax.inject.Inject;
-
-import org.apache.abdera.Abdera;
-import org.apache.abdera.model.Entry;
 
 /**
  * @author Esmé Cowles
@@ -57,10 +50,11 @@ import org.apache.abdera.model.Entry;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
-public class IndexerGroupIT {
+public class IndexerGroupIT implements Listener {
 
-    private static final int SERVER_PORT = Integer.parseInt(System
-            .getProperty("test.port", "8080"));
+    private static final Logger LOGGER = getLogger(IndexerGroupIT.class);
+
+    private static final int SERVER_PORT = parseInt(getProperty("test.port", "8080"));
 
     private static final String serverAddress = "http://localhost:"
             + SERVER_PORT + "/";
@@ -70,43 +64,27 @@ public class IndexerGroupIT {
 
     private static HttpClient client;
 
-    @Inject
+    @Autowired
     private IndexerGroup indexerGroup;
-    @Inject
-    private SparqlIndexer sparqlIndexer;
-    @Inject
-    private FileSerializer fileSerializer;
+
     @Inject
     private TestIndexer testIndexer;
-    private File fileSerializerPath;
 
-    private static TextMessage getMessage(String operation,
-                                          String pid) throws Exception {
-        Abdera abdera = new Abdera();
-
-        Entry entry = abdera.newEntry();
-        entry.setTitle(operation, TEXT).setBaseUri(serverAddress);
-        entry.addCategory("xsd:string", pid, "fedora-types:pid");
-        entry.addCategory("xsd:string", "/" + pid, "path");
-        entry.setContent("contentds");
-        StringWriter writer = new StringWriter();
-        entry.writeTo(writer);
-
-        String atomMessage = writer.toString();
-
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getText()).thenReturn(atomMessage);
-        return msg;
-    }
+    private List<Message> messages = new ArrayList<>();
+    private List<String> updates = new ArrayList<>();
+    private List<String> removals = new ArrayList<>();
 
     @Before
     public void setup() {
         client = new DefaultHttpClient(connectionManager);
-        fileSerializerPath = new File(fileSerializer.getPath());
     }
 
     @Test
-    public void indexerGroupUpdateTest() throws Exception {
+    public void testIndexerGroupUpdate() throws Exception {
+        LOGGER.debug("Adding a listener {} to the IndexerGroup under test.",
+                this);
+        indexerGroup.addListener(this);
+
         doIndexerGroupUpdateTest("test_pid_0");
     }
 
@@ -116,28 +94,27 @@ public class IndexerGroupIT {
         final HttpPost method = new HttpPost(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(201, response.getStatusLine().getStatusCode());
+        LOGGER.debug("Created object at: {}", pid);
 
-        FilenameFilter filter = prefixFileFilter(pid);
-        waitForFiles(1, filter); // wait for message to be processed
+        synchronized (indexerGroup) {
+            while (!updates.contains(pid)) {
+                LOGGER.debug("Waiting for next notification from IndexerGroup...");
+                LOGGER.debug("Updates currently received for pids: {}", updates);
+                indexerGroup.wait(1000);
+            }
+        }
+        assertTrue("Test indexer should have received an update message!", testIndexer
+                .receivedUpdate(pid));
 
-        // file should exist and contain data
-        File[] files = fileSerializerPath.listFiles(filter);
-        assertNotNull(files);
-        assertTrue("There should be at least 1 file", files.length > 0);
-
-        File f = files[0];
-        assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
-                   f.getName().startsWith(pid));
-        assertTrue("File size too small: " + f.length(), f.length() > 500);
-
-        waitForTriples(uri);
-        
-        // triples should exist in the triplestore
-        assertTrue("Triples should exist", sparqlIndexer.countTriples(uri) > 0);
-    }    
+    }
 
     @Test
-    public void indexerGroupDeleteTest() throws Exception {
+    public void testIndexerGroupDelete() throws Exception {
+
+        LOGGER.debug("Adding a listener {} to the IndexerGroup under test.",
+                this);
+        indexerGroup.addListener(this);
+
         // create and verify dummy object
         final String pid = "test_pid_5";
         final String uri = serverAddress + pid;
@@ -149,133 +126,24 @@ public class IndexerGroupIT {
         final HttpDelete method = new HttpDelete(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(204, response.getStatusLine().getStatusCode());
-        
-        // create update message and send to indexer group
-        Message deleteMessage = getMessage("purgeObject", pid);
-        indexerGroup.onMessage( deleteMessage );
 
-        FilenameFilter filter = prefixFileFilter(pid);
-        waitForFiles(2, filter); // wait for message to be processed
+        assertTrue("Test indexer should have received delete message!", testIndexer
+                .receivedRemove(pid));
 
-        // two files should exist: one empty and one with data
-        File[] files = fileSerializerPath.listFiles(filter);
-        
-        assertNotNull(files);
-        assertTrue("Should have multiple files", files.length > 1);
-
-        Arrays.sort(files); // sort files by filename (i.e., creation time)
-        File f1 = files[0];
-        File f2 = files[files.length - 1];
-        assertTrue("Filename doesn't match: " + f1.getAbsolutePath(),
-                f1.getName().startsWith(pid) );
-        assertTrue("File size too small: " + f1.length(), f1.length() > 500);
-        assertTrue("Filename doesn't match: " + f2.getAbsolutePath(),
-                f2.getName().startsWith(pid) );
-        assertTrue("File size should be 0: " + f2.length(), f2.length() == 0);
-
-        // triples should not exist in the triplestore
-        assertTrue("Triples should not exist",
-                sparqlIndexer.countTriples(uri) == 0);
-    }    
-    
-    @Test
-    public void indexerGroupUpdateTestingFullPath() throws Exception {
-    	  // create update message and send to indexer group
-    	final String pid = "test_pid_10";
-        final String uri = serverAddress + "a/b/c/" + pid;
-       
-        // create dummy object
-        final HttpPost method = new HttpPost(uri);
-        final HttpResponse response = client.execute(method);
-        assertEquals(201, response.getStatusLine().getStatusCode());
-
-        FilenameFilter filter = prefixFileFilter(pid);
-        waitForFiles(1, filter); // wait for message to be processed
-
-        // file should exist and contain data
-        File[] files = fileSerializerPath.listFiles(filter);
-        assertNotNull(files);
-        assertTrue("There should be at least 1 file", files.length > 0);
-
-        File f = files[0];
-        assertTrue("Filename doesn't match: " + f.getAbsolutePath(),
-                   f.getName().startsWith(pid));
-        assertTrue("File size too small: " + f.length(), f.length() > 500);
-        
-        waitForTriples(uri);
-        
-        // triples should exist in the triplestore
-        assertTrue("Triples should exist", sparqlIndexer.countTriples(uri) > 0);
-    }
-    	
-    private void waitForFiles(int expectedFiles, FilenameFilter filter) throws InterruptedException {
-        long elapsed = 0;
-        long restingWait = 500;
-        long maxWait = 15000; // 15 seconds
-
-        List<File> files = FileUtils.listFiles(fileSerializerPath, filter);
-        while (expectedFiles > files.size() && (elapsed < maxWait)) {
-            Thread.sleep(restingWait);
-            files = FileUtils.listFiles(fileSerializerPath, filter);
-
-            elapsed += restingWait;
-        }
     }
 
-    private void waitForTriples(String pid) throws InterruptedException {
-        long elapsed = 0;
-        long restingWait = 1500;
-        long maxWait = 15000; // 15 seconds
+    @Override
+    public void notifyUpdate(final String pid, final Message msg) {
+        updates.add(pid);
+        messages.add(msg);
 
-        int count = sparqlIndexer.countTriples(pid);
-        while ((count == 0) && (elapsed < maxWait)) {
-            Thread.sleep(restingWait);
-            count = sparqlIndexer.countTriples(pid);
-
-            elapsed += restingWait;
-        }
     }
 
-    @Ignore
-    @Test
-    public void testIndexerUpdate() throws Exception {
-        // create dummy object
-        final String uri = serverAddress + "foo";
-        final HttpPost method = new HttpPost(uri);
-        final HttpResponse response = client.execute(method);
-        assertEquals(201, response.getStatusLine().getStatusCode());
+    @Override
+    public void notifyRemove(final String pid, final Message msg) {
+        removals.add(pid);
+        messages.add(msg);
 
-        // test indexer should receive update event
-        waitForUpdate(uri);
-        assertTrue("Test indexer should receive update message",testIndexer.receivedUpdate(uri));
-    }
-
-    @Ignore
-    @Test
-    public void testIndexerDelete() throws Exception {
-        // create dummy object
-        testIndexerUpdate();
-
-        final String uri = serverAddress + "foo";
-        final HttpDelete method = new HttpDelete(uri);
-        final HttpResponse response = client.execute(method);
-        assertEquals(204, response.getStatusLine().getStatusCode());
-
-        // test indexer should receive update event
-        waitForRemove(uri);
-        assertTrue("Test indexer should receive remove message",testIndexer.receivedRemove(uri));
-    }
-
-    private void waitForRemove( String uri ) throws Exception {
-        for ( int n = 0; n < 10 && !testIndexer.receivedRemove(uri); n++ ) {
-            Thread.sleep(1000);
-        }
-    }
-
-    private void waitForUpdate( String uri ) throws Exception {
-        for ( int n = 0; n < 10 && !testIndexer.receivedUpdate(uri); n++ ) {
-            Thread.sleep(1000);
-        }
     }
 
 }

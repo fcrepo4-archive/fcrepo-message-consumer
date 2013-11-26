@@ -15,7 +15,10 @@
  */
 package org.fcrepo.indexer;
 
+import static com.google.common.base.Throwables.propagate;
+
 import java.io.IOException;
+import java.util.concurrent.Callable;
 
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -24,6 +27,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 
 /**
  * A Solr Indexer (stub) implementation that adds some basic information to
@@ -36,7 +42,7 @@ public class SolrIndexer implements Indexer {
 
     private final SolrServer server;
 
-    private final Logger logger = LoggerFactory.getLogger(SolrIndexer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SolrIndexer.class);
 
     /**
      * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
@@ -47,45 +53,75 @@ public class SolrIndexer implements Indexer {
     }
 
     @Override
-    public void update(final String pid, final String doc) {
-        try {
-            final SolrInputDocument inputDoc = new SolrInputDocument();
-            inputDoc.addField("id", pid);
-            inputDoc.addField("content", doc);
-            final UpdateResponse resp = server.add(inputDoc);
-            if (resp.getStatus() == 0) {
-                logger.debug("update request was successful for pid: {}", pid);
-                server.commit();
-            } else {
-                logger.warn(
-                        "update request has error, code: {} for pid: {}",
-                        resp.getStatus(), pid);
-            }
-        } catch (final SolrServerException | IOException e) {
-            logger.warn("Update Exception: {}", e);
-        }
+    public ListenableFuture<UpdateResponse> update(final String pid,
+            final String doc) {
+        LOGGER.debug("Received request for update to: {}", pid);
+        return run(ListenableFutureTask.create(new Callable<UpdateResponse>() {
 
+            @Override
+            public UpdateResponse call() throws Exception {
+                try {
+                    final SolrInputDocument inputDoc = new SolrInputDocument();
+                    inputDoc.addField("id", pid);
+                    inputDoc.addField("content", doc);
+                    final UpdateResponse resp = server.add(inputDoc);
+                    if (resp.getStatus() == 0) {
+                        LOGGER.debug(
+                                "Update request was successful for: {}",
+                                pid);
+                        server.commit();
+                    } else {
+                        LOGGER.error(
+                                "update request has error, code: {} for pid: {}",
+                                resp.getStatus(), pid);
+                    }
+                    return resp;
+                } catch (final SolrServerException | IOException e) {
+                    LOGGER.error("Update Exception: {}", e);
+                    throw propagate(e);
+                }
+            }
+        }));
     }
 
     /**
      * (non-Javadoc)
+     * @return
      * @see org.fcrepo.indexer.Indexer#remove(java.lang.String)
      */
     @Override
-    public void remove(final String pid) throws IOException {
-        try {
-            final UpdateResponse resp = server.deleteById(pid);
-            if (resp.getStatus() == 0) {
-                logger.debug("remove request was successful for pid: {}", pid);
-                server.commit();
-            } else {
-                logger.warn("remove request has error, code: {} for pid: {}",
-                        resp.getStatus(), pid);
-            }
-        } catch (final SolrServerException | IOException e) {
-            logger.warn("Delete Exception: {}", e);
-        }
+    public ListenableFuture<UpdateResponse> remove(final String pid)
+        throws IOException {
+        LOGGER.debug("Received request for removal of: {}", pid);
+        return run(ListenableFutureTask.create(new Callable<UpdateResponse>() {
 
+            @Override
+            public UpdateResponse call() throws Exception {
+                try {
+                    final UpdateResponse resp = server.deleteById(pid);
+                    if (resp.getStatus() == 0) {
+                        LOGGER.debug(
+                                "Remove request was successful for: {}",
+                                pid);
+                        server.commit();
+
+                    } else {
+                        LOGGER.error(
+                                "Remove request has error, code: {} for pid: {}",
+                                resp.getStatus(), pid);
+                    }
+                    return resp;
+                } catch (final SolrServerException | IOException e) {
+                    LOGGER.error("Delete Exception: {}", e);
+                    throw propagate(e);
+                }
+            }
+        }));
     }
 
+    private static <T> ListenableFuture<T> run(
+        final ListenableFutureTask<T> task) {
+        task.run();
+        return task;
+    }
 }

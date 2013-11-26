@@ -18,6 +18,8 @@ package org.fcrepo.indexer;
 
 import java.io.IOException;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 /**
  * Main interface for individual indexers to implement.  Each type of
  * destination (Solr, triplestore, files, etc.) should have its own
@@ -27,13 +29,14 @@ import java.io.IOException;
  *         Date: Aug 19, 2013
 **/
 public interface Indexer {
+
     /**
      * Create or update an index entry for the object.
     **/
-    public void update(String pid, String doc) throws IOException;
+    public ListenableFuture<?> update(final String pid, final String doc) throws IOException;
 
     /**
      * Remove the object from the index.
     **/
-    public void remove(String pid) throws IOException;
+    public ListenableFuture<?> remove(final String pid) throws IOException;
 }
