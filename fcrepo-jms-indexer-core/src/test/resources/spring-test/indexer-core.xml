@@ -29,11 +29,14 @@
     -->
   </bean>
 
+  <!-- test indexer -->
+  <bean id="testIndexer" class="org.fcrepo.indexer.TestIndexer"/>
+  
   <!-- file serializer -->
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="./target/test-classes/fileSerializer/"/>
   </bean>
-  
+
    <!-- Solr Indexer START-->
   <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer"/>
 
@@ -61,6 +64,7 @@
     <property name="repositoryURL" value="http://localhost:${test.port:8080}" />
     <property name="indexers">
       <set>
+        <ref bean="testIndexer"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
       </set>

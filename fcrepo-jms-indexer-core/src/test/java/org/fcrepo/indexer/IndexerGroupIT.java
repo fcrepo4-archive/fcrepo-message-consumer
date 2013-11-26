@@ -38,6 +38,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.iq80.leveldb.util.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -75,6 +76,8 @@ public class IndexerGroupIT {
     private SparqlIndexer sparqlIndexer;
     @Inject
     private FileSerializer fileSerializer;
+    @Inject
+    private TestIndexer testIndexer;
     private File fileSerializerPath;
 
     private static TextMessage getMessage(String operation,
@@ -158,11 +161,11 @@ public class IndexerGroupIT {
         File[] files = fileSerializerPath.listFiles(filter);
         
         assertNotNull(files);
-        assertEquals(2, files.length);
+        assertTrue("Should have multiple files", files.length > 1);
 
         Arrays.sort(files); // sort files by filename (i.e., creation time)
         File f1 = files[0];
-        File f2 = files[1];
+        File f2 = files[files.length - 1];
         assertTrue("Filename doesn't match: " + f1.getAbsolutePath(),
                 f1.getName().startsWith(pid) );
         assertTrue("File size too small: " + f1.length(), f1.length() > 500);
@@ -211,7 +214,7 @@ public class IndexerGroupIT {
         long maxWait = 15000; // 15 seconds
 
         List<File> files = FileUtils.listFiles(fileSerializerPath, filter);
-        while (expectedFiles != files.size() && (elapsed < maxWait)) {
+        while (expectedFiles > files.size() && (elapsed < maxWait)) {
             Thread.sleep(restingWait);
             files = FileUtils.listFiles(fileSerializerPath, filter);
 
@@ -230,6 +233,48 @@ public class IndexerGroupIT {
             count = sparqlIndexer.countTriples(pid);
 
             elapsed += restingWait;
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testIndexerUpdate() throws Exception {
+        // create dummy object
+        final String uri = serverAddress + "foo";
+        final HttpPost method = new HttpPost(uri);
+        final HttpResponse response = client.execute(method);
+        assertEquals(201, response.getStatusLine().getStatusCode());
+
+        // test indexer should receive update event
+        waitForUpdate(uri);
+        assertTrue("Test indexer should receive update message",testIndexer.receivedUpdate(uri));
+    }
+
+    @Ignore
+    @Test
+    public void testIndexerDelete() throws Exception {
+        // create dummy object
+        testIndexerUpdate();
+
+        final String uri = serverAddress + "foo";
+        final HttpDelete method = new HttpDelete(uri);
+        final HttpResponse response = client.execute(method);
+        assertEquals(204, response.getStatusLine().getStatusCode());
+
+        // test indexer should receive update event
+        waitForRemove(uri);
+        assertTrue("Test indexer should receive remove message",testIndexer.receivedRemove(uri));
+    }
+
+    private void waitForRemove( String uri ) throws Exception {
+        for ( int n = 0; n < 10 && !testIndexer.receivedRemove(uri); n++ ) {
+            Thread.sleep(1000);
+        }
+    }
+
+    private void waitForUpdate( String uri ) throws Exception {
+        for ( int n = 0; n < 10 && !testIndexer.receivedUpdate(uri); n++ ) {
+            Thread.sleep(1000);
         }
     }
 
