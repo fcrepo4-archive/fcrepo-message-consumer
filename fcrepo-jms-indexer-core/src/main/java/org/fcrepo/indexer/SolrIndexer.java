@@ -15,7 +15,15 @@
  */
 package org.fcrepo.indexer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -24,6 +32,10 @@ import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 /**
  * A Solr Indexer (stub) implementation that adds some basic information to
@@ -49,12 +61,43 @@ public class SolrIndexer implements Indexer {
     @Override
     public void update(final String pid, final String doc) {
         try {
-            final SolrInputDocument inputDoc = new SolrInputDocument();
-            inputDoc.addField("id", pid);
-            inputDoc.addField("content", doc);
-            final UpdateResponse resp = server.add(inputDoc);
+            SolrInputDocument inputDoc;
+            final Collection<SolrInputDocument> docs =
+                    new ArrayList<SolrInputDocument>();
+            // inputDoc.addField("id", pid);
+            // inputDoc.addField("content", doc);
+            final HashMap<String, ArrayList<String[]>> tokens = docParser(doc);
+            final Iterator it = tokens.entrySet().iterator();
+            while (it.hasNext()) {
+                final Map.Entry pairs = (Map.Entry) it.next();
+                final String id = (String) pairs.getKey();
+                // not index root node
+                if (id.equals("http://localhost:9090/rest/")) {
+                    break;
+                }
+                inputDoc = new SolrInputDocument();
+                inputDoc.addField("id", id);
+                final ArrayList<String[]> fields =
+                        (ArrayList<String[]>) pairs.getValue();
+                final Iterator<String[]> iterator_fields = fields.iterator();
+                while (iterator_fields.hasNext()) {
+                    final String[] field = iterator_fields.next();
+                    final String fieldname = field[0];
+                    final String fieldvalue = field[1];
+                    // TODO add selected fields
+                    if (fieldname
+                            .trim()
+                            .equals("http://fedora.info/definitions/v4/repository#mixinTypes")) {
+                        inputDoc.addField(fieldname, fieldvalue);
+                        logger.debug("pid:" + pid + "||" + fieldname);
+                    }
+                }
+                docs.add(inputDoc);
+            }
+            final UpdateResponse resp = server.add(docs);
             if (resp.getStatus() == 0) {
-                logger.debug("update request was successful for pid: {}", pid);
+                // logger.debug("update request was successful for pid: {}",
+                // pid);
                 server.commit();
             } else {
                 logger.warn(
@@ -88,4 +131,40 @@ public class SolrIndexer implements Indexer {
 
     }
 
+    /*
+     * return json
+     */
+    HashMap<String, ArrayList<String[]>> docParser(final String doc) {
+        // parse content into a model
+        final Model model = ModelFactory.createDefaultModel();
+        // final StringReader sr = new StringReader(doc);
+        final InputStream sr = new ByteArrayInputStream(doc.getBytes());
+        model.read(sr, "N3");
+        final StmtIterator iter = model.listStatements();
+        final HashMap<String, ArrayList<String[]>> docs =
+                new HashMap<String, ArrayList<String[]>>();
+        while (iter.hasNext()) {
+            final String str0 = iter.next().toString();
+            final String str = str0.substring(1, str0.length() - 1);
+            final String delims = ",";
+            final StringTokenizer st = new StringTokenizer(str, delims);
+            if (st.countTokens() == 3) {
+                // insert pid
+                final String pid = st.nextToken();
+                // insert key
+                final String fieldName = st.nextToken();
+                // insert value
+                final String fieldValue = st.nextToken();
+                final ArrayList<String[]> fields;
+                if (docs.containsKey(pid)) {
+                    fields = docs.get(pid);
+                    fields.add(new String[] {fieldName, fieldValue});
+                } else {
+                    fields = new ArrayList<String[]>();
+                }
+                docs.put(pid, fields);
+            }
+        }
+        return docs;
+    }
 }
