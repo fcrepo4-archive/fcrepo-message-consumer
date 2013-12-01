@@ -49,7 +49,7 @@
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
         <!--To enable solr Indexer, please uncomment line below  -->
-<!--         <ref bean="solrIndexer"/> -->
+        <ref bean="solrIndexer"/>
       </set>
     </property>
   </bean>

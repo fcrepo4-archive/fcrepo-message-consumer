@@ -61,37 +61,26 @@ public class SolrIndexer implements Indexer {
     @Override
     public void update(final String pid, final String doc) {
         try {
-            SolrInputDocument inputDoc;
+            final SolrInputDocument inputDoc;
             final Collection<SolrInputDocument> docs =
                     new ArrayList<SolrInputDocument>();
             // inputDoc.addField("id", pid);
             // inputDoc.addField("content", doc);
-            final HashMap<String, ArrayList<String[]>> tokens = docParser(doc);
+            final HashMap<String, String> tokens =
+                    docParser(pid, doc);
             final Iterator it = tokens.entrySet().iterator();
+            inputDoc = new SolrInputDocument();
             while (it.hasNext()) {
                 final Map.Entry pairs = (Map.Entry) it.next();
-                final String id = (String) pairs.getKey();
-                // not index root node
-                if (id.equals("http://localhost:9090/rest/")) {
-                    break;
+                final String fieldname = (String) pairs.getKey();
+                final String fieldvalue = (String) pairs.getValue();
+                // TODO add selected fields
+                if (fieldname
+                        .equals("http://fedora.info/definitions/v4/repository#mixinTypes")) {
+                    inputDoc.addField(fieldname, fieldvalue);
+                    logger.debug("pid:" + pid + "||" + fieldname);
                 }
-                inputDoc = new SolrInputDocument();
-                inputDoc.addField("id", id);
-                final ArrayList<String[]> fields =
-                        (ArrayList<String[]>) pairs.getValue();
-                final Iterator<String[]> iterator_fields = fields.iterator();
-                while (iterator_fields.hasNext()) {
-                    final String[] field = iterator_fields.next();
-                    final String fieldname = field[0];
-                    final String fieldvalue = field[1];
-                    // TODO add selected fields
-                    if (fieldname
-                            .trim()
-                            .equals("http://fedora.info/definitions/v4/repository#mixinTypes")) {
-                        inputDoc.addField(fieldname, fieldvalue);
-                        logger.debug("pid:" + pid + "||" + fieldname);
-                    }
-                }
+                inputDoc.addField("id", pid);
                 docs.add(inputDoc);
             }
             final UpdateResponse resp = server.add(docs);
@@ -134,37 +123,33 @@ public class SolrIndexer implements Indexer {
     /*
      * return json
      */
-    HashMap<String, ArrayList<String[]>> docParser(final String doc) {
+    HashMap<String, String> docParser(final String inputPid,
+            final String doc) {
         // parse content into a model
         final Model model = ModelFactory.createDefaultModel();
         // final StringReader sr = new StringReader(doc);
         final InputStream sr = new ByteArrayInputStream(doc.getBytes());
         model.read(sr, "N3");
         final StmtIterator iter = model.listStatements();
-        final HashMap<String, ArrayList<String[]>> docs =
-                new HashMap<String, ArrayList<String[]>>();
+        final HashMap<String, String> fields = new HashMap<String, String>();
         while (iter.hasNext()) {
             final String str0 = iter.next().toString();
+            // get rid of [... ]
             final String str = str0.substring(1, str0.length() - 1);
             final String delims = ",";
             final StringTokenizer st = new StringTokenizer(str, delims);
             if (st.countTokens() == 3) {
-                // insert pid
                 final String pid = st.nextToken();
-                // insert key
-                final String fieldName = st.nextToken();
-                // insert value
-                final String fieldValue = st.nextToken();
-                final ArrayList<String[]> fields;
-                if (docs.containsKey(pid)) {
-                    fields = docs.get(pid);
-                    fields.add(new String[] {fieldName, fieldValue});
-                } else {
-                    fields = new ArrayList<String[]>();
+             // check if contains pid
+                if (inputPid.equals(pid)) {
+                    // insert key
+                    final String fieldName = st.nextToken().trim();
+                    // insert value
+                    final String fieldValue = st.nextToken().trim();
+                    fields.put(fieldName, fieldValue);
                 }
-                docs.put(pid, fields);
             }
         }
-        return docs;
+        return fields;
     }
 }
