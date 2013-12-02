@@ -35,8 +35,9 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * A Solr Indexer (stub) implementation that adds some basic information to
  * a Solr index server.
  *
+ * @author ajs6f
  * @author yecao
- *
+ * @date Nov 2013
  */
 public class SolrIndexer implements Indexer {
 

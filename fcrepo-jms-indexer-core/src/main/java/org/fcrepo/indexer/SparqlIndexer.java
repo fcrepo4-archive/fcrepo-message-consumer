@@ -52,7 +52,7 @@ public class SparqlIndexer implements Indexer {
     private String updateBase;
     private boolean formUpdates = false;
 
-    private final Logger logger = getLogger(SparqlIndexer.class);
+    private static final Logger LOGGER = getLogger(SparqlIndexer.class);
 
     /**
      * Set whether to use SPARQL Update or form updates.
@@ -82,6 +82,7 @@ public class SparqlIndexer implements Indexer {
     **/
     @Override
     public ListenableFuture<Void> update( final String pid, final String content ) {
+        LOGGER.debug("Received update for: {}", pid);
         // first remove old data
         remove(pid);
 
@@ -97,7 +98,7 @@ public class SparqlIndexer implements Indexer {
         }
 
         // send update to server
-        logger.debug("Sending update request for pid: {}", pid);
+        LOGGER.debug("Sending update request for pid: {}", pid);
         return exec(new UpdateRequest(new UpdateDataInsert(add)));
     }
 
@@ -108,6 +109,7 @@ public class SparqlIndexer implements Indexer {
     @Override
     public ListenableFuture<Void> remove( final String subject ) {
 
+        LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
         final String describeQuery = "DESCRIBE <" + subject + ">";
         final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
@@ -140,7 +142,7 @@ public class SparqlIndexer implements Indexer {
         final UpdateRequest del = new UpdateRequest();
         for ( final String uri : uris ) {
             final String cmd = "delete where { <" + uri + "> ?p ?o }";
-            logger.debug(cmd);
+            LOGGER.debug(cmd);
             del.add( cmd );
         }
 

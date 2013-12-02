@@ -32,8 +32,9 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 /**
  * Indexer implementation that tracks which PIDs it has received messages for.
  *
+ * @author ajs6f
  * @author Esmé Cowles
- *         Date: Nov. 25, 2013
+ * @date Nov 25, 2013
 **/
 public class TestIndexer implements Indexer {
 
@@ -52,14 +53,18 @@ public class TestIndexer implements Indexer {
     public ListenableFuture<Boolean> update(final String pid,
             final String content) throws IOException {
         LOGGER.debug("Received update for: {}", pid);
-        return ListenableFutureTask.create(new Callable<Boolean>() {
+        final ListenableFutureTask<Boolean> result = ListenableFutureTask.create(new Callable<Boolean>() {
 
             @Override
             public Boolean call() throws Exception {
                 return updates.add(pid);
             }
         });
-
+        result.run();
+        synchronized(this) {
+            notifyAll();
+            return result;
+        }
     }
 
     /**
@@ -70,13 +75,18 @@ public class TestIndexer implements Indexer {
     public ListenableFuture<Boolean> remove(final String pid)
         throws IOException {
         LOGGER.debug("Received remove for: {}", pid);
-        return ListenableFutureTask.create(new Callable<Boolean>() {
+        final ListenableFutureTask<Boolean> result = ListenableFutureTask.create(new Callable<Boolean>() {
 
             @Override
             public Boolean call() throws Exception {
                 return removes.add(pid);
             }
         });
+        result.run();
+        synchronized (this) {
+            notifyAll();
+            return result;
+        }
 
     }
 

@@ -22,18 +22,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import javax.jms.Message;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.fcrepo.indexer.IndexerGroup.Listener;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,12 +39,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.inject.Inject;
 
 /**
+ * @author ajs6f
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @date Aug 19, 2013
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
-public class IndexerGroupIT implements Listener {
+public class IndexerGroupIT {
 
     private static final Logger LOGGER = getLogger(IndexerGroupIT.class);
 
@@ -70,10 +65,6 @@ public class IndexerGroupIT implements Listener {
     @Inject
     private TestIndexer testIndexer;
 
-    private List<Message> messages = new ArrayList<>();
-    private List<String> updates = new ArrayList<>();
-    private List<String> removals = new ArrayList<>();
-
     @Before
     public void setup() {
         client = new DefaultHttpClient(connectionManager);
@@ -81,10 +72,6 @@ public class IndexerGroupIT implements Listener {
 
     @Test
     public void testIndexerGroupUpdate() throws Exception {
-        LOGGER.debug("Adding a listener {} to the IndexerGroup under test.",
-                this);
-        indexerGroup.addListener(this);
-
         doIndexerGroupUpdateTest("test_pid_0");
     }
 
@@ -94,15 +81,15 @@ public class IndexerGroupIT implements Listener {
         final HttpPost method = new HttpPost(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(201, response.getStatusLine().getStatusCode());
-        LOGGER.debug("Created object at: {}", pid);
+        LOGGER.debug("Created object at: {}", uri);
 
-        synchronized (indexerGroup) {
-            while (!updates.contains(uri)) {
-                LOGGER.debug("Waiting for next notification from IndexerGroup...");
-                LOGGER.debug("Updates currently received for pids: {}", updates);
-                indexerGroup.wait(1000);
+        synchronized (testIndexer) {
+            while (!testIndexer.receivedUpdate(uri)) {
+                LOGGER.debug("Waiting for next notification from TestIndexer...");
+                testIndexer.wait(1000);
             }
         }
+        LOGGER.debug("Received update at test indexer for uri: {}", uri);
         assertTrue("Test indexer should have received an update message!", testIndexer
                 .receivedUpdate(uri));
 
@@ -111,39 +98,26 @@ public class IndexerGroupIT implements Listener {
     @Test
     public void testIndexerGroupDelete() throws Exception {
 
-        LOGGER.debug("Adding a listener {} to the IndexerGroup under test.",
-                this);
-        indexerGroup.addListener(this);
-
         // create and verify dummy object
         final String pid = "test_pid_5";
         final String uri = serverAddress + pid;
         doIndexerGroupUpdateTest(pid);
 
-        Thread.sleep(1200); // Let the creation event persist
-
         // delete dummy object
         final HttpDelete method = new HttpDelete(uri);
         final HttpResponse response = client.execute(method);
         assertEquals(204, response.getStatusLine().getStatusCode());
+        LOGGER.debug("Deleted object at: {}", uri);
+        synchronized (testIndexer) {
+            while (!testIndexer.receivedRemove(uri)) {
+                LOGGER.debug("Waiting for next notification from TestIndexer...");
+                testIndexer.wait(1000);
+            }
+        }
+        LOGGER.debug("Received update at test indexer for uri: {}", uri);
 
         assertTrue("Test indexer should have received delete message!", testIndexer
-                .receivedRemove(pid));
+                .receivedRemove(uri));
 
     }
-
-    @Override
-    public void notifyUpdate(final String pid, final Message msg) {
-        updates.add(pid);
-        messages.add(msg);
-
-    }
-
-    @Override
-    public void notifyRemove(final String pid, final Message msg) {
-        removals.add(pid);
-        messages.add(msg);
-
-    }
-
 }

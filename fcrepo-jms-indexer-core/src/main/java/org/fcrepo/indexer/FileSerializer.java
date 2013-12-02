@@ -36,8 +36,9 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * Basic Indexer implementation that writes object content to timestamped files
  * on disk.
  *
+ * @author ajs6f
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @date Aug 19, 2013
 **/
 public class FileSerializer implements Indexer {
 

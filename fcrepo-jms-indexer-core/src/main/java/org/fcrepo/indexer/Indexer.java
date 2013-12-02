@@ -25,8 +25,9 @@ import com.google.common.util.concurrent.ListenableFuture;
  * destination (Solr, triplestore, files, etc.) should have its own
  * implementation.
  *
+ * @author ajs6f
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @date Aug 19, 2013
 **/
 public interface Indexer {
 

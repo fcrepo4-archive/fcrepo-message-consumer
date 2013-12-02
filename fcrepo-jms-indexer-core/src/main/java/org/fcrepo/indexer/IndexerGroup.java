@@ -18,11 +18,11 @@ package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashSet;
 import java.util.Set;
 import java.nio.charset.Charset;
 
@@ -52,7 +52,7 @@ import org.slf4j.Logger;
  *
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19, 2013
+ * @date Aug 19 2013
  **/
 public class IndexerGroup implements MessageListener {
 
@@ -63,8 +63,6 @@ public class IndexerGroup implements MessageListener {
     private String repositoryURL;
 
     private Set<Indexer> indexers;
-
-    private Set<Listener> listeners = new HashSet<>();
 
     private HttpClient httpclient;
 
@@ -127,9 +125,7 @@ public class IndexerGroup implements MessageListener {
      **/
     @Override
     public void onMessage(final Message message) {
-        LOGGER.debug(
-                "Registered listeners for IndexerGroup: {} now include: {}",
-                this, listeners);try {
+        try {
             LOGGER.debug("Received message: {}", message.getJMSMessageID());
         } catch (final JMSException e) {
             LOGGER.error("Received unparseable message: {}", e);
@@ -139,18 +135,27 @@ public class IndexerGroup implements MessageListener {
             if (message instanceof TextMessage) {
                 // get pid from message
                 final String xml = ((TextMessage) message).getText();
+                LOGGER.debug("Received Atom message: {}", xml);
                 final Document<Entry> doc = atomParser.parse(new StringReader(xml));
                 final Entry entry = doc.getRoot();
-                // if the object is updated, fetch current content
-                String content = null;
+
 
                 final Boolean removal = "purgeObject".equals(entry.getTitle());
+
+                // if the object is updated, fetch current content
+                Boolean hasContent = false;
+                String content = null;
                 if (!removal) {
                     final HttpGet get = new HttpGet(
                             getPath(entry.getCategories("xsd:string")));
                     final HttpResponse response = httpclient.execute(get);
-                    content = IOUtils.toString(response.getEntity()
-                            .getContent(), Charset.forName("UTF-8"));
+                    if (response.getStatusLine().getStatusCode() == SC_OK) {
+                        content =
+                            IOUtils.toString(response.getEntity().getContent(),
+                                    Charset.forName("UTF-8"));
+                        hasContent = true;
+                    }
+
                 }
                 // pid represents the full path. Alternative would be to send
                 // path separately in all calls
@@ -167,26 +172,17 @@ public class IndexerGroup implements MessageListener {
                         if (removal) {
                             indexer.remove(pid);
                         } else {
-                            indexer.update(pid, content);
+                            if (hasContent) {
+                                indexer.update(pid, content);
+                            } else {
+                                LOGGER.error(
+                                        "Received update on {} but was unable to retrieve representation!",
+                                        pid);
+                            }
                         }
                     } catch (final Exception e) {
                         LOGGER.error("Error indexing {}: {}!", pid, e);
                     }
-                }
-                LOGGER.debug(
-                        "Registered listeners for IndexerGroup: {} now include: {}",
-                        this, listeners);
-                for (final Listener l : listeners) {
-                    LOGGER.debug("Notifying listener: {}", l);
-                    if (removal) {
-                        l.notifyRemove(pid, message);
-                    } else {
-                        l.notifyUpdate(pid, message);
-                    }
-                }
-                synchronized (this) {
-                    LOGGER.debug("Notifying waiting threads.");
-                    notifyAll();
                 }
             }
         } catch (final JMSException e) {
@@ -194,42 +190,6 @@ public class IndexerGroup implements MessageListener {
         } catch (final IOException e) {
             LOGGER.error("Error retrieving object from repository!", e);
         }
-    }
-
-    /**
-     * Adds a listener to be notified when an indexing operation takes place.
-     *
-     * @param l
-     */
-    public void addListener(final Listener l) {
-        LOGGER.debug("Adding listener: {}", l);
-        LOGGER.debug(
-                "Registered listeners for IndexerGroup: {} now include: {}",
-                this, listeners);
-        listeners.add(l);
-
-    }
-
-    /**
-     * Implemented by classes that want to listen to the results of indexing.
-     *
-     * @author ajs6f
-     * @date Nov 26, 2013
-     */
-    public static interface Listener {
-
-        /**
-         * @param pid
-         * @param msg
-         */
-        void notifyUpdate(final String pid, final Message msg);
-
-        /**
-         * @param pid
-         * @param msg
-         */
-        void notifyRemove(final String pid, final Message msg);
-
     }
 
 }
