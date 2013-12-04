@@ -16,6 +16,8 @@
 
 package org.fcrepo.indexer;
 
+import static com.hp.hpl.jena.sparql.util.Context.emptyContext;
+import static com.hp.hpl.jena.update.UpdateExecutionFactory.createRemoteForm;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.StringReader;
@@ -28,12 +30,10 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.graph.Node_URI;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.util.Context;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import com.hp.hpl.jena.sparql.modify.UpdateProcessRemote;
 import com.hp.hpl.jena.sparql.modify.request.QuadDataAcc;
 import com.hp.hpl.jena.sparql.modify.request.UpdateDataInsert;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 
@@ -161,25 +161,27 @@ public class SparqlIndexer implements Indexer {
     }
 
     private ListenableFuture<Void> exec(final UpdateRequest update) {
-        return ListenableFutureTask.create(new Runnable() {
+        final ListenableFutureTask<Void> task =
+            ListenableFutureTask.create(new Runnable() {
 
-            @Override
-            public void run() {
-                if (formUpdates) {
-                    // form updates
-                    final UpdateProcessor proc =
-                        UpdateExecutionFactory.createRemoteForm(update,
-                                updateBase);
-                    proc.execute();
-                } else {
-                    // normal SPARQL updates
-                    final UpdateProcessRemote proc =
-                        new UpdateProcessRemote(update, updateBase,
-                                Context.emptyContext);
-                    proc.execute();
+                @Override
+                public void run() {
+                    if (formUpdates) {
+                        // form updates
+                        final UpdateProcessor proc =
+                            createRemoteForm(update, updateBase);
+                        proc.execute();
+                    } else {
+                        // normal SPARQL updates
+                        final UpdateProcessRemote proc =
+                            new UpdateProcessRemote(update, updateBase,
+                                    emptyContext);
+                        proc.execute();
+                    }
                 }
-            }
-        }, null);
+            }, null);
+        task.run();
+        return task;
     }
 
     /**

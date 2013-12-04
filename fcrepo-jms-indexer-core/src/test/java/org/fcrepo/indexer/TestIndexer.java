@@ -57,7 +57,9 @@ public class TestIndexer implements Indexer {
 
             @Override
             public Boolean call() throws Exception {
-                return updates.add(pid);
+                final Boolean success = updates.add(pid);
+                LOGGER.debug("Current recorded updates include: {}", updates);
+                return success;
             }
         });
         result.run();
@@ -79,7 +81,9 @@ public class TestIndexer implements Indexer {
 
             @Override
             public Boolean call() throws Exception {
-                return removes.add(pid);
+                final Boolean success = removes.add(pid);
+                LOGGER.debug("Current recorded removes include: {}", removes);
+                return success;
             }
         });
         result.run();
