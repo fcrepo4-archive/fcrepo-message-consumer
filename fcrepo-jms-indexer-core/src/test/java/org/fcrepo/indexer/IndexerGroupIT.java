@@ -17,6 +17,7 @@
 package org.fcrepo.indexer;
 
 import static java.lang.Integer.parseInt;
+import static java.lang.System.currentTimeMillis;
 import static java.lang.System.getProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -54,12 +54,14 @@ public class IndexerGroupIT {
     private static final String serverAddress = "http://localhost:"
             + SERVER_PORT + "/";
 
+    private static final long TIMEOUT = 5000;
+
     private final PoolingClientConnectionManager connectionManager =
             new PoolingClientConnectionManager();
 
     private static HttpClient client;
 
-    @Autowired
+    @Inject
     private IndexerGroup indexerGroup;
 
     @Inject
@@ -72,7 +74,7 @@ public class IndexerGroupIT {
 
     @Test
     public void testIndexerGroupUpdate() throws Exception {
-        doIndexerGroupUpdateTest("test_pid_0");
+        doIndexerGroupUpdateTest("/updateTestPid");
     }
 
     private void doIndexerGroupUpdateTest(final String pid) throws Exception {
@@ -83,15 +85,17 @@ public class IndexerGroupIT {
         assertEquals(201, response.getStatusLine().getStatusCode());
         LOGGER.debug("Created object at: {}", uri);
 
+        final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedUpdate(uri)) {
+            while (!testIndexer.receivedUpdate(pid)
+                    && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
-        LOGGER.debug("Received update at test indexer for uri: {}", uri);
-        assertTrue("Test indexer should have received an update message!", testIndexer
-                .receivedUpdate(uri));
+        assertTrue("Test indexer should have received an update message for " + pid + "!", testIndexer
+                .receivedUpdate(pid));
+        LOGGER.debug("Received update at test indexer for pid: {}", pid);
 
     }
 
@@ -99,7 +103,7 @@ public class IndexerGroupIT {
     public void testIndexerGroupDelete() throws Exception {
 
         // create and verify dummy object
-        final String pid = "test_pid_5";
+        final String pid = "/removeTestPid";
         final String uri = serverAddress + pid;
         doIndexerGroupUpdateTest(pid);
 
@@ -108,16 +112,20 @@ public class IndexerGroupIT {
         final HttpResponse response = client.execute(method);
         assertEquals(204, response.getStatusLine().getStatusCode());
         LOGGER.debug("Deleted object at: {}", uri);
+
+        final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedRemove(uri)) {
+            while (!testIndexer.receivedRemove(pid)
+                    && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
-        LOGGER.debug("Received update at test indexer for uri: {}", uri);
+        assertTrue("Test indexer should have received remove message for " + pid + "!", testIndexer
+                .receivedRemove(pid));
+        LOGGER.debug("Received remove at test indexer for pid: {}", pid);
 
-        assertTrue("Test indexer should have received delete message!", testIndexer
-                .receivedRemove(uri));
+
 
     }
 }

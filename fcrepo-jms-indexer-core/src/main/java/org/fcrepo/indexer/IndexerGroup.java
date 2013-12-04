@@ -18,31 +18,20 @@ package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.http.HttpStatus.SC_OK;
+import static javax.jcr.observation.Event.NODE_REMOVED;
+import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.Set;
-import java.nio.charset.Charset;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import javax.jms.TextMessage;
 
-import org.apache.abdera.Abdera;
-import org.apache.abdera.model.Category;
-import org.apache.abdera.model.Document;
-import org.apache.abdera.model.Entry;
-import org.apache.abdera.parser.Parser;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-
+import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
 
@@ -50,6 +39,8 @@ import org.slf4j.Logger;
  * MessageListener implementation that retrieves objects from the repository and
  * invokes one or more indexers to index the content.
  *
+ * documentation:
+ * https://wiki.duraspace.org/display/FF/Design+-+Messaging+for+Workflow
  * @author Esmé Cowles
  * @author ajs6f
  * @date Aug 19 2013
@@ -58,13 +49,22 @@ public class IndexerGroup implements MessageListener {
 
     private static final Logger LOGGER = getLogger(IndexerGroup.class);
 
-    private Parser atomParser = new Abdera().getParser();
-
     private String repositoryURL;
 
     private Set<Indexer> indexers;
 
     private HttpClient httpclient;
+
+    private static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
+            + EventType.valueOf(NODE_REMOVED).toString();
+
+    //pid
+    private static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
+            + "identifier";
+
+    //eventType - purgeObject
+    private static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
+            + "eventType";
 
     /**
      * Default constructor.
@@ -107,20 +107,6 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
-     * Extract node path from Atom category list
-     *
-     * @return Node path or repositoryUrl if it's not found
-     */
-    private String getPath(final java.util.List<Category> categories) {
-        for (final Category c : categories) {
-            if (c.getLabel().equals("path")) {
-                return repositoryURL + c.getTerm();
-            }
-        }
-        return repositoryURL;
-    }
-
-    /**
      * Handle a JMS message representing an object update or deletion event.
      **/
     @Override
@@ -128,67 +114,41 @@ public class IndexerGroup implements MessageListener {
         try {
             LOGGER.debug("Received message: {}", message.getJMSMessageID());
         } catch (final JMSException e) {
-            LOGGER.error("Received unparseable message: {}", e);
+            LOGGER.error("Received unintelligible message: {}", e);
             propagate(e);
         }
         try {
-            if (message instanceof TextMessage) {
-                // get pid from message
-                final String xml = ((TextMessage) message).getText();
-                LOGGER.debug("Received Atom message: {}", xml);
-                final Document<Entry> doc = atomParser.parse(new StringReader(xml));
-                final Entry entry = doc.getRoot();
+            // get pid and eventType from message
+            final String pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+            final String eventType = message.getStringProperty(EVENT_TYPE_HEADER_NAME);
 
+            LOGGER.debug("Discovered pid: {} in message.", pid);
+            LOGGER.debug("Discovered event Type: {} in message.", eventType);
 
-                final Boolean removal = "purgeObject".equals(entry.getTitle());
-
-                // if the object is updated, fetch current content
-                Boolean hasContent = false;
-                String content = null;
-                if (!removal) {
-                    final HttpGet get = new HttpGet(
-                            getPath(entry.getCategories("xsd:string")));
-                    final HttpResponse response = httpclient.execute(get);
-                    if (response.getStatusLine().getStatusCode() == SC_OK) {
-                        content =
-                            IOUtils.toString(response.getEntity().getContent(),
-                                    Charset.forName("UTF-8"));
-                        hasContent = true;
-                    }
-
-                }
-                // pid represents the full path. Alternative would be to send
-                // path separately in all calls
-                // String pid = getPath(entry.getCategories("xsd:string"))
-                //        .replace("//objects", "/objects");
-                final String pid = getPath(entry.getCategories("xsd:string"));
-                LOGGER.debug("Operating with pid: {}", pid);
-
-                // call each registered indexer
-                LOGGER.debug("It is {} that this is a removal operation.",
+            final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
+            final String content = "<info:example.com/test_pid> <info:example.com/predicate> \" test value \"";
+            final boolean hasContent = true; //temp
+            LOGGER.debug("It is {} that this is a removal operation.",
                         removal);
-                for (final Indexer indexer : indexers) {
-                    try {
-                        if (removal) {
-                            indexer.remove(pid);
+            for (final Indexer indexer : indexers) {
+                try {
+                    if (removal) {
+                        indexer.remove(pid);
+                    } else {
+                        if (hasContent) {
+                            indexer.update(pid, content);
                         } else {
-                            if (hasContent) {
-                                indexer.update(pid, content);
-                            } else {
-                                LOGGER.error(
-                                        "Received update on {} but was unable to retrieve representation!",
-                                        pid);
-                            }
+                            LOGGER.error(
+                                "Received update for {} but was unable to retrieve content for update!",
+                                pid);
                         }
-                    } catch (final Exception e) {
-                        LOGGER.error("Error indexing {}: {}!", pid, e);
                     }
+                } catch (final Exception e) {
+                    LOGGER.error("Error indexing {}: {}!", pid, e);
                 }
             }
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
-        } catch (final IOException e) {
-            LOGGER.error("Error retrieving object from repository!", e);
         }
     }
 
