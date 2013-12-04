@@ -18,12 +18,16 @@ package org.fcrepo.indexer;
 
 import javax.inject.Inject;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import org.junit.Test;
+
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * @author Esmé Cowles
@@ -33,57 +37,41 @@ import static org.junit.Assert.assertEquals;
 @ContextConfiguration({"/spring-test/test-container.xml"})
 public class SparqlIndexerIT {
 
-    private static final int SERVER_PORT =
-            Integer.parseInt(System.getProperty("test.port", "8080"));
+    private static final String uri = "http://example.com/sparqlIndexerTestURI";
 
-    private static final String serverAddress = "http://localhost:" +
-            SERVER_PORT + "/rest/objects";
+
+    private static final Logger LOGGER = getLogger(SparqlIndexerIT.class);
 
     @Inject
     private SparqlIndexer sparqlIndexer;
 
-    private static final String fooN3 =
+    private static final String fooRDF =
         "@prefix fcrepo: <http://fcrepo.org/repository#> .\n" +
         "@prefix fedora: <http://fcrepo.org/repository/rest-api#> .\n" +
-                "<" + serverAddress + "/foo>\n" +
-        " fcrepo:hasChild\n" +
-        "   <" + serverAddress + "/foo/barDS> ;\n" +
-        " fcrepo:hasParent\n" +
-        "   <" + serverAddress + "> ;\n" +
-        " fcrepo:uuid\n" +
-        "   \"feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\" .\n" +
-        "<" + serverAddress + "/foo/barDS>\n" +
-        " fcrepo:hasContent\n" +
-        "   <" + serverAddress + "/foo/barDS/fcr:content> ;\n" +
-        " fcrepo:hasParent\n" +
-        "   <" + serverAddress + "/foo> ;\n" +
-        " fcrepo:uuid\n" +
-        "   \"d26efce7-1b30-42eb-9236-0e62171e1d6e\" .\n" +
-        "<" + serverAddress + "/foo/barDS/fcr:content>\n" +
-        " fcrepo:isContentOf\n" +
-        "   <" + serverAddress + "/foo/barDS> ;\n" +
-        " fedora:digest\n" +
-        "   <urn:sha1:b3eab5058657e177f05a39f94944c39086951eab> .\n";
+        "<" + uri + ">\n" +
+        " fcrepo:hasChild <" + uri + "/barDS> ;\n" +
+        " fcrepo:hasParent <" + uri + "> ;\n" +
+        " fcrepo:uuid \"feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\" .";
 
     @Test
     public void indexerTest() throws Exception {
-        // add object
-        sparqlIndexer.update(serverAddress + "/foo",fooN3);
+        // add triples
+        sparqlIndexer.update(uri, fooRDF);
 
         waitForTriples(3);
 
         // triples should be present in the triplestore
-        assertEquals("Triples should be present",
-                     3, sparqlIndexer.countTriples(serverAddress + "/foo"));
+        assertEquals("Triples should be present!", 3, sparqlIndexer
+                .countTriples(uri));
 
         // remove object
-        sparqlIndexer.remove("foo");
+        sparqlIndexer.remove(uri);
 
         waitForTriples(0);
 
         // triples should not be present in the triplestore
-        assertTrue("Triples should not be present",
-                sparqlIndexer.countTriples("foo") == 0 );
+        assertTrue("Triples should not be present!", sparqlIndexer
+                .countTriples(uri) == 0);
     }
 
     private void waitForTriples(final int expectTriples) throws InterruptedException {
@@ -91,10 +79,11 @@ public class SparqlIndexerIT {
         final long restingWait = 500;
         final long maxWait = 15000; // 15 seconds
 
-        int count = sparqlIndexer.countTriples(serverAddress + "foo");
-        while ((count != expectTriples) && (elapsed < maxWait)) {
-            Thread.sleep(restingWait);
-            count = sparqlIndexer.countTriples(serverAddress + "foo");
+        int count = sparqlIndexer.countTriples(uri);
+        while ((count < expectTriples) && (elapsed < maxWait)) {
+            LOGGER.debug("Discovered {} triples, waiting for {}...", count, expectTriples);
+            sleep(restingWait);
+            count = sparqlIndexer.countTriples(uri);
 
             elapsed += restingWait;
         }

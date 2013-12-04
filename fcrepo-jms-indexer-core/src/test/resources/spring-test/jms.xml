@@ -13,8 +13,8 @@
     <!-- publishes events from the internal bus to JMS -->
     <bean class="org.fcrepo.jms.observer.JMSTopicPublisher"/>
     
-    <!-- translates events from the internal bus to JMS, in Atom format -->
-    <bean class="org.fcrepo.jms.legacy.LegacyMethodEventFactory" />
+    <!-- translates events from the internal bus to JMS -->
+    <bean class="org.fcrepo.jms.headers.DefaultMessageFactory" />
     
 
     <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"
