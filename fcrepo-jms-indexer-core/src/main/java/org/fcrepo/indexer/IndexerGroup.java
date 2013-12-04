@@ -164,7 +164,7 @@ public class IndexerGroup implements MessageListener {
             String content = "temp until getting real content from transformer";
             boolean hasContent = true; //temp
             LOGGER.debug("Operating with pid: {}", pid);
-            LOGGER.dubug("Operation with eventType: {}", eventType);
+            LOGGER.debug("Operation with eventType: {}", eventType);
             LOGGER.debug("It is {} that this is a removal operation.",
                         removal);
             for (final Indexer indexer : indexers) {
