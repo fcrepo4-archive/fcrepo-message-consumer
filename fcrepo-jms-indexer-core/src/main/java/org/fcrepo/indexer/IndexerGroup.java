@@ -19,6 +19,7 @@ package org.fcrepo.indexer;
 import static com.google.common.base.Throwables.propagate;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -50,6 +51,12 @@ import org.slf4j.Logger;
  * MessageListener implementation that retrieves objects from the repository and
  * invokes one or more indexers to index the content.
  *
+ * documentation:
+ * https://wiki.duraspace.org/display/FF/Design+-+Messaging+for+Workflow
+ *
+ * current message factory:
+ * https://github.com/futures/fcrepo4/blob/a9be2e5d8bc3d7d4909a0fdf674d9faa0a37708e/fcrepo-jms/src/main/java/org/fcrepo/jms/headers/DefaultMessageFactory.java
+ *
  * @author Esmé Cowles
  * @author ajs6f
  * @date Aug 19 2013
@@ -65,6 +72,18 @@ public class IndexerGroup implements MessageListener {
     private Set<Indexer> indexers;
 
     private HttpClient httpclient;
+
+    //timestamp
+    private static final String TIMESTAMP_HEADER_NAME = REPOSITORY_NAMESPACE
+            + "timestamp";
+
+    //pid
+    private static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
+            + "identifier";
+
+    //eventType - purgeObject
+    private static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
+            + "eventType";
 
     /**
      * Default constructor.
@@ -132,63 +151,41 @@ public class IndexerGroup implements MessageListener {
             propagate(e);
         }
         try {
-            if (message instanceof TextMessage) {
-                // get pid from message
-                final String xml = ((TextMessage) message).getText();
-                LOGGER.debug("Received Atom message: {}", xml);
-                final Document<Entry> doc = atomParser.parse(new StringReader(xml));
-                final Entry entry = doc.getRoot();
+            // get pid, timestamp, and eventType from message
+            try {
+                long timestamp = message.getLongProperty(TIMESTAMP_HEADER_NAME);
+            } catch (final NumberFormatException e) {
+                LOGGER.error("Error getting timestamp property {}", e);
+            }
+            String pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+            String eventType = message.getStringProperty(EVENT_TYPE_HEADER_NAME);
 
-
-                final Boolean removal = "purgeObject".equals(entry.getTitle());
-
-                // if the object is updated, fetch current content
-                Boolean hasContent = false;
-                String content = null;
-                if (!removal) {
-                    final HttpGet get = new HttpGet(
-                            getPath(entry.getCategories("xsd:string")));
-                    final HttpResponse response = httpclient.execute(get);
-                    if (response.getStatusLine().getStatusCode() == SC_OK) {
-                        content =
-                            IOUtils.toString(response.getEntity().getContent(),
-                                    Charset.forName("UTF-8"));
-                        hasContent = true;
-                    }
-
-                }
-                // pid represents the full path. Alternative would be to send
-                // path separately in all calls
-                // String pid = getPath(entry.getCategories("xsd:string"))
-                //        .replace("//objects", "/objects");
-                final String pid = getPath(entry.getCategories("xsd:string"));
-                LOGGER.debug("Operating with pid: {}", pid);
-
-                // call each registered indexer
-                LOGGER.debug("It is {} that this is a removal operation.",
+            final Boolean removal = "purgeObject".equals(eventType);
+            String content = "temp until getting real content from transformer";
+            boolean hasContent = true; //temp
+            LOGGER.debug("Operating with pid: {}", pid);
+            LOGGER.debug("Operation with eventType: {}", eventType);
+            LOGGER.debug("It is {} that this is a removal operation.",
                         removal);
-                for (final Indexer indexer : indexers) {
-                    try {
-                        if (removal) {
-                            indexer.remove(pid);
+            for (final Indexer indexer : indexers) {
+                try {
+                    if (removal) {
+                        indexer.remove(pid);
+                    } else {
+                        if (hasContent) {
+                            indexer.update(pid, content);
                         } else {
-                            if (hasContent) {
-                                indexer.update(pid, content);
-                            } else {
-                                LOGGER.error(
-                                        "Received update on {} but was unable to retrieve representation!",
-                                        pid);
-                            }
+                            LOGGER.error(
+                                "Received update on {} but was unable to retrieve representation!",
+                                pid);
                         }
-                    } catch (final Exception e) {
-                        LOGGER.error("Error indexing {}: {}!", pid, e);
                     }
+                } catch (final Exception e) {
+                    LOGGER.error("Error indexing {}: {}!", pid, e);
                 }
             }
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
-        } catch (final IOException e) {
-            LOGGER.error("Error retrieving object from repository!", e);
         }
     }
 
