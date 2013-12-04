@@ -32,10 +32,10 @@
   </bean>
   
   <!-- Solr Indexer START-->
-    <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
+  <bean id="solrIndexer" class="org.fcrepo.indexer.SolrIndexer">
     <constructor-arg ref="solrServer" />
-	<constructor-arg value="${solrIndexer.customIndexerFieldsConfigFile:'solrIndexerFieldsConfig.txt'}" />
-    </bean>
+	<constructor-arg><value>./target/classes/solrIndexerFieldsConfig.txt</value></constructor-arg>
+  </bean>
 <!--Standardalone solr Server  -->
   <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
     <constructor-arg index="0" value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/" />
