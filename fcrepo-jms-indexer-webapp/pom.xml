@@ -92,6 +92,7 @@
         <configuration>
           <systemPropertyVariables>
             <test.port>${test.port}</test.port>
+            <jms.port>${jms.port}</jms.port>
             <test.context.path>${test.context.path}</test.context.path>
           </systemPropertyVariables>
         </configuration>
@@ -102,6 +103,7 @@
         <configuration>
           <portNames>
             <portName>test.port</portName>
+            <portName>jms.port</portName>
             <!-- reserves the stop port for jetty-maven-plugin -->
             <portName>jetty.port.stop</portName>
           </portNames>
@@ -122,6 +124,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
+              <configUri>broker:(tcp://localhost:${jms.port})</configUri>
               <fork>true</fork>
             </configuration>
           </execution>
@@ -156,6 +159,12 @@
               </connectors>
               <daemon>true</daemon>
               <stopPort>${jetty.port.stop}</stopPort>
+              <systemProperties>
+                <systemProperty>
+                  <name>jms.port</name>
+                  <value>${jms.port}</value>
+                </systemProperty>
+              </systemProperties>
             </configuration>
           </execution>
           <execution>
