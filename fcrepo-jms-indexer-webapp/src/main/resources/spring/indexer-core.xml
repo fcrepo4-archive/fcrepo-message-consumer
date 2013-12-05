@@ -6,9 +6,6 @@
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
 
-    <!-- base URL for triplestore subjects, PID will be appended -->
-    <property name="prefix" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest"/>
-
     <!-- fuseki -->
     <property name="queryBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/query"/>
     <property name="updateBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/update"/>
