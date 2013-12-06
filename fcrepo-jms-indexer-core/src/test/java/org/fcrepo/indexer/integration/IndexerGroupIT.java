@@ -14,29 +14,28 @@
  * limitations under the License.
  */
 
-package org.fcrepo.indexer;
+package org.fcrepo.indexer.integration;
 
-import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.getProperty;
+import static org.apache.jena.riot.WebContent.contentTypeN3Alt1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import javax.inject.Inject;
+
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.junit.Before;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.fcrepo.indexer.IndexerGroup;
+import org.fcrepo.indexer.TestIndexer;
+import org.fcrepo.indexer.system.IndexingIT;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import javax.inject.Inject;
 
 /**
  * @author ajs6f
@@ -45,21 +44,9 @@ import javax.inject.Inject;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
-public class IndexerGroupIT {
+public class IndexerGroupIT extends IndexingIT {
 
-    private static final Logger LOGGER = getLogger(IndexerGroupIT.class);
-
-    private static final int SERVER_PORT = parseInt(getProperty("test.port", "8080"));
-
-    private static final String serverAddress = "http://localhost:"
-            + SERVER_PORT + "/";
-
-    private static final long TIMEOUT = 5000;
-
-    private final PoolingClientConnectionManager connectionManager =
-            new PoolingClientConnectionManager();
-
-    private static HttpClient client;
+    private static final long TIMEOUT = 15000;
 
     @Inject
     private IndexerGroup indexerGroup;
@@ -67,46 +54,48 @@ public class IndexerGroupIT {
     @Inject
     private TestIndexer testIndexer;
 
-    @Before
-    public void setup() {
-        client = new DefaultHttpClient(connectionManager);
-    }
+    private static final Logger LOGGER = getLogger(IndexerGroupIT.class);
 
     @Test
     public void testIndexerGroupUpdate() throws Exception {
-        doIndexerGroupUpdateTest("/updateTestPid");
+        doIndexerGroupUpdateTest(serverAddress + "updateTestPid");
     }
 
-    private void doIndexerGroupUpdateTest(final String pid) throws Exception {
-        // create dummy object
-        final String uri = serverAddress + pid;
-        final HttpPost method = new HttpPost(uri);
-        final HttpResponse response = client.execute(method);
+    private void doIndexerGroupUpdateTest(final String uri) throws Exception {
+        final HttpPost createRequest = new HttpPost(uri);
+        final String objectRdf =
+            "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
+                    + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
+                    + "<" + uri + ">  rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
+                    + "indexing:hasIndexingTransformation \"default\".";
+
+        createRequest.setEntity(new StringEntity(objectRdf));
+        createRequest.addHeader("Content-Type", contentTypeN3Alt1);
+
+        final HttpResponse response = client.execute(createRequest);
         assertEquals(201, response.getStatusLine().getStatusCode());
         LOGGER.debug("Created object at: {}", uri);
 
         final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedUpdate(pid)
+            while (!testIndexer.receivedUpdate(uri)
                     && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
-        assertTrue("Test indexer should have received an update message for " + pid + "!", testIndexer
-                .receivedUpdate(pid));
-        LOGGER.debug("Received update at test indexer for pid: {}", pid);
+        assertTrue("Test indexer should have received an update message for " + uri + "!", testIndexer
+                .receivedUpdate(uri));
+        LOGGER.debug("Received update at test indexer for identifier: {}", uri);
 
     }
 
     @Test
     public void testIndexerGroupDelete() throws Exception {
 
-        // create and verify dummy object
-        final String pid = "/removeTestPid";
-        final String uri = serverAddress + pid;
-        doIndexerGroupUpdateTest(pid);
+        final String uri = serverAddress + "removeTestPid";
 
+        doIndexerGroupUpdateTest(uri);
         // delete dummy object
         final HttpDelete method = new HttpDelete(uri);
         final HttpResponse response = client.execute(method);
@@ -115,17 +104,18 @@ public class IndexerGroupIT {
 
         final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedRemove(pid)
+            while (!testIndexer.receivedRemove(uri)
                     && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
-        assertTrue("Test indexer should have received remove message for " + pid + "!", testIndexer
-                .receivedRemove(pid));
-        LOGGER.debug("Received remove at test indexer for pid: {}", pid);
+        assertTrue("Test indexer should have received remove message for " + uri + "!", testIndexer
+                .receivedRemove(uri));
+        LOGGER.debug("Received remove at test indexer for identifier: {}", uri);
 
 
 
     }
+
 }

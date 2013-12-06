@@ -17,30 +17,42 @@
 package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
+import static com.hp.hpl.jena.vocabulary.RDF.type;
+import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Set;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import org.apache.http.HttpException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * MessageListener implementation that retrieves objects from the repository and
- * invokes one or more indexers to index the content.
- *
- * documentation:
+ * invokes one or more indexers to index the content. documentation:
  * https://wiki.duraspace.org/display/FF/Design+-+Messaging+for+Workflow
+ *
  * @author Esmé Cowles
  * @author ajs6f
  * @date Aug 19 2013
@@ -53,28 +65,54 @@ public class IndexerGroup implements MessageListener {
 
     private Set<Indexer> indexers;
 
-    private HttpClient httpclient;
+    private final HttpClient httpClient;
 
-    private static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
-            + EventType.valueOf(NODE_REMOVED).toString();
-
-    //pid
+    /**
+     * Identifier message header
+     */
     private static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
             + "identifier";
 
-    //eventType - purgeObject
+    /**
+     * Event type message header
+     */
     private static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
             + "eventType";
+
+    /**
+     * Type of event that qualifies as a removal.
+     */
+    private static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
+            + EventType.valueOf(NODE_REMOVED).toString();
+
+    public static final String INDEXER_NAMESPACE =
+        "http://fedora.info/definitions/v4/indexing#";
+
+    /**
+     * Indicates the transformation to use with this resource to derive indexing
+     * information.
+     */
+    public static final Property INDEXING_TRANSFORM_PREDICATE =
+        createProperty(INDEXER_NAMESPACE + "hasIndexingTransformation");
+
+    /**
+     * Indicates that a resource is indexable.
+     */
+    public static final Resource INDEXABLE_MIXIN =
+        createResource(INDEXER_NAMESPACE + "indexable");
+
+    private static final Reader EMPTY_CONTENT = null;
 
     /**
      * Default constructor.
      **/
     public IndexerGroup() {
         LOGGER.debug("Creating IndexerGroup: {}", this);
-        final PoolingClientConnectionManager p = new PoolingClientConnectionManager();
-        p.setDefaultMaxPerRoute(5);
-        p.closeIdleConnections(3, SECONDS);
-        httpclient = new DefaultHttpClient(p);
+        final PoolingClientConnectionManager connMann =
+            new PoolingClientConnectionManager();
+        connMann.setMaxTotal(MAX_VALUE);
+        connMann.setDefaultMaxPerRoute(MAX_VALUE);
+        this.httpClient = new DefaultHttpClient(connMann);
     }
 
     /**
@@ -119,36 +157,114 @@ public class IndexerGroup implements MessageListener {
         }
         try {
             // get pid and eventType from message
-            final String pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
-            final String eventType = message.getStringProperty(EVENT_TYPE_HEADER_NAME);
+            final String pid =
+                message.getStringProperty(IDENTIFIER_HEADER_NAME);
+            final String eventType =
+                message.getStringProperty(EVENT_TYPE_HEADER_NAME);
 
             LOGGER.debug("Discovered pid: {} in message.", pid);
-            LOGGER.debug("Discovered event Type: {} in message.", eventType);
+            LOGGER.debug("Discovered event type: {} in message.", eventType);
 
             final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
-            final String content = "<info:example.com/test_pid> <info:example.com/predicate> \" test value \"";
-            final boolean hasContent = true; //temp
-            LOGGER.debug("It is {} that this is a removal operation.",
-                        removal);
-            for (final Indexer indexer : indexers) {
+            LOGGER.debug("It is {} that this is a removal operation.", removal);
+            final String uri = getRepositoryURL() + pid;
+            final RdfRetriever rdfr = new RdfRetriever(uri, httpClient);
+            final NamedFieldsRetriever nfr =
+                new NamedFieldsRetriever(uri, httpClient, rdfr);
+            Boolean indexable = false;
+
+            if (!removal) {
+                final Model rdf =
+                    createDefaultModel().read(rdfr.call(), null, "N3");
+                if (rdf.contains(createResource(uri), type, INDEXABLE_MIXIN)) {
+                    LOGGER.debug("Resource: {} retrieved with indexable type.",
+                            pid);
+                    indexable = true;
+                } else {
+                    LOGGER.debug(
+                            "Resource: {} retrieved without indexable type.",
+                            pid);
+                }
+            }
+
+            for (final Indexer indexer : getIndexers()) {
+                LOGGER.debug("Operating for indexer: {}", indexer);
+                Boolean hasContent = false;
+                Reader content = EMPTY_CONTENT;
+                if (!removal && indexable) {
+                    switch (indexer.getIndexerType()) {
+                        case NAMEDFIELDS:
+                            LOGGER.debug(
+                                    "Retrieving named fields for: {}, (may be cached) to index to {}...",
+                                    pid, indexer);
+                            try (final InputStream result = nfr.call()) {
+                                content = new InputStreamReader(result);
+                                hasContent = true;
+                            } catch (final IOException | HttpException e) {
+                                LOGGER.error(
+                                        "Could not retrieve content for update of: {} to indexer {}!",
+                                        pid, indexer);
+                                LOGGER.error("with exception:", e);
+                                hasContent = false;
+                            } catch (final AbsentTransformPropertyException e) {
+                                hasContent = false;
+                            }
+                            break;
+                        case RDF:
+                            LOGGER.debug(
+                                    "Retrieving RDF for: {}, (may be cached) to index to {}...",
+                                    pid, indexer);
+                            try (final InputStream result = rdfr.call()) {
+                                content = new InputStreamReader(result);
+                                hasContent = true;
+                            } catch (IOException | HttpException e) {
+                                LOGGER.error(
+                                        "Could not retrieve content for update of: {} to indexer {}!",
+                                        pid, indexer);
+                                LOGGER.error("with exception:", e);
+                                hasContent = false;
+                            } catch (final AbsentTransformPropertyException e1) {
+                                hasContent = false;
+                            }
+                            break;
+                        default:
+                            content =
+                                new StringReader("Default content for update: "
+                                        + pid);
+                            hasContent = true;
+                            break;
+                    }
+                }
+
                 try {
                     if (removal) {
-                        indexer.remove(pid);
+                        LOGGER.debug(
+                                "Executing removal of: {} to indexer: {}...",
+                                pid, indexer);
+                        indexer.remove(uri);
                     } else {
                         if (hasContent) {
-                            indexer.update(pid, content);
-                        } else {
+                            LOGGER.debug(
+                                    "Executing update of: {} to indexer: {}...",
+                                    pid, indexer);
+                            indexer.update(uri, content);
+                        } else if (indexable) {
                             LOGGER.error(
-                                "Received update for {} but was unable to retrieve content for update!",
-                                pid);
+                                    "Received update for: {} but was unable to retrieve "
+                                            + "content for update to indexer: {}!",
+                                    pid, indexer);
                         }
                     }
                 } catch (final Exception e) {
                     LOGGER.error("Error indexing {}: {}!", pid, e);
                 }
             }
-        } catch (final JMSException e) {
+
+        } catch (final JMSException | IOException | HttpException e) {
             LOGGER.error("Error processing JMS event!", e);
+        } catch (final AbsentTransformPropertyException e2) {
+            // cannot be thrown here: simply an artifact of Java's crappy type
+            // system
         }
     }
 

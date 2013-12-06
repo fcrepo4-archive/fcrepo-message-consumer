@@ -14,19 +14,28 @@
  * limitations under the License.
  */
 
-package org.fcrepo.indexer;
+package org.fcrepo.indexer.sparql;
 
+import static com.google.common.base.Throwables.propagate;
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static com.hp.hpl.jena.sparql.util.Context.emptyContext;
 import static com.hp.hpl.jena.update.UpdateExecutionFactory.createRemoteForm;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static org.fcrepo.indexer.Indexer.IndexerType.RDF;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.StringReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.util.HashSet;
 import java.util.Iterator;
-import com.google.common.util.concurrent.ListenableFuture;
+import java.util.concurrent.Callable;
+
 import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.graph.Node_URI;
 import com.hp.hpl.jena.graph.Triple;
@@ -37,6 +46,8 @@ import com.hp.hpl.jena.sparql.modify.request.UpdateDataInsert;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 
+import org.apache.jena.atlas.io.IndentedWriter;
+import org.fcrepo.indexer.AsynchIndexer;
 import org.slf4j.Logger;
 
 
@@ -44,9 +55,10 @@ import org.slf4j.Logger;
  * Indexes triples from Fedora into a triplestore using SPARQL Update.
  *
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @author ajs6f
+ * @date Aug 19, 2013
 **/
-public class SparqlIndexer implements Indexer {
+public class SparqlIndexer extends AsynchIndexer<Void> {
 
     private String queryBase;
     private String updateBase;
@@ -55,25 +67,12 @@ public class SparqlIndexer implements Indexer {
     private static final Logger LOGGER = getLogger(SparqlIndexer.class);
 
     /**
-     * Set whether to use SPARQL Update or form updates.
-    **/
-    public void setFormUpdates( final boolean b ) {
-        this.formUpdates = b;
-    }
+     * Number of threads to use for operating against the triplestore.
+     */
+    private static final Integer THREAD_POOL_SIZE = 5;
 
-    /**
-     * Set base URL for SPARQL Query requests.
-    **/
-    public void setQueryBase( final String url ) {
-        this.queryBase = url;
-    }
-
-    /**
-     * Set base URL for SPARQL Update requests.
-    **/
-    public void setUpdateBase( final String url ) {
-        this.updateBase = url;
-    }
+    private ListeningExecutorService executorService =
+        listeningDecorator(newFixedThreadPool(THREAD_POOL_SIZE));
 
     /**
      * Remove any current triples about the Fedora object and replace them with
@@ -81,14 +80,17 @@ public class SparqlIndexer implements Indexer {
      * @content RDF in N3 format.
     **/
     @Override
-    public ListenableFuture<Void> update( final String pid, final String content ) {
+    public ListenableFutureTask<Void> updateSynch( final String pid, final Reader content ) {
         LOGGER.debug("Received update for: {}", pid);
         // first remove old data
-        remove(pid);
+        try {
+            remove(pid);
+        } catch (final IOException e) {
+            propagate(e);
+        }
 
         // parse content into a model
-        final Model model = ModelFactory.createDefaultModel();
-        model.read( new StringReader(content), null, "N3");
+        final Model model = createDefaultModel().read(content, null, "N3");
 
         // build a list of triples
         final StmtIterator triples = model.listStatements();
@@ -107,7 +109,7 @@ public class SparqlIndexer implements Indexer {
      * all triples with subjects starting with the same subject.
     **/
     @Override
-    public ListenableFuture<Void> remove( final String subject ) {
+    public ListenableFutureTask<Void> removeSynch(final String subject) {
 
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
@@ -116,7 +118,7 @@ public class SparqlIndexer implements Indexer {
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
-        final HashSet<String> uris = new HashSet<String>();
+        final HashSet<String> uris = new HashSet<>();
         while ( results.hasNext() ) {
             final Triple triple = results.next();
 
@@ -140,10 +142,10 @@ public class SparqlIndexer implements Indexer {
 
         // build update commands
         final UpdateRequest del = new UpdateRequest();
-        for ( final String uri : uris ) {
-            final String cmd = "delete where { <" + uri + "> ?p ?o }";
-            LOGGER.debug(cmd);
-            del.add( cmd );
+        for (final String uri : uris) {
+            final String cmd = "DELETE WHERE { <" + uri + "> ?p ?o }";
+            LOGGER.debug("Executing: {}", cmd);
+            del.add(cmd);
         }
 
         // send updates
@@ -160,12 +162,24 @@ public class SparqlIndexer implements Indexer {
             || uri1.startsWith(uri2 + "#");
     }
 
-    private ListenableFuture<Void> exec(final UpdateRequest update) {
+    private ListenableFutureTask<Void> exec(final UpdateRequest update) {
+        if (update.getOperations().isEmpty()) {
+            LOGGER.debug("Received empty update/remove operation.");
+            return ListenableFutureTask.create(new Callable<Void>() {
+
+                @Override
+                public Void call() throws Exception {
+                    return null;
+                }
+            });
+        }
+
         final ListenableFutureTask<Void> task =
             ListenableFutureTask.create(new Runnable() {
 
                 @Override
                 public void run() {
+
                     if (formUpdates) {
                         // form updates
                         final UpdateProcessor proc =
@@ -176,11 +190,37 @@ public class SparqlIndexer implements Indexer {
                         final UpdateProcessRemote proc =
                             new UpdateProcessRemote(update, updateBase,
                                     emptyContext);
-                        proc.execute();
+                        try {
+                            proc.execute();
+                        } catch (final Exception e) {
+                            LOGGER.error(
+                                    "Error executing Sparql update/remove!", e);
+                        }
                     }
                 }
             }, null);
-        task.run();
+        task.addListener(new Runnable() {
+
+            @Override
+            public void run() {
+                LOGGER.debug("Completed Sparql update/removal.");
+                if (LOGGER.isTraceEnabled()) {
+                    try (
+                        final OutputStream buffer = new ByteArrayOutputStream()) {
+                        final IndentedWriter out = new IndentedWriter(buffer);
+                        update.output(out);
+                        LOGGER.trace("Executed update/remove operation:\n{}",
+                                buffer.toString());
+                        out.close();
+                    } catch (final IOException e) {
+                        LOGGER.error(
+                                "Couldn't retrieve execution of update/remove operation!",
+                                e);
+                    }
+                }
+            }
+        }, executorService);
+        executorService.submit(task);
         return task;
     }
 
@@ -203,4 +243,37 @@ public class SparqlIndexer implements Indexer {
 
         return triples;
     }
+
+    @Override
+    public IndexerType getIndexerType() {
+        return RDF;
+    }
+
+    /**
+     * Set whether to use SPARQL Update or form updates.
+    **/
+    public void setFormUpdates( final boolean b ) {
+        this.formUpdates = b;
+    }
+
+    /**
+     * Set base URL for SPARQL Query requests.
+    **/
+    public void setQueryBase( final String url ) {
+        this.queryBase = url;
+    }
+
+    /**
+     * Set base URL for SPARQL Update requests.
+    **/
+    public void setUpdateBase( final String url ) {
+        this.updateBase = url;
+    }
+
+    @Override
+    public ListeningExecutorService executorService() {
+        return executorService;
+    }
+
+
 }

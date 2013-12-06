@@ -16,20 +16,24 @@
 
 package org.fcrepo.indexer;
 
-import static org.apache.commons.io.IOUtils.write;
+import static com.google.common.base.Throwables.propagate;
 import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
-import com.google.common.util.concurrent.ListenableFuture;
+
 import com.google.common.util.concurrent.ListenableFutureTask;
 
 /**
@@ -40,7 +44,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * @author Esmé Cowles
  * @date Aug 19, 2013
 **/
-public class FileSerializer implements Indexer {
+public class FileSerializer extends SynchIndexer<File> {
 
     private static final Logger LOGGER = getLogger(FileSerializer.class);
 
@@ -70,26 +74,27 @@ public class FileSerializer implements Indexer {
      * @return
     **/
     @Override
-    public ListenableFuture<File> update(final String pid, final String content) throws IOException {
+    public ListenableFutureTask<File> updateSynch(final String pid, final Reader content) {
         // timestamped filename
         String fn = pid + "." + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
             fn = substringAfterLast(fn, "/");
         }
         final File file = new File(path, fn);
-        return run(ListenableFutureTask.create(new Callable<File>() {
+        LOGGER.debug("Updating to file: {}", file);
+        return ListenableFutureTask.create(new Callable<File>() {
 
             @Override
             public File call() {
                 // write content to disk
-                try (Writer fw = new FileWriter(file)) {
-                    write(content, fw);
-                } catch (final IOException ex) {
-                    LOGGER.error("Error writing file", ex);
+                try (Writer w = new FileWriter(file)) {
+                    IOUtils.copy(content, w);
+                } catch (final IOException e) {
+                    propagate(e);
                 }
                 return file;
             }
-        }));
+        });
 
     }
 
@@ -98,14 +103,14 @@ public class FileSerializer implements Indexer {
      * Remove the object from the index.
     **/
     @Override
-    public ListenableFuture<File> remove(final String pid) throws IOException {
+    public ListenableFutureTask<File> removeSynch(final String id) {
         // empty update
-        return update(pid,"");
+        LOGGER.debug("Received remove for identifier: {}", id);
+        return updateSynch(id, new StringReader(""));
     }
 
-    private static <T> ListenableFuture<T> run(
-        final ListenableFutureTask<T> task) {
-        task.run();
-        return task;
+    @Override
+    public IndexerType getIndexerType() {
+        return NAMEDFIELDS;
     }
 }
