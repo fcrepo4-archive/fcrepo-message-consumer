@@ -17,6 +17,7 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
+import java.io.Reader;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -34,10 +35,19 @@ public interface Indexer {
     /**
      * Create or update an index entry for the object.
     **/
-    public ListenableFuture<?> update(final String pid, final String doc) throws IOException;
+    public ListenableFuture<?> update(final String pid, final Reader doc) throws IOException;
 
     /**
      * Remove the object from the index.
     **/
     public ListenableFuture<?> remove(final String pid) throws IOException;
+
+    /**
+     * @return What kind of indexer this is.
+     */
+    public IndexerType getIndexerType();
+
+    public static enum IndexerType {
+        NAMEDFIELDS, RDF, NO_CONTENT
+    }
 }

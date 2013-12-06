@@ -1,0 +1,3 @@
+title = dc:title :: xsd:string ;
+author = dc:creator :: xsd:string ;
+subject = dc:subject :: xsd:anyURI ;

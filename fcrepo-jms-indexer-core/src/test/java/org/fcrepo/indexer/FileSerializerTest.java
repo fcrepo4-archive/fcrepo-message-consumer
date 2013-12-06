@@ -18,6 +18,7 @@ package org.fcrepo.indexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
@@ -30,7 +31,8 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Esmé Cowles
- *         Date: Aug 19, 2013
+ * @author ajs6f
+ * @date Aug 19, 2013
  */
 public class FileSerializerTest {
     private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmssSSS");
@@ -53,7 +55,7 @@ public class FileSerializerTest {
 
     @Test
     public void updateTest() throws IOException, InterruptedException, ExecutionException {
-        serializer.update("abc123","test content");
+        serializer.update("abc123", new StringReader("test content"));
 
         // file should exist
         final File f = path.listFiles()[0];
