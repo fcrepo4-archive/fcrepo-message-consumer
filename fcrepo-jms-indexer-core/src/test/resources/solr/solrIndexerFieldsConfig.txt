@@ -1,3 +1,3 @@
-   <!--user defined indexer fields -->
+   <!--user defined indexer fields, please also copy to your solr collection folder, schema.xml(e.g., solr-4.6.0\example\solr\collection1\conf), inside <fileds> </fileds>-->
 <field name="http://fedora.info/definitions/v4/repository#mixinTypes" type="text_general" indexed="true" stored="true" multiValued="false"/>
-<field c="http://fedora.info/definitions/v4/repository#lastModified" type="text_general" indexed="true" stored="true" multiValued="false"/>
+<field name="http://fedora.info/definitions/v4/repository#lastModifiedBy" type="text_general" indexed="true" stored="true" multiValued="false"/>

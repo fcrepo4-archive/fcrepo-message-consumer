@@ -152,9 +152,9 @@
         using copyField below. This is to save space. Use this field for returning and
         highlighting document content. Use the "text" field to search the content. -->
       <!--user defined indexer fields -->
-   <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
+   <field name="content" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="http://fedora.info/definitions/v4/repository#mixinTypes" type="text_general" indexed="true" stored="true" multiValued="false"/>
-   <field name="http://fedora.info/definitions/v4/repository#lastModified" type="text_general" indexed="true" stored="true" multiValued="false"/>
+   <field name="http://fedora.info/definitions/v4/repository#lastModifiedBy" type="text_general" indexed="true" stored="true" multiValued="false"/>
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
    <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>

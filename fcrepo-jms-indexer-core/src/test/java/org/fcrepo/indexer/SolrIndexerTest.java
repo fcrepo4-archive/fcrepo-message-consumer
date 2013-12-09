@@ -26,17 +26,12 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 
 /**
  * @author yecao
- *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"/spring-test/test-container.xml"})
+
 public class SolrIndexerTest extends AbstractSolrTestCase {
 
     private final String solrHome = "./target/test-classes/solr";
@@ -61,29 +56,36 @@ public class SolrIndexerTest extends AbstractSolrTestCase {
      * Test method for
      * {@link org.fcrepo.indexer.SolrIndexer#update(java.lang.String, java.lang.String)}
      * .
-     * 
+     *
      * @throws SolrServerException
      */
     @Test
     public void testUpdate() throws SolrServerException {
-        indexer.update("123", "some content");
-        final SolrParams params = new SolrQuery("content");
+        // update(id,content) by default, content is N3 format
+        indexer.update(
+                "http://localhost:9090/rest/tesnodeid1",
+                "<http://localhost:9090/rest/tesnodeid1> <http://www.w3.org/ns/ldp#inlinedResource> <http://localhost:9090/rest/>");
+        final SolrParams params = new SolrQuery("inlinedResource");
         final QueryResponse response = server.query(params);
-        assertEquals("123", response.getResults().get(0).get("id"));
+        assertEquals("http://localhost:9090/rest/tesnodeid1", response
+                .getResults().get(0).get("id"));
     }
 
     /**
      * Test method for
      * {@link org.fcrepo.indexer.SolrIndexer#remove(java.lang.String)}.
-     * 
+     *
      * @throws IOException
      * @throws SolrServerException
      */
     @Test
     public void testRemove() throws IOException, SolrServerException {
-        indexer.update("123", "some content");
-        indexer.remove("123");
-        final SolrParams params = new SolrQuery("content");
+        // update(id,content) by default, content is N3 format
+        indexer.update(
+                "http://localhost:9090/rest/tesnodeid2",
+                "<http://localhost:9090/rest/tesnodeid2> <http://www.w3.org/ns/ldp#inlinedResource> <http://localhost:9090/rest/>");
+        indexer.remove("http://localhost:9090/rest/tesnodeid2");
+        final SolrParams params = new SolrQuery("inlinedResource");
         final QueryResponse response = server.query(params);
         assertEquals(0, response.getResults().getNumFound());
     }

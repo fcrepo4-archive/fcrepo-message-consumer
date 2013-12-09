@@ -77,7 +77,7 @@ public class SolrIndexer implements Indexer {
             final Collection<SolrInputDocument> docs =
                     new ArrayList<SolrInputDocument>();
             final HashMap<String, String> tokens =
-                    docParser(pid, doc);
+                docParser(pid, doc, "N3");
             final Iterator it = tokens.entrySet().iterator();
             inputDoc = new SolrInputDocument();
             final StringBuilder restContent = new StringBuilder("");
@@ -95,7 +95,6 @@ public class SolrIndexer implements Indexer {
                         restContent.append(fieldname + "," + fieldvalue + "||");
                     }
                 }
-
             }
             if (!restContent.toString().equals("")) {
                 inputDoc.addField("content", restContent);
@@ -143,12 +142,13 @@ public class SolrIndexer implements Indexer {
      * return json
      */
     HashMap<String, String> docParser(final String inputPid,
-            final String doc) {
+    final String doc,
+            final String format) {
         // parse content into a model
         final Model model = ModelFactory.createDefaultModel();
         // final StringReader sr = new StringReader(doc);
         final InputStream sr = new ByteArrayInputStream(doc.getBytes());
-        model.read(sr, null,"N3");
+        model.read(sr, null, format);
         final StmtIterator iter = model.listStatements();
         final HashMap<String, String> fields = new HashMap<String, String>();
         while (iter.hasNext()) {

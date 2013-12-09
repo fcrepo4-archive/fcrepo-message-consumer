@@ -54,10 +54,13 @@ public class SolrIndexerIT {
      */
     @Test
     public void testUpdate() throws SolrServerException {
-        solrIndexer.update("123", "some content");
+        solrIndexer
+                .update("http://localhost:9090/rest/tesnodeid1",
+                        "<http://localhost:9090/rest/tesnodeid1> <http://www.w3.org/ns/ldp#inlinedResource> <http://localhost:9090/rest/>");
         final SolrParams params = new SolrQuery("content");
         final QueryResponse response = server.query(params);
-        assertEquals("123", response.getResults().get(0).get("id"));
+        assertEquals("http://localhost:9090/rest/tesnodeid1", response
+                .getResults().get(0).get("id"));
     }
 
     /**
@@ -69,8 +72,10 @@ public class SolrIndexerIT {
      */
     @Test
     public void testRemove() throws IOException, SolrServerException {
-        solrIndexer.update("345", "some content");
-        solrIndexer.remove("345");
+        solrIndexer
+                .update("http://localhost:9090/rest/tesnodeid2",
+                        "<http://localhost:9090/rest/tesnodeid2> <http://www.w3.org/ns/ldp#inlinedResource> <http://localhost:9090/rest/>");
+        solrIndexer.remove("http://localhost:9090/rest/tesnodeid2");
         final SolrParams params = new SolrQuery("content");
         final QueryResponse response = server.query(params);
         assertEquals(0, response.getResults().getNumFound());
