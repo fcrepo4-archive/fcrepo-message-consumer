@@ -1,4 +1,4 @@
-This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves the updated object from the repository once, and then passes the content on to any number of registered handlers.  It is built relying heavily on Spring machinery, including:
+This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves a message including pid and eventType, looks up object properties, gets and passes the transformed or untransformed properties on to any number of registered handlers.  It is built relying heavily on Spring machinery, including:
 
 * spring-lang
 * spring-jms
@@ -7,7 +7,7 @@ This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves the
 
 ## Running the indexer
 
-In the simplest case, the indexer can be configurd in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/futures/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
+In the simplest case, the indexer can be configured in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/futures/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
 
 For production deployment, it is more typical to run the indexer on a separate machine.  So we also have a stand-alone mode where the indexer is run as its own webapp:
 
@@ -19,8 +19,11 @@ $ mvn -D jetty.port=9999 install jetty:run
 
 ## Configuring the indexer
 
-There is an example Spring configuration [in the tests](https://github.com/futures/fcrepo-jms-indexer-solr/blob/master/src/test/resources/spring-test/solr-indexer.xml), but it goes something like this:
+ [Test Spring Configuration](https://github.com/futures/fcrepo-jms-indexer-pluggable/tree/master/fcrepo-jms-indexer-core/src/test/resources/spring-test)
+ 
+ [Production Spring Configuration](https://github.com/futures/fcrepo-jms-indexer-pluggable/tree/master/fcrepo-jms-indexer-webapp/src/main/resources/spring) 
 
+indexer-core.xml
 ```xml
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
@@ -43,6 +46,35 @@ There is an example Spring configuration [in the tests](https://github.com/futur
     </property>
     -->
   </bean>
+  
+  <!--Embedded Server used in spring-test -->
+  <!--
+  
+  <bean id="multiCore" class="org.apache.solr.core.CoreContainer"
+    factory-method="createAndLoad" c:solrHome="target/test-classes/solr"
+    c:configFile-ref="solrConfig"/>
+    
+  <bean class="java.io.File" id="solrConfig">
+    <constructor-arg type="String">
+      <value>target/test-classes/solr/solr.xml</value>
+    </constructor-arg>
+  </bean>
+
+  <bean id="solrServer"
+    class="org.apache.solr.client.solrj.embedded.EmbeddedSolrServer"
+    c:coreContainer-ref="multiCore" c:coreName="testCore"/>
+    -->
+  <!-- end Embedded Server-->
+  
+  <!--Standardalone solr Server -->
+  <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
+    <constructor-arg index="0" value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/" />
+  </bean>
+  
+  <!-- Solr Indexer START-->
+    <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer">
+    <constructor-arg ref="solrServer" />
+    </bean>
 
   <!-- file serializer -->
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
@@ -54,19 +86,40 @@ There is an example Spring configuration [in the tests](https://github.com/futur
     <property name="repositoryURL" value="http://localhost:${test.port:8080}/rest/objects/" />
     <property name="indexers">
       <set>
-        <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
+        <ref bean="solrIndexer"/>
+        <ref bean="fileSerializer"/>
       </set>
     </property>
   </bean>
+  <!--end indexer-core.xml-->
+```
 
+Here 3 indexers are implemented, sparqlUpdate writing to an as configured fuseki triplestore, solrIndexer writing to an as configured standalone solr instance, and fileSerializer writing to an arbitrary path.  
+
+indexer-events.xml
+```xml
+  <bean id="connectionFactory"
+    class="org.apache.activemq.ActiveMQConnectionFactory">
+    <property name="brokerURL" value="vm://localhost"/>
+  </bean>
+
+  <bean id="pooledConnectionFactory"
+    class="org.apache.activemq.pool.PooledConnectionFactory"
+    depends-on="connectionFactory">
+    <property name="connectionFactory" ref="connectionFactory"/>
+    <property name="maxConnections" value="1"/>
+    <property name="idleTimeout" value="0"/>
+  </bean>
+  
   <!-- ActiveMQ queue to listen for events -->
   <bean id="destination" class="org.apache.activemq.command.ActiveMQTopic">
     <constructor-arg value="fedora" />
   </bean>
 
   <!-- and this is the message listener container -->
-  <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+  <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer"
+    depends-on="destination, pooledConnectionFactory">
     <property name="connectionFactory" ref="connectionFactory"/>
     <property name="destination" ref="destination"/>
     <property name="messageListener" ref="indexerGroup" />
@@ -119,6 +172,18 @@ Sesame requires a little more setup to run with the tests, since by default it u
     > quit.
     ```
 
-## Caveat: Blank Nodes
+### Solr
 
-Currently, blank nodes are not supported and will cause deletes and updates to fail, because the SPARQL Update protocol does not have support for deleting blank nodes.  By default, no blank nodes are generated by Fedora, so this should not typically be a problem.  In cases where blank nodes are attached to objects (e.g., to implement descriptive metadata schemas such as MADS), an alternative indexer will need to be created.  This indexer would need to use a native API tied to a particular triplestore in order to access and delete blank nodes.
+Solr can be installed embedded into a jetty server (recommended for test) or in a tomcat container (recommended for production).  Download install and configuration are here: https://cwiki.apache.org/confluence/display/solr/Getting+Started
+
+### Maven Build
+
+Use the following MAVEN_OPTS on build
+
+   ``` sh
+   MAVEN_OPTS=-Xmx750M -XX:maxPermSize=300M clean install
+   ```
+
+### Caveat: Blank Nodes
+
+Fedora doesn't currently support blank nodes.
