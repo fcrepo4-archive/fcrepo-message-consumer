@@ -118,7 +118,9 @@
     -->
   <!-- <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/> --> 
-
+  <directoryFactory name="DirectoryFactory" class="solr.RAMDirectoryFactory"/>
+  
+  
   <!-- The CodecFactory for defining the format of the inverted index.
        The default implementation is SchemaCodecFactory, which is the official Lucene
        index format, but hooks into the schema to provide per-field customization of
@@ -363,8 +365,9 @@
          have some sort of hard autoCommit to limit the log size.
       -->
      <autoCommit> 
-       <maxTime>${solr.autoCommit.maxTime:15000}</maxTime> 
-       <openSearcher>false</openSearcher> 
+       <maxTime>0</maxTime> 
+       <maxDocs>0</maxDocs>
+       <openSearcher>true</openSearcher> 
      </autoCommit>
 
     <!-- softAutoCommit is like autoCommit except it causes a

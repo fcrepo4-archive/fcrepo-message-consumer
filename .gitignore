@@ -8,6 +8,7 @@ FedoraRepository/
 indexes/
 ObjectStore/
 */.cache
+**/data
 .cache
 .DS_Store
 *~

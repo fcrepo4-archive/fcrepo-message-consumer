@@ -2,8 +2,8 @@
     "name" : "repo",
     "jndiName" : "",
     "workspaces" : {
-        "predefined" : ["fedora"],
-        "default" : "fedora",
+        "predefined" : ["default"],
+        "default" : "default",
         "allowCreation" : true
     },
     "security" : {
@@ -14,6 +14,9 @@
         "providers" : [
             { "classname" : "org.fcrepo.http.commons.session.BypassSecurityServletAuthenticationProvider" }
         ]
+    },
+    "query" : {
+        "enabled": false
     },
     "node-types" : ["fedora-node-types.cnd"]
 }

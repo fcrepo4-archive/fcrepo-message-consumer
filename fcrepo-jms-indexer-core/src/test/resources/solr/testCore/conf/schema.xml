@@ -107,7 +107,8 @@
    -->
         
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
-
+   <field name="uuid" type="string" indexed="true" stored="true" required="false" multiValued="false" /> 
+   
    <!-- points to the root document of a block of nested documents -->
    <field name="_root_" type="string" indexed="true" stored="false"/>
 
