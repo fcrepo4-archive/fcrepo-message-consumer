@@ -60,20 +60,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.abdera</groupId>
-      <artifactId>abdera-core</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.abdera</groupId>
-      <artifactId>abdera-parser</artifactId>
     </dependency>
 
     <dependency>
@@ -84,6 +76,12 @@
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-http-commons</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>lucene-core</artifactId>
+          <groupId>org.apache.lucene</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -92,8 +90,20 @@
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-transform</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j-over-slf4j</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel</artifactId>
     </dependency>
+    
 
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -111,20 +121,28 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki</artifactId>
       <scope>test</scope>
+<!--       <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+      </exclusions> -->
     </dependency>
     <!-- Start of Solr Indexer libs -->
     <dependency>
       <groupId>org.apache.solr</groupId>
-      <artifactId>solr-solrj</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.solr</groupId>
       <artifactId>solr-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
-    <dependency>
+    <!--   <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-test-framework</artifactId>
-    </dependency>
+    </dependency> -->
     <!--  HttpClient are used for create standardalone SolrIndexer Server client.
      They seem to be included with Solr 3.6.2?
      Ver 4.2.5 aim to fit JENA included version -->
@@ -133,6 +151,11 @@
       <artifactId>httpmime</artifactId>
     </dependency>
     <!-- End of Solr Indexer libs -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.2.4</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -242,4 +265,18 @@
     </plugins>
   </build>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-facet</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>

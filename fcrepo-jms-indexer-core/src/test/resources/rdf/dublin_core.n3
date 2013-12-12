@@ -1,0 +1,7 @@
+@prefix dc:<http://purl.org/dc/elements/1.1/> .
+@prefix fedora:<http://fedora.info/definitions/v4/repository#>.
+
+<>	dc:title		"Easy Microwave Meals For Ghouls" ;  
+	dc:creator		"Yubulac Xorhorisa" ; 
+	dc:subject		<http://id.loc.gov/authorities/subjects/sh2012004374> ;
+	fedora:hasIndexingTransformation "dc".
