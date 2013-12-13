@@ -23,6 +23,7 @@ import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
+import static javax.jcr.observation.Event.PROPERTY_CHANGED;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -84,6 +85,12 @@ public class IndexerGroup implements MessageListener {
      */
     private static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
             + EventType.valueOf(NODE_REMOVED).toString();
+
+    /**
+     * Type of event that qualifies as a propert change.
+     */
+    private static final String PROPERTY_CHANGED_EVENT_TYPE = REPOSITORY_NAMESPACE
+            + EventType.valueOf(PROPERTY_CHANGED).toString();
 
     public static final String INDEXER_NAMESPACE =
         "http://fedora.info/definitions/v4/indexing#";
@@ -167,7 +174,12 @@ public class IndexerGroup implements MessageListener {
 
             final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
             LOGGER.debug("It is {} that this is a removal operation.", removal);
-            final String uri = getRepositoryURL() + pid;
+            final Boolean property_changed = PROPERTY_CHANGED_EVENT_TYPE.equals(eventType);
+            LOGGER.debug("It is {} that this is a property_change operation.", property_changed);
+            String uri = getRepositoryURL() + pid;
+            if (property_changed) {
+                uri = uri.substring(0,uri.lastIndexOf("/"));
+            }
             final RdfRetriever rdfr = new RdfRetriever(uri, httpClient);
             final NamedFieldsRetriever nfr =
                 new NamedFieldsRetriever(uri, httpClient, rdfr);
