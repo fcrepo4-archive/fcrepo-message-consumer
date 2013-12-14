@@ -24,14 +24,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -44,7 +41,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * @author Esmé Cowles
  * @date Aug 19, 2013
 **/
-public class FileSerializer extends SynchIndexer<File> {
+public class FileSerializer extends SynchIndexer<NamedFields, File> {
 
     private static final Logger LOGGER = getLogger(FileSerializer.class);
 
@@ -74,7 +71,7 @@ public class FileSerializer extends SynchIndexer<File> {
      * @return
     **/
     @Override
-    public ListenableFutureTask<File> updateSynch(final String pid, final Reader content) {
+    public ListenableFutureTask<File> updateSynch(final String pid, final NamedFields content) {
         // timestamped filename
         String fn = pid + "." + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
@@ -88,7 +85,11 @@ public class FileSerializer extends SynchIndexer<File> {
             public File call() {
                 // write content to disk
                 try (Writer w = new FileWriter(file)) {
-                    IOUtils.copy(content, w);
+                    if (content.isEmpty()) {
+                        w.write("");
+                    } else {
+                        w.write(content.toString());
+                    }
                 } catch (final IOException e) {
                     propagate(e);
                 }
@@ -106,7 +107,7 @@ public class FileSerializer extends SynchIndexer<File> {
     public ListenableFutureTask<File> removeSynch(final String id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
-        return updateSynch(id, new StringReader(""));
+        return updateSynch(id, new NamedFields());
     }
 
     @Override

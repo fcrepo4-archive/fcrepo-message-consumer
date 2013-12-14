@@ -15,17 +15,18 @@
  */
 package org.fcrepo.indexer.solr;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
+import static java.util.Arrays.asList;
 import static org.apache.solr.core.CoreContainer.createAndLoad;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -33,6 +34,7 @@ import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
+import org.fcrepo.indexer.NamedFields;
 import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,11 +77,12 @@ public class SolrIndexerTest {
     }
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
-        final String content = "[{\"id\" : [\"" +pid+ "\"]}]";
+        final Collection<String> values = asList(pid);
+        final NamedFields testContent = new NamedFields(of("id", values));
         LOGGER.debug(
                 "Trying update operation with identifier: {} and content: \"{}\".",
-                pid, content);
-        indexer.update(pid, new StringReader(content));
+                pid, testContent);
+        indexer.update(pid, testContent);
 
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();

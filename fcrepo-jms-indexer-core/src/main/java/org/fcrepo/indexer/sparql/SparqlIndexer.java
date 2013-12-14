@@ -18,7 +18,6 @@ package org.fcrepo.indexer.sparql;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static com.hp.hpl.jena.sparql.util.Context.emptyContext;
 import static com.hp.hpl.jena.update.UpdateExecutionFactory.createRemoteForm;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -28,7 +27,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -58,7 +56,7 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @date Aug 19, 2013
 **/
-public class SparqlIndexer extends AsynchIndexer<Void> {
+public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
     private String queryBase;
     private String updateBase;
@@ -80,7 +78,8 @@ public class SparqlIndexer extends AsynchIndexer<Void> {
      * @content RDF in N3 format.
     **/
     @Override
-    public ListenableFutureTask<Void> updateSynch( final String pid, final Reader content ) {
+    public ListenableFutureTask<Void> updateSynch(final String pid,
+        final Model model) {
         LOGGER.debug("Received update for: {}", pid);
         // first remove old data
         try {
@@ -88,9 +87,6 @@ public class SparqlIndexer extends AsynchIndexer<Void> {
         } catch (final IOException e) {
             propagate(e);
         }
-
-        // parse content into a model
-        final Model model = createDefaultModel().read(content, null, "N3");
 
         // build a list of triples
         final StmtIterator triples = model.listStatements();

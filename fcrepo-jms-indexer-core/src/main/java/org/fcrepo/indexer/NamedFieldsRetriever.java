@@ -16,20 +16,29 @@
 
 package org.fcrepo.indexer;
 
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static com.google.common.base.Throwables.propagate;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.fcrepo.indexer.IndexerGroup.INDEXING_TRANSFORM_PREDICATE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Map;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 
+import com.google.common.base.Supplier;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
@@ -40,13 +49,18 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * @author ajs6f
  * @date Dec 6, 2013
  */
-public class NamedFieldsRetriever extends CachingRetriever {
+public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
     private final String uri;
 
     private final HttpClient httpClient;
 
-    private final RdfRetriever rdfr;
+    private final Supplier<Model> rdfr;
+
+    private Gson gson;
+
+    private static final Type typeToken =
+        new TypeToken<Map<String, Collection<String>>>() {}.getType();
 
     private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);
 
@@ -55,35 +69,55 @@ public class NamedFieldsRetriever extends CachingRetriever {
      * @param client
      */
     public NamedFieldsRetriever(final String uri, final HttpClient client,
-        final RdfRetriever rdfr) {
+        final Supplier<Model> rdfr) {
         this.uri = uri;
         this.httpClient = client;
         this.rdfr = rdfr;
+        final NamedFieldsDeserializer deserializer =
+            new NamedFieldsDeserializer();
+        this.gson =
+            new GsonBuilder().registerTypeAdapter(typeToken, deserializer)
+                    .create();
+        deserializer.setGson(gson);
     }
 
     @Override
-    public HttpResponse retrieveHttpResponse() throws AbsentTransformPropertyException,
-        ClientProtocolException, IOException, HttpException {
+    public NamedFields get() {
         LOGGER.debug("Retrieving RDF representation from: {}", uri);
-        final Model rdf = createDefaultModel().read(rdfr.call(), null, "N3");
-        if (!rdf.contains(createResource(uri), INDEXING_TRANSFORM_PREDICATE)) {
-            LOGGER.info(
-                    "Found no property locating LDPath transform for: {}, will not retrieve transformed content.",
-                    uri);
-            throw new AbsentTransformPropertyException(uri);
-        }
-        final RDFNode indexingTransform =
-            rdf.listObjectsOfProperty(createResource(uri),
-                    INDEXING_TRANSFORM_PREDICATE).next();
-        final String transformKey = indexingTransform.asLiteral().getString();
+        try {
+            final Model rdf = rdfr.get();
+            if (!rdf.contains(createResource(uri), INDEXING_TRANSFORM_PREDICATE)) {
+                LOGGER.info(
+                        "Found no property locating LDPath transform for: {}, will not retrieve transformed content.",
+                        uri);
+                throw new AbsentTransformPropertyException(uri);
+            }
+            final RDFNode indexingTransform =
+                rdf.listObjectsOfProperty(createResource(uri),
+                        INDEXING_TRANSFORM_PREDICATE).next();
+            final String transformKey =
+                indexingTransform.asLiteral().getString();
 
-        LOGGER.debug("Discovered transform key: {}", transformKey);
-        final HttpGet transformedResourceRequest =
-            new HttpGet(uri + "/fcr:transform/" + transformKey);
-        LOGGER.debug("Retrieving transformed resource from: {}",
-                transformedResourceRequest.getURI());
-        return
-            httpClient.execute(transformedResourceRequest);
+            LOGGER.debug("Discovered transform key: {}", transformKey);
+            final HttpGet transformedResourceRequest =
+                new HttpGet(uri + "/fcr:transform/" + transformKey);
+            LOGGER.debug("Retrieving transformed resource from: {}",
+                    transformedResourceRequest.getURI());
+
+            final HttpResponse response =
+                httpClient.execute(transformedResourceRequest);
+            if (response.getStatusLine().getStatusCode() != SC_OK) {
+                throw new HttpException(response.getStatusLine().toString());
+            }
+            try (
+                Reader r =
+                    new InputStreamReader(response.getEntity().getContent())) {
+                return gson.fromJson(r, typeToken);
+            }
+
+        } catch (IOException | HttpException e) {
+            throw propagate(e);
+        }
     }
 
 }

@@ -15,20 +15,22 @@
  */
 package org.fcrepo.indexer.integration.solr;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.SolrParams;
+import org.fcrepo.indexer.NamedFields;
 import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,9 +66,9 @@ public class SolrIndexerIT {
     }
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
-        final String json =
-            "[{\"id\" : [\"" + pid + "\"]}]";
-        solrIndexer.update(pid, new StringReader(json));
+        final Collection<String> values = asList(pid);
+        final NamedFields testContent = new NamedFields(of("id", values));
+        solrIndexer.update(pid, testContent);
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
         Boolean success = results.size() == 1;

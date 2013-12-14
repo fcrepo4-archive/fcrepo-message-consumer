@@ -19,8 +19,6 @@ package org.fcrepo.indexer;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.io.Reader;
-
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,9 +30,12 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  *
  * @author ajs6f
  * @date Dec 8, 2013
- * @param <T> the type of response to expect from an operation
+ *
+ * @param <Content> the type of content to index
+ * @param <Result> the type of response to expect from an operation
  */
-public abstract class AsynchIndexer<T> implements Indexer {
+public abstract class AsynchIndexer<Content, Result> implements
+    Indexer<Content> {
 
     private static final Logger LOGGER = getLogger(AsynchIndexer.class);
 
@@ -44,11 +45,11 @@ public abstract class AsynchIndexer<T> implements Indexer {
     public abstract ListeningExecutorService executorService();
 
     @Override
-    public ListenableFuture<T> update(final String identifier,
-        final Reader content) throws IOException {
+    public ListenableFuture<Result> update(final String identifier,
+        final Content content) throws IOException {
         LOGGER.debug("Received update for identifier: {}", identifier);
 
-        final ListenableFutureTask<T> task = updateSynch(identifier, content);
+        final ListenableFutureTask<Result> task = updateSynch(identifier, content);
         task.addListener(new Runnable() {
             @Override
             public void run() {
@@ -62,10 +63,10 @@ public abstract class AsynchIndexer<T> implements Indexer {
     }
 
     @Override
-    public ListenableFuture<T> remove(final String identifier)
+    public ListenableFuture<Result> remove(final String identifier)
         throws IOException {
         LOGGER.debug("Received remove for identifier: {}", identifier);
-        final ListenableFutureTask<T> task = removeSynch(identifier);
+        final ListenableFutureTask<Result> task = removeSynch(identifier);
         task.addListener(new Runnable() {
             @Override
             public void run() {
@@ -82,14 +83,14 @@ public abstract class AsynchIndexer<T> implements Indexer {
      * @param identifier
      * @return
      */
-    public abstract ListenableFutureTask<T> removeSynch(final String identifier);
+    public abstract ListenableFutureTask<Result> removeSynch(final String identifier);
 
     /**
      * @param identifier
      * @param content
      * @return
      */
-    public abstract ListenableFutureTask<T> updateSynch(final String identifier,
-            final Reader content);
+    public abstract ListenableFutureTask<Result> updateSynch(final String identifier,
+            final Content content);
 
 }

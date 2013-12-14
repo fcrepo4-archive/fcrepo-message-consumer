@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package org.fcrepo.indexer.solr;
+package org.fcrepo.indexer;
 
-import static com.google.common.collect.Maps.transformEntries;
+import static com.google.common.collect.ImmutableList.builder;
+import static com.google.common.collect.Maps.transformValues;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.SolrInputField;
 import org.slf4j.Logger;
 
-import com.google.common.collect.Maps.EntryTransformer;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.TypeAdapter;
@@ -37,13 +38,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 /**
- * Translates JSON maps to {@link SolrInputDocument}s
+ * Deserializes JSON maps
  *
  * @author ajs6f
  * @date Dec 6, 2013
  */
-public class SolrInputDocumentDeserializer extends
-        TypeAdapter<SolrInputDocument> {
+public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 
     private static final Type type = new TypeToken<Collection<Map<String, JsonElement>>>() {}
             .getType();
@@ -53,36 +53,38 @@ public class SolrInputDocumentDeserializer extends
     //TODO make index-time boost somehow adjustable, or something
     public static final Long INDEX_TIME_BOOST = 1L;
 
-    private static final Logger LOGGER = getLogger(SolrInputDocumentDeserializer.class);
+    private static final Logger LOGGER = getLogger(NamedFieldsDeserializer.class);
 
-    private static EntryTransformer<String, JsonElement, SolrInputField> jsonElement2solrInputField =
-        new EntryTransformer<String, JsonElement, SolrInputField>() {
+    private static Function<JsonElement, Collection<String>> jsonElement2list =
+        new Function<JsonElement, Collection<String>>() {
 
             @Override
-            public SolrInputField transformEntry(final String key,
-                final JsonElement input) {
-                final SolrInputField field = new SolrInputField(key);
+            public List<String> apply(final JsonElement input) {
+                final ImmutableList.Builder<String> b = builder();
                 for (final JsonElement value : input.getAsJsonArray()) {
-                    field.addValue(value.getAsString(), INDEX_TIME_BOOST);
+                    b.add(value.getAsString());
                 }
-                return field;
+                return b.build();
             }
         };
 
     @Override
-    public void write(final JsonWriter out, final SolrInputDocument value) throws IOException {
+    public void write(final JsonWriter out, final NamedFields value)
+        throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public SolrInputDocument read(final JsonReader in) throws IOException {
+    public NamedFields read(final JsonReader in)
+        throws IOException {
         try {
             final Collection<Map<String, JsonElement>> fields =
                 gson.fromJson(in, type);
-            return new SolrInputDocument(transformEntries(fields.iterator()
-                    .next(), jsonElement2solrInputField));
+            // note: we assume that only one element will exist in
+            // fields, because that is the nature of the LDPath machinery
+            return new NamedFields(transformValues(fields.iterator().next(), jsonElement2list));
         } catch (final Exception e) {
-            LOGGER.error("Failed to parse JSON to Solr update document!", e);
+            LOGGER.error("Failed to parse JSON to Map<String, Collection<String>>!", e);
             throw e;
         }
 
@@ -90,7 +92,7 @@ public class SolrInputDocumentDeserializer extends
 
 
     /**
-     * @param gson the Gson engine to use
+     * @param gson the Gson engine to set
      */
     public void setGson(final Gson gson) {
         this.gson = gson;
