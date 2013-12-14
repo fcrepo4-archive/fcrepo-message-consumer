@@ -30,6 +30,7 @@
   <modules>
     <module>fcrepo-jms-indexer-core</module>
     <module>fcrepo-jms-indexer-webapp</module>
+    <module>fcrepo-jms-indexer-elasticsearch</module>
   </modules>
 
   <scm>
