@@ -22,7 +22,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * Main interface for individual indexers to implement.  Each type of
  * destination (Solr, triplestore, files, etc.) should have its own
- * implementation.
+ * implementation. Abstract classes {@link AsynchIndexer} and {@link SynchIndexer
+ * are provided for convenience.
  *
  * @author ajs6f
  * @author Esmé Cowles
@@ -35,11 +36,14 @@ public interface Indexer<Content> {
 
     /**
      * Create or update an index entry for the object.
+     * @return the results of addition
     **/
     public ListenableFuture<?> update(final String pid, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
+     * @return the results of removal
+     *
     **/
     public ListenableFuture<?> remove(final String pid) throws IOException;
 
@@ -49,7 +53,7 @@ public interface Indexer<Content> {
     public IndexerType getIndexerType();
 
     /**
-     * Indexer types.
+     * Types of content processed by {@link Indexer}s.
      *
      * @author ajs6f
      * @date Dec 14, 2013
@@ -59,7 +63,7 @@ public interface Indexer<Content> {
     }
 
     /**
-     * Marker class for indexers that do not actually accept content.
+     * Class for indexers that do not actually accept content.
      *
      * @author ajs6f
      * @date Dec 14, 2013
