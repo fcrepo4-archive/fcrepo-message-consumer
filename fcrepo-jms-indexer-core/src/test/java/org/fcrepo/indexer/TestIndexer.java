@@ -17,6 +17,7 @@
 package org.fcrepo.indexer;
 
 import static org.fcrepo.indexer.Indexer.IndexerType.NO_CONTENT;
+import static org.fcrepo.indexer.Indexer.NoContent;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashSet;
@@ -29,13 +30,14 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 
 
 /**
- * Indexer implementation that tracks which PIDs it has received messages for.
+ * Indexer implementation that tracks which PIDs it has received messages for,
+ * but does not actually process content.
  *
  * @author ajs6f
  * @author Esmé Cowles
  * @date Nov 25, 2013
-**/
-public class TestIndexer extends SynchIndexer<Void, Boolean> {
+ **/
+public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
 
     private static final Logger LOGGER = getLogger(TestIndexer.class);
 
@@ -44,7 +46,7 @@ public class TestIndexer extends SynchIndexer<Void, Boolean> {
 
     @Override
     public ListenableFutureTask<Boolean> updateSynch(final String identifier,
-        final Void content) {
+        final NoContent content) {
         LOGGER.debug("Received update for identifier: {}", identifier);
         return ListenableFutureTask.create(new Callable<Boolean>() {
 
@@ -58,8 +60,7 @@ public class TestIndexer extends SynchIndexer<Void, Boolean> {
     }
 
     @Override
-    public ListenableFutureTask<Boolean>
-    removeSynch(final String identifier) {
+    public ListenableFutureTask<Boolean> removeSynch(final String identifier) {
         LOGGER.debug("Received remove for identifier: {}", identifier);
         return ListenableFutureTask.create(new Callable<Boolean>() {
 

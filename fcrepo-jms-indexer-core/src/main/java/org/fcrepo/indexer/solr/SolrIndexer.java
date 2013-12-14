@@ -37,6 +37,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.IndexerGroup;
+import org.fcrepo.indexer.NamedFields;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,8 +53,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * @author yecao
  * @date Nov 2013
  */
-public class SolrIndexer extends
-    AsynchIndexer<Map<String, Collection<String>>, UpdateResponse> {
+public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
     public static final String CONFIGURATION_FOLDER =
         "/fedora:system/fedora:transform/fedora:ldpath/";
@@ -87,7 +87,7 @@ public class SolrIndexer extends
 
     @Override
     public ListenableFutureTask<UpdateResponse> updateSynch(final String pid,
-            final Map<String, Collection<String>> fields) {
+        final NamedFields fields) {
         LOGGER.debug("Received request for update to: {}", pid);
         return ListenableFutureTask.create(new Callable<UpdateResponse>() {
 

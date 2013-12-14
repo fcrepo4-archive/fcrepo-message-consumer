@@ -48,7 +48,23 @@ public interface Indexer<Content> {
      */
     public IndexerType getIndexerType();
 
+    /**
+     * Indexer types.
+     *
+     * @author ajs6f
+     * @date Dec 14, 2013
+     */
     public static enum IndexerType {
         NAMEDFIELDS, RDF, NO_CONTENT
+    }
+
+    /**
+     * Marker class for indexers that do not actually accept content.
+     *
+     * @author ajs6f
+     * @date Dec 14, 2013
+     */
+    public static interface NoContent {
+
     }
 }

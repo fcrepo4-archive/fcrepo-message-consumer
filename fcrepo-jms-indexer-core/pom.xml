@@ -201,7 +201,6 @@
 
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${checkstyle.plugin.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.fcrepo</groupId>
@@ -229,7 +228,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.8</version>
         <!-- reserve ports for integration tests -->
         <configuration>
           <portNames>
