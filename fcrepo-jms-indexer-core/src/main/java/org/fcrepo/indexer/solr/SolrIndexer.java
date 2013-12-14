@@ -64,7 +64,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     private final SolrServer server;
 
     /**
-     * Number of threads to use for operating against the triplestore.
+     * Number of threads to use for operating against the index.
      */
     private static final Integer THREAD_POOL_SIZE = 5;
 
