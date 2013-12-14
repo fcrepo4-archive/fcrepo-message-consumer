@@ -17,13 +17,15 @@
 package org.fcrepo.indexer.solr;
 
 import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.Maps.transformEntries;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
@@ -32,15 +34,16 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.IndexerGroup;
+import org.fcrepo.indexer.NamedFields;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.collect.Maps.EntryTransformer;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * A Solr Indexer (stub) implementation that adds some basic information to a
@@ -50,15 +53,18 @@ import com.google.gson.GsonBuilder;
  * @author yecao
  * @date Nov 2013
  */
-public class SolrIndexer extends AsynchIndexer<UpdateResponse> {
+public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
     public static final String CONFIGURATION_FOLDER =
         "/fedora:system/fedora:transform/fedora:ldpath/";
 
+    // TODO make index-time boost somehow adjustable, or something
+    public static final Long INDEX_TIME_BOOST = 1L;
+
     private final SolrServer server;
 
     /**
-     * Number of threads to use for operating against the triplestore.
+     * Number of threads to use for operating against the index.
      */
     private static final Integer THREAD_POOL_SIZE = 5;
 
@@ -71,35 +77,17 @@ public class SolrIndexer extends AsynchIndexer<UpdateResponse> {
     @Inject
     private IndexerGroup indexerGroup;
 
-    private Gson gson;
-
     /**
      * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
      */
     @Autowired
     public SolrIndexer(final SolrServer solrServer) {
         this.server = solrServer;
-        final SolrInputDocumentDeserializer deserializer =
-            new SolrInputDocumentDeserializer();
-        this.gson =
-            new GsonBuilder().registerTypeAdapter(SolrInputDocument.class,
-                    deserializer).create();
-        deserializer.setGson(this.gson);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.fcrepo.indexer.Indexer#update(java.lang.String, java.io.Reader)
-     * This method expects to receive a JSON input in {@param doc} that shows
-     * the following form:
-     * [{  "id" : ["myId"],
-     *     "myField" : ["myFieldValue"],
-     *     "myMultiValuedField" : ["value1", "value2"]
-     * }]
-     */
     @Override
     public ListenableFutureTask<UpdateResponse> updateSynch(final String pid,
-            final Reader doc) {
+        final NamedFields fields) {
         LOGGER.debug("Received request for update to: {}", pid);
         return ListenableFutureTask.create(new Callable<UpdateResponse>() {
 
@@ -107,10 +95,9 @@ public class SolrIndexer extends AsynchIndexer<UpdateResponse> {
             public UpdateResponse call() throws Exception {
                 try {
                     // parse the JSON fields to a Solr input doc
-                    final SolrInputDocument inputDoc =
-                        gson.fromJson(doc, SolrInputDocument.class);
+                    final SolrInputDocument inputDoc = fromMap(fields);
                     LOGGER.debug("Parsed SolrInputDocument: {}", inputDoc);
-                    doc.close();
+
 
                     // add the identifier of the resource as a unique index-key
                     inputDoc.addField("id", pid);
@@ -133,6 +120,26 @@ public class SolrIndexer extends AsynchIndexer<UpdateResponse> {
             }
         });
     }
+
+    protected SolrInputDocument fromMap(final Map<String, Collection<String>> fields) {
+        return new SolrInputDocument(transformEntries(fields,
+                collection2solrInputField));
+    }
+
+    private static EntryTransformer<String, Collection<String>, SolrInputField> collection2solrInputField =
+            new EntryTransformer<String, Collection<String>, SolrInputField>() {
+
+                @Override
+                public SolrInputField transformEntry(final String key,
+                    final Collection<String> input) {
+                    final SolrInputField field = new SolrInputField(key);
+                    for (final String value : input) {
+                        field.addValue(value, INDEX_TIME_BOOST);
+                    }
+                    return field;
+                }
+            };
+
 
     @Override
     public ListenableFutureTask<UpdateResponse> removeSynch(final String pid) {

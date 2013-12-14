@@ -17,28 +17,33 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
-import java.io.Reader;
-
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Main interface for individual indexers to implement.  Each type of
  * destination (Solr, triplestore, files, etc.) should have its own
- * implementation.
+ * implementation. Abstract classes {@link AsynchIndexer} and {@link SynchIndexer
+ * are provided for convenience.
  *
  * @author ajs6f
  * @author Esmé Cowles
  * @date Aug 19, 2013
+ *
+ * @param <Content> the type of content to index
+ *
 **/
-public interface Indexer {
+public interface Indexer<Content> {
 
     /**
      * Create or update an index entry for the object.
+     * @return the results of addition
     **/
-    public ListenableFuture<?> update(final String pid, final Reader doc) throws IOException;
+    public ListenableFuture<?> update(final String pid, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
+     * @return the results of removal
+     *
     **/
     public ListenableFuture<?> remove(final String pid) throws IOException;
 
@@ -47,7 +52,23 @@ public interface Indexer {
      */
     public IndexerType getIndexerType();
 
+    /**
+     * Types of content processed by {@link Indexer}s.
+     *
+     * @author ajs6f
+     * @date Dec 14, 2013
+     */
     public static enum IndexerType {
         NAMEDFIELDS, RDF, NO_CONTENT
+    }
+
+    /**
+     * Class for indexers that do not actually accept content.
+     *
+     * @author ajs6f
+     * @date Dec 14, 2013
+     */
+    public static interface NoContent {
+
     }
 }

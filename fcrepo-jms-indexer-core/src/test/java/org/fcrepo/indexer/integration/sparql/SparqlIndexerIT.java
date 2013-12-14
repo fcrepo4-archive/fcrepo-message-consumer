@@ -28,6 +28,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import org.junit.Test;
 
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -60,7 +61,8 @@ public class SparqlIndexerIT {
     @Test
     public void indexerTest() throws Exception {
         // add triples
-        sparqlIndexer.update(uri, new StringReader(fooRDF));
+        sparqlIndexer.update(uri, createDefaultModel().read(
+                new StringReader(fooRDF), "", "N3"));
 
         waitForTriples(3);
 
