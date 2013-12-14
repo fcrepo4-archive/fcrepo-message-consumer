@@ -26,14 +26,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
 /**
@@ -44,7 +41,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * @author Esmé Cowles
  * @date Aug 19, 2013
 **/
-public class FileSerializer extends SynchIndexer<Map<String, Collection<String>>, File> {
+public class FileSerializer extends SynchIndexer<NamedFields, File> {
 
     private static final Logger LOGGER = getLogger(FileSerializer.class);
 
@@ -74,7 +71,7 @@ public class FileSerializer extends SynchIndexer<Map<String, Collection<String>>
      * @return
     **/
     @Override
-    public ListenableFutureTask<File> updateSynch(final String pid, final Map<String, Collection<String>> content) {
+    public ListenableFutureTask<File> updateSynch(final String pid, final NamedFields content) {
         // timestamped filename
         String fn = pid + "." + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
@@ -110,7 +107,7 @@ public class FileSerializer extends SynchIndexer<Map<String, Collection<String>>
     public ListenableFutureTask<File> removeSynch(final String id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
-        return updateSynch(id, Maps.<String, Collection<String>> newHashMap());
+        return updateSynch(id, new NamedFields());
     }
 
     @Override

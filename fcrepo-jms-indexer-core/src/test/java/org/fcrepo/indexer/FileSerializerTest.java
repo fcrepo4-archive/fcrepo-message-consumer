@@ -21,14 +21,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.text.SimpleDateFormat;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
-
+import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -63,8 +61,8 @@ public class FileSerializerTest {
     @Test
     public void updateTest() throws IOException, InterruptedException, ExecutionException {
         final Collection<String> values = asList("value1", "value2");
-        final Map<String, Collection<String>> testContent =
-            ImmutableMap.of("testProperty", values);
+        final NamedFields testContent =
+            new NamedFields(of("testProperty", values));
         serializer.update("abc123", testContent);
 
         // file should exist

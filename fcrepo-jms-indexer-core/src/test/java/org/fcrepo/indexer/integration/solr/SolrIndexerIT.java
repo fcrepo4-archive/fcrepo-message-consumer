@@ -15,6 +15,7 @@
  */
 package org.fcrepo.indexer.integration.solr;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
@@ -37,8 +38,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -68,8 +67,7 @@ public class SolrIndexerIT {
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
         final Collection<String> values = asList(pid);
-        final NamedFields testContent =
-            new NamedFields(ImmutableMap.of("id", values));
+        final NamedFields testContent = new NamedFields(of("id", values));
         solrIndexer.update(pid, testContent);
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();

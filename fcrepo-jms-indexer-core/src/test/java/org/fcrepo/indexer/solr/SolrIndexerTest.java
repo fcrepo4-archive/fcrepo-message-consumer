@@ -15,6 +15,7 @@
  */
 package org.fcrepo.indexer.solr;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
@@ -38,8 +39,6 @@ import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
-
-import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -79,8 +78,7 @@ public class SolrIndexerTest {
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
         final Collection<String> values = asList(pid);
-        final NamedFields testContent =
-            new NamedFields(ImmutableMap.of("id", values));
+        final NamedFields testContent = new NamedFields(of("id", values));
         LOGGER.debug(
                 "Trying update operation with identifier: {} and content: \"{}\".",
                 pid, testContent);
