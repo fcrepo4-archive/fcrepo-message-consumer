@@ -18,14 +18,19 @@ package org.fcrepo.indexer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.text.SimpleDateFormat;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
+
+import static java.nio.file.Files.readAllBytes;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -49,21 +54,27 @@ public class FileSerializerTest {
     @Test
     public void pathTest() throws IOException {
         // should automatically create path
-        assertTrue("Path not found: " + path.getAbsolutePath(), path.exists());
-        assertTrue("Not a dir: " + path.getAbsolutePath(), path.isDirectory());
+        assertTrue("Path not found: " + path.getAbsolutePath() + "!", path
+                .exists());
+        assertTrue("Not a dir: " + path.getAbsolutePath() + "!", path
+                .isDirectory());
     }
 
     @Test
     public void updateTest() throws IOException, InterruptedException, ExecutionException {
-        serializer.update("abc123", new StringReader("test content"));
+        final Collection<String> values = asList("value1", "value2");
+        final Map<String, Collection<String>> testContent =
+            ImmutableMap.of("testProperty", values);
+        serializer.update("abc123", testContent);
 
         // file should exist
         final File f = path.listFiles()[0];
         assertTrue("Filename doesn't match", f.getName().startsWith("abc123"));
 
         // content should be 'test content'
-        final String content = new String( Files.readAllBytes(f.toPath()) );
-        assertEquals("Content doesn't match", content, "test content");
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't contain our property!", content
+                .contains("testProperty"));
     }
 
     @Test
@@ -77,6 +88,6 @@ public class FileSerializerTest {
 
         // content should be ''
         final String content = new String( Files.readAllBytes(f.toPath()) );
-        assertEquals("Content doesn't match", content, "");
+        assertEquals("Content doesn't match", "", content);
     }
 }

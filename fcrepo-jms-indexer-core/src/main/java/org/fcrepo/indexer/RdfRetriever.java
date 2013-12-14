@@ -16,19 +16,25 @@
 
 package org.fcrepo.indexer;
 
+import static com.google.common.base.Throwables.propagate;
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.jena.riot.WebContent.contentTypeN3;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.jena.riot.WebContent;
 import org.slf4j.Logger;
+
+import com.google.common.base.Supplier;
+import com.hp.hpl.jena.rdf.model.Model;
 
 /**
  * Retrieves RDF representations of resources for storage in a triplestore.
@@ -38,9 +44,9 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @date Dec 6, 2013
  */
-public class RdfRetriever extends CachingRetriever {
+public class RdfRetriever implements Supplier<Model> {
 
-    private static final String RDF_SERIALIZATION = WebContent.contentTypeN3;
+    private static final String RDF_SERIALIZATION = contentTypeN3;
 
     private final String identifier;
 
@@ -59,16 +65,23 @@ public class RdfRetriever extends CachingRetriever {
     }
 
     @Override
-    public HttpResponse retrieveHttpResponse() throws ClientProtocolException, IOException,
-        HttpException {
+    public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
         request.addHeader("Accept", RDF_SERIALIZATION);
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
-        final HttpResponse response = httpClient.execute(request);
-        if (response.getStatusLine().getStatusCode() == SC_OK) {
-            return response;
-        } else {
-            throw new HttpException(response.getStatusLine().toString());
+        try {
+            final HttpResponse response = httpClient.execute(request);
+            if (response.getStatusLine().getStatusCode() == SC_OK) {
+                try (
+                    Reader r =
+                        new InputStreamReader(response.getEntity().getContent())) {
+                    return createDefaultModel().read(r, "", "N3");
+                }
+            } else {
+                throw new HttpException(response.getStatusLine().toString());
+            }
+        } catch (IOException | HttpException e) {
+            throw propagate(e);
         }
     }
 

@@ -17,8 +17,6 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
-import java.io.Reader;
-
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -29,13 +27,16 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author ajs6f
  * @author Esmé Cowles
  * @date Aug 19, 2013
+ *
+ * @param <Content> the type of content to index
+ *
 **/
-public interface Indexer {
+public interface Indexer<Content> {
 
     /**
      * Create or update an index entry for the object.
     **/
-    public ListenableFuture<?> update(final String pid, final Reader doc) throws IOException;
+    public ListenableFuture<?> update(final String pid, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.

@@ -16,8 +16,8 @@
 
 package org.fcrepo.indexer;
 
+import static com.google.common.base.Suppliers.memoize;
 import static com.google.common.base.Throwables.propagate;
-import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.vocabulary.RDF.type;
@@ -26,24 +26,22 @@ import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-import org.apache.http.HttpException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
+import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -63,7 +61,7 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
-    private Set<Indexer> indexers;
+    private Set<Indexer<Object>> indexers;
 
     private final HttpClient httpClient;
 
@@ -132,7 +130,7 @@ public class IndexerGroup implements MessageListener {
     /**
      * Set indexers for this group.
      **/
-    public void setIndexers(final Set<Indexer> indexers) {
+    public void setIndexers(final Set<Indexer<Object>> indexers) {
         this.indexers = indexers;
         LOGGER.debug("Using indexer complement: {} ", indexers);
     }
@@ -140,7 +138,7 @@ public class IndexerGroup implements MessageListener {
     /**
      * Get indexers set for this group.
      **/
-    public Set<Indexer> getIndexers() {
+    public Set<Indexer<Object>> getIndexers() {
         return indexers;
     }
 
@@ -168,14 +166,14 @@ public class IndexerGroup implements MessageListener {
             final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
             LOGGER.debug("It is {} that this is a removal operation.", removal);
             final String uri = getRepositoryURL() + pid;
-            final RdfRetriever rdfr = new RdfRetriever(uri, httpClient);
-            final NamedFieldsRetriever nfr =
-                new NamedFieldsRetriever(uri, httpClient, rdfr);
+            final Supplier<Model> rdfr = memoize(
+                    new RdfRetriever(uri, httpClient));
+            final Supplier<Map<String, Collection<String>>> nfr = memoize(
+                new NamedFieldsRetriever(uri, httpClient, rdfr));
             Boolean indexable = false;
 
             if (!removal) {
-                final Model rdf =
-                    createDefaultModel().read(rdfr.call(), null, "N3");
+                final Model rdf = rdfr.get();
                 if (rdf.contains(createResource(uri), type, INDEXABLE_MIXIN)) {
                     LOGGER.debug("Resource: {} retrieved with indexable type.",
                             pid);
@@ -187,25 +185,19 @@ public class IndexerGroup implements MessageListener {
                 }
             }
 
-            for (final Indexer indexer : getIndexers()) {
+            for (final Indexer<Object> indexer : getIndexers()) {
                 LOGGER.debug("Operating for indexer: {}", indexer);
                 Boolean hasContent = false;
-                Reader content = EMPTY_CONTENT;
+                Object content = EMPTY_CONTENT;
                 if (!removal && indexable) {
                     switch (indexer.getIndexerType()) {
                         case NAMEDFIELDS:
                             LOGGER.debug(
                                     "Retrieving named fields for: {}, (may be cached) to index to {}...",
                                     pid, indexer);
-                            try (final InputStream result = nfr.call()) {
-                                content = new InputStreamReader(result);
+                            try  {
+                                content = nfr.get();
                                 hasContent = true;
-                            } catch (final IOException | HttpException e) {
-                                LOGGER.error(
-                                        "Could not retrieve content for update of: {} to indexer {}!",
-                                        pid, indexer);
-                                LOGGER.error("with exception:", e);
-                                hasContent = false;
                             } catch (final AbsentTransformPropertyException e) {
                                 hasContent = false;
                             }
@@ -214,23 +206,14 @@ public class IndexerGroup implements MessageListener {
                             LOGGER.debug(
                                     "Retrieving RDF for: {}, (may be cached) to index to {}...",
                                     pid, indexer);
-                            try (final InputStream result = rdfr.call()) {
-                                content = new InputStreamReader(result);
+                            try {
+                                content = rdfr.get();
                                 hasContent = true;
-                            } catch (IOException | HttpException e) {
-                                LOGGER.error(
-                                        "Could not retrieve content for update of: {} to indexer {}!",
-                                        pid, indexer);
-                                LOGGER.error("with exception:", e);
-                                hasContent = false;
                             } catch (final AbsentTransformPropertyException e1) {
                                 hasContent = false;
                             }
                             break;
                         default:
-                            content =
-                                new StringReader("Default content for update: "
-                                        + pid);
                             hasContent = true;
                             break;
                     }
@@ -260,7 +243,7 @@ public class IndexerGroup implements MessageListener {
                 }
             }
 
-        } catch (final JMSException | IOException | HttpException e) {
+        } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
         } catch (final AbsentTransformPropertyException e2) {
             // cannot be thrown here: simply an artifact of Java's crappy type
