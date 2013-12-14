@@ -17,14 +17,16 @@ package org.fcrepo.indexer.solr;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
+import static java.util.Arrays.asList;
 import static org.apache.solr.core.CoreContainer.createAndLoad;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -37,6 +39,8 @@ import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -75,11 +79,13 @@ public class SolrIndexerTest {
     }
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
-        final String content = "[{\"id\" : [\"" +pid+ "\"]}]";
+        final Collection<String> values = asList(pid);
+        final Map<String, Collection<String>> testContent =
+            ImmutableMap.of("id", values);
         LOGGER.debug(
                 "Trying update operation with identifier: {} and content: \"{}\".",
-                pid, content);
-        indexer.update(pid, new StringReader(content));
+                pid, testContent);
+        indexer.update(pid, testContent);
 
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();

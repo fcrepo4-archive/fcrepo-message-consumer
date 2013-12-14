@@ -13,30 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.fcrepo.indexer;
 
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import java.util.Collection;
+import java.util.Map;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * An {@Indexer} that completes its operations synchronously.
+ * A group of named fields.
  *
  * @author ajs6f
- * @date Dec 8, 2013
- * @param <Content> the type of content to index
- * @param <Result> the type of response to expect from an operation
+ * @date Dec 13, 2013
  */
-public abstract class SynchIndexer<Content, Result> extends
-    AsynchIndexer<Content, Result> {
-
-    private final ListeningExecutorService executorService =
-        sameThreadExecutor();
-
-    @Override
-    public ListeningExecutorService executorService() {
-        return executorService;
-    }
+public interface NamedFields extends Map<String, Collection<String>> {
 
 }

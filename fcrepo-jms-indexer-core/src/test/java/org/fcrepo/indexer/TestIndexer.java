@@ -19,7 +19,6 @@ package org.fcrepo.indexer;
 import static org.fcrepo.indexer.Indexer.IndexerType.NO_CONTENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.Reader;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -36,7 +35,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
  * @author Esmé Cowles
  * @date Nov 25, 2013
 **/
-public class TestIndexer extends SynchIndexer<Boolean> {
+public class TestIndexer extends SynchIndexer<Void, Boolean> {
 
     private static final Logger LOGGER = getLogger(TestIndexer.class);
 
@@ -45,7 +44,7 @@ public class TestIndexer extends SynchIndexer<Boolean> {
 
     @Override
     public ListenableFutureTask<Boolean> updateSynch(final String identifier,
-        final Reader content) {
+        final Void content) {
         LOGGER.debug("Received update for identifier: {}", identifier);
         return ListenableFutureTask.create(new Callable<Boolean>() {
 
