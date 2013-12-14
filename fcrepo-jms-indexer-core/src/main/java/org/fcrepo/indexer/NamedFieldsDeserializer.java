@@ -43,8 +43,7 @@ import com.google.gson.stream.JsonWriter;
  * @author ajs6f
  * @date Dec 6, 2013
  */
-public class NamedFieldsDeserializer extends
-        TypeAdapter<Map<String, Collection<String>>> {
+public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 
     private static final Type type = new TypeToken<Collection<Map<String, JsonElement>>>() {}
             .getType();
@@ -70,20 +69,20 @@ public class NamedFieldsDeserializer extends
         };
 
     @Override
-    public void write(final JsonWriter out, final Map<String, Collection<String>> value)
+    public void write(final JsonWriter out, final NamedFields value)
         throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Map<String, Collection<String>> read(final JsonReader in)
+    public NamedFields read(final JsonReader in)
         throws IOException {
         try {
             final Collection<Map<String, JsonElement>> fields =
                 gson.fromJson(in, type);
             // note: we assume that only one element will exist in
             // fields, because that is the nature of the LDPath machinery
-            return transformValues(fields.iterator().next(), jsonElement2list);
+            return new NamedFields(transformValues(fields.iterator().next(), jsonElement2list));
         } catch (final Exception e) {
             LOGGER.error("Failed to parse JSON to Map<String, Collection<String>>!", e);
             throw e;

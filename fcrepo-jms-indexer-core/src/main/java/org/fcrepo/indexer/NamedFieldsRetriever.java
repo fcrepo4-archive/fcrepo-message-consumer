@@ -49,7 +49,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * @author ajs6f
  * @date Dec 6, 2013
  */
-public class NamedFieldsRetriever implements Supplier<Map<String, Collection<String>>> {
+public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
     private final String uri;
 
@@ -82,7 +82,7 @@ public class NamedFieldsRetriever implements Supplier<Map<String, Collection<Str
     }
 
     @Override
-    public Map<String, Collection<String>> get() {
+    public NamedFields get() {
         LOGGER.debug("Retrieving RDF representation from: {}", uri);
         try {
             final Model rdf = rdfr.get();

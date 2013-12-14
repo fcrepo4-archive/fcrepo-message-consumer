@@ -27,8 +27,6 @@ import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.Reader;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -166,10 +164,10 @@ public class IndexerGroup implements MessageListener {
             final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
             LOGGER.debug("It is {} that this is a removal operation.", removal);
             final String uri = getRepositoryURL() + pid;
-            final Supplier<Model> rdfr = memoize(
-                    new RdfRetriever(uri, httpClient));
-            final Supplier<Map<String, Collection<String>>> nfr = memoize(
-                new NamedFieldsRetriever(uri, httpClient, rdfr));
+            final Supplier<Model> rdfr =
+                memoize(new RdfRetriever(uri, httpClient));
+            final Supplier<NamedFields> nfr =
+                memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
             Boolean indexable = false;
 
             if (!removal) {

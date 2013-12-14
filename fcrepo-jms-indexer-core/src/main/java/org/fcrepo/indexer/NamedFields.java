@@ -16,6 +16,7 @@
 package org.fcrepo.indexer;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -25,6 +26,24 @@ import java.util.Map;
  * @author ajs6f
  * @date Dec 13, 2013
  */
-public interface NamedFields extends Map<String, Collection<String>> {
+public class NamedFields extends HashMap<String, Collection<String>> {
+
+    /**
+     * Default constructor
+     *
+     * @param values
+     */
+    public NamedFields(final Map<String, Collection<String>> values) {
+        super(values);
+    }
+
+    /**
+     * Constructor for empty object.
+     */
+    public NamedFields() {
+        super();
+    }
+
+    private static final long serialVersionUID = 1L;
 
 }
