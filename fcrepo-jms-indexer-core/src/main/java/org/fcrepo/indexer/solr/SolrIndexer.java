@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Maps.EntryTransformer;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
@@ -87,10 +86,10 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     }
 
     @Override
-    public ListenableFutureTask<UpdateResponse> updateSynch(final String id,
+    public Callable<UpdateResponse> updateSynch(final String id,
         final NamedFields fields) {
         LOGGER.debug("Received request for update to: {}", id);
-        return ListenableFutureTask.create(new Callable<UpdateResponse>() {
+        return new Callable<UpdateResponse>() {
 
             @Override
             public UpdateResponse call() throws Exception {
@@ -120,7 +119,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
                     throw propagate(e);
                 }
             }
-        });
+        };
     }
 
     protected SolrInputDocument fromMap(final Map<String, Collection<String>> fields) {
@@ -145,9 +144,9 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         };
 
     @Override
-    public ListenableFutureTask<UpdateResponse> removeSynch(final String pid) {
+    public Callable<UpdateResponse> removeSynch(final String pid) {
         LOGGER.debug("Received request for removal of: {}", pid);
-        return ListenableFutureTask.create(new Callable<UpdateResponse>() {
+        return new Callable<UpdateResponse>() {
 
             @Override
             public UpdateResponse call() throws Exception {
@@ -169,7 +168,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
                     throw propagate(e);
                 }
             }
-        });
+        };
     }
 
     /**
