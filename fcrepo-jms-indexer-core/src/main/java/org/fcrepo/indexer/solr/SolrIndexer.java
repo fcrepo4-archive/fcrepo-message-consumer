@@ -19,6 +19,7 @@ package org.fcrepo.indexer.solr;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Maps.transformEntries;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -56,7 +57,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
     public static final String CONFIGURATION_FOLDER =
-        "/fedora:system/fedora:transform/fedora:ldpath/";
+        "fedora:system/fedora:transform/fedora:ldpath/";
 
     // TODO make index-time boost somehow adjustable, or something
     public static final Long INDEX_TIME_BOOST = 1L;
@@ -86,32 +87,33 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     }
 
     @Override
-    public ListenableFutureTask<UpdateResponse> updateSynch(final String pid,
+    public ListenableFutureTask<UpdateResponse> updateSynch(final String id,
         final NamedFields fields) {
-        LOGGER.debug("Received request for update to: {}", pid);
+        LOGGER.debug("Received request for update to: {}", id);
         return ListenableFutureTask.create(new Callable<UpdateResponse>() {
 
             @Override
             public UpdateResponse call() throws Exception {
                 try {
-                    // parse the JSON fields to a Solr input doc
-                    final SolrInputDocument inputDoc = fromMap(fields);
-                    LOGGER.debug("Parsed SolrInputDocument: {}", inputDoc);
-
-
+                    LOGGER.debug(
+                            "Executing request to Solr index for identifier: {} with fields: {}",
+                            id, fields);
                     // add the identifier of the resource as a unique index-key
-                    inputDoc.addField("id", pid);
+                    fields.put("id", asList(id));
+                    // pack the fields into a Solr input doc
+                    final SolrInputDocument inputDoc = fromMap(fields);
+                    LOGGER.debug("Created SolrInputDocument: {}", inputDoc);
 
                     final UpdateResponse resp = server.add(inputDoc);
                     if (resp.getStatus() == 0) {
                         LOGGER.debug("Update request was successful for: {}",
-                                pid);
-                        server.commit();
+                                id);
                     } else {
                         LOGGER.error(
-                                "update request has error, code: {} for pid: {}",
-                                resp.getStatus(), pid);
+                                "Update request returned error code: {} for identifier: {}",
+                                resp.getStatus(), id);
                     }
+                    LOGGER.debug("Received result from Solr request.");
                     return resp;
                 } catch (final SolrServerException | IOException e) {
                     LOGGER.error("Update exception: {}!", e);
@@ -122,24 +124,25 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     }
 
     protected SolrInputDocument fromMap(final Map<String, Collection<String>> fields) {
+        LOGGER.debug("Constructing new SolrInputDocument...");
         return new SolrInputDocument(transformEntries(fields,
                 collection2solrInputField));
     }
 
     private static EntryTransformer<String, Collection<String>, SolrInputField> collection2solrInputField =
-            new EntryTransformer<String, Collection<String>, SolrInputField>() {
+        new EntryTransformer<String, Collection<String>, SolrInputField>() {
 
-                @Override
-                public SolrInputField transformEntry(final String key,
+            @Override
+            public SolrInputField transformEntry(final String key,
                     final Collection<String> input) {
-                    final SolrInputField field = new SolrInputField(key);
-                    for (final String value : input) {
-                        field.addValue(value, INDEX_TIME_BOOST);
-                    }
-                    return field;
+                final SolrInputField field = new SolrInputField(key);
+                for (final String value : input) {
+                    LOGGER.debug("Adding value: {} to field: {}", value, key);
+                    field.addValue(value, INDEX_TIME_BOOST);
                 }
-            };
-
+                return field;
+            }
+        };
 
     @Override
     public ListenableFutureTask<UpdateResponse> removeSynch(final String pid) {

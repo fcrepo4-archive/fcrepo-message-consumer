@@ -1,0 +1,12 @@
+discovery.zen.ping.multicast.enabled: false
+
+cluster:
+  name: testCluster
+  
+node:
+  name: testNode
+  local: true
+
+index:
+  store:
+    type: memory

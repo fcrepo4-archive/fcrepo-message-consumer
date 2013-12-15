@@ -54,6 +54,10 @@ public abstract class IndexingIT {
 
     protected static HttpClient client;
 
+    public static final String INDEXER_TEST_NAMESPACE =
+            "http://fedora.info/definitions/v4/indexingtest#";
+
+
     @Before
     public void setUp() throws ClientProtocolException, IOException {
         final PoolingClientConnectionManager connMann =
@@ -63,9 +67,8 @@ public abstract class IndexingIT {
         client = new DefaultHttpClient(connMann);
         LOGGER.debug("Installing indexing namespace...");
         final String nsSparqlUpdate =
-            "INSERT { <"
-                    + INDEXER_NAMESPACE
-                    + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> \"indexing\" } WHERE { }";
+            "INSERT { <" + INDEXER_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> \"indexing\"."+
+                    "<" + INDEXER_TEST_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> \"indexingtest\"} WHERE { }";
         HttpPost update = new HttpPost(serverAddress + "fcr:namespaces");
         update.setEntity(new StringEntity(nsSparqlUpdate));
         update.setHeader("Content-Type", "application/sparql-update");
@@ -76,12 +79,23 @@ public abstract class IndexingIT {
         LOGGER.debug("Installing indexing type information...");
         update = new HttpPost(serverAddress + "fcr:nodetypes");
         update.setHeader("Content-Type", "text/cnd");
-        final HttpEntity cnd =
+        HttpEntity cnd =
             new StringEntity(Files.toString(new File(
                     "target/classes/indexing.cnd"), defaultCharset()));
         update.setEntity(cnd);
         response = client.execute(update);
         assertEquals("Failed to install indexing type information!",
+                SC_NO_CONTENT, response.getStatusLine().getStatusCode());
+
+        LOGGER.debug("Installing indexing test type information...");
+        update = new HttpPost(serverAddress + "fcr:nodetypes");
+        update.setHeader("Content-Type", "text/cnd");
+        cnd =
+            new StringEntity(Files.toString(new File(
+                    "target/test-classes/indexingtest.cnd"), defaultCharset()));
+        update.setEntity(cnd);
+        response = client.execute(update);
+        assertEquals("Failed to install indexing test type information!",
                 SC_NO_CONTENT, response.getStatusLine().getStatusCode());
         /*HttpGet nsRequest = new HttpGet(serverAddress + "fcr:namespaces");
         nsRequest.setHeader("Content-Type", WebContent.contentTypeN3Alt1);
