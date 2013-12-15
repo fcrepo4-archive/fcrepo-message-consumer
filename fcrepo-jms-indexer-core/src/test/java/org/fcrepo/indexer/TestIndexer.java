@@ -26,8 +26,6 @@ import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 
-import com.google.common.util.concurrent.ListenableFutureTask;
-
 
 /**
  * Indexer implementation that tracks which PIDs it has received messages for,
@@ -45,10 +43,10 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     private final Set<String> removes = new HashSet<>();
 
     @Override
-    public ListenableFutureTask<Boolean> updateSynch(final String identifier,
+    public Callable<Boolean> updateSynch(final String identifier,
         final NoContent content) {
         LOGGER.debug("Received update for identifier: {}", identifier);
-        return ListenableFutureTask.create(new Callable<Boolean>() {
+        return new Callable<Boolean>() {
 
             @Override
             public Boolean call() throws Exception {
@@ -56,13 +54,13 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
                 LOGGER.debug("Current recorded updates include: {}", updates);
                 return success;
             }
-        });
+        };
     }
 
     @Override
-    public ListenableFutureTask<Boolean> removeSynch(final String identifier) {
+    public Callable<Boolean> removeSynch(final String identifier) {
         LOGGER.debug("Received remove for identifier: {}", identifier);
-        return ListenableFutureTask.create(new Callable<Boolean>() {
+        return new Callable<Boolean>() {
 
                 @Override
                 public Boolean call() throws Exception {
@@ -71,7 +69,7 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
                             removes);
                     return success;
                 }
-            });
+            };
 
     }
 

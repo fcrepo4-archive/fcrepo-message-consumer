@@ -31,8 +31,6 @@ import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 
-import com.google.common.util.concurrent.ListenableFutureTask;
-
 /**
  * Basic Indexer implementation that writes object content to timestamped files
  * on disk.
@@ -71,7 +69,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
      * @return
     **/
     @Override
-    public ListenableFutureTask<File> updateSynch(final String pid, final NamedFields content) {
+    public Callable<File> updateSynch(final String pid, final NamedFields content) {
         // timestamped filename
         String fn = pid + "." + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
@@ -79,7 +77,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
         }
         final File file = new File(path, fn);
         LOGGER.debug("Updating to file: {}", file);
-        return ListenableFutureTask.create(new Callable<File>() {
+        return new Callable<File>() {
 
             @Override
             public File call() {
@@ -95,7 +93,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
                 }
                 return file;
             }
-        });
+        };
 
     }
 
@@ -104,7 +102,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
      * Remove the object from the index.
     **/
     @Override
-    public ListenableFutureTask<File> removeSynch(final String id) {
+    public Callable<File> removeSynch(final String id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
         return updateSynch(id, new NamedFields());

@@ -78,7 +78,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * @content RDF in N3 format.
     **/
     @Override
-    public ListenableFutureTask<Void> updateSynch(final String pid,
+    public Callable<Void> updateSynch(final String pid,
         final Model model) {
         LOGGER.debug("Received update for: {}", pid);
         // first remove old data
@@ -105,7 +105,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * all triples with subjects starting with the same subject.
     **/
     @Override
-    public ListenableFutureTask<Void> removeSynch(final String subject) {
+    public Callable<Void> removeSynch(final String subject) {
 
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
@@ -158,43 +158,46 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
             || uri1.startsWith(uri2 + "#");
     }
 
-    private ListenableFutureTask<Void> exec(final UpdateRequest update) {
+    private Callable<Void> exec(final UpdateRequest update) {
         if (update.getOperations().isEmpty()) {
             LOGGER.debug("Received empty update/remove operation.");
-            return ListenableFutureTask.create(new Callable<Void>() {
+            return new Callable<Void>() {
 
                 @Override
                 public Void call() throws Exception {
                     return null;
                 }
-            });
+            };
         }
 
-        final ListenableFutureTask<Void> task =
-            ListenableFutureTask.create(new Runnable() {
+        final Callable<Void> callable = new Callable<Void>() {
 
-                @Override
-                public void run() {
+            @Override
+            public Void call() {
 
-                    if (formUpdates) {
-                        // form updates
-                        final UpdateProcessor proc =
-                            createRemoteForm(update, updateBase);
+                if (formUpdates) {
+                    // form updates
+                    final UpdateProcessor proc =
+                        createRemoteForm(update, updateBase);
+                    proc.execute();
+                } else {
+                    // normal SPARQL updates
+                    final UpdateProcessRemote proc =
+                        new UpdateProcessRemote(update, updateBase,
+                                emptyContext);
+                    try {
                         proc.execute();
-                    } else {
-                        // normal SPARQL updates
-                        final UpdateProcessRemote proc =
-                            new UpdateProcessRemote(update, updateBase,
-                                    emptyContext);
-                        try {
-                            proc.execute();
-                        } catch (final Exception e) {
-                            LOGGER.error(
-                                    "Error executing Sparql update/remove!", e);
-                        }
+                    } catch (final Exception e) {
+                        LOGGER.error(
+                                "Error executing Sparql update/remove!", e);
                     }
                 }
-            }, null);
+                return null;
+            }
+        };
+
+        final ListenableFutureTask<Void> task =
+            ListenableFutureTask.create(callable);
         task.addListener(new Runnable() {
 
             @Override
@@ -217,7 +220,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
             }
         }, executorService);
         executorService.submit(task);
-        return task;
+        return callable;
     }
 
     /**
