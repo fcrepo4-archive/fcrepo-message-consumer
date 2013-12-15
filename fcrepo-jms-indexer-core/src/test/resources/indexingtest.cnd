@@ -1,0 +1,3 @@
+<indexingtest = 'http://fedora.info/definitions/v4/indexingtest#'>
+
+[indexingtest:book] mixin

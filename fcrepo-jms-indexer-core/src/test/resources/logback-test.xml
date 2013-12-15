@@ -13,6 +13,9 @@
   <logger name="org.fcrepo" additivity="false" level="INFO">
     <appender-ref ref="STDOUT"/>
   </logger>
+  <logger name="org.fcrepo.transform" additivity="false" level="DEBUG">
+    <appender-ref ref="STDOUT"/>
+  </logger>
   <logger name="org.apache.solr" additivity="false" level="ERROR">
     <appender-ref ref="STDOUT"/>
   </logger>
