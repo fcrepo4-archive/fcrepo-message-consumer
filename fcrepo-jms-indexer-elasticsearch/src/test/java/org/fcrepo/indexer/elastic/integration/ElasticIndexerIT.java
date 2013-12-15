@@ -41,10 +41,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ElasticIndexerIT {
 
     @Inject
-    ElasticIndexer testIndexer = new ElasticIndexer();
-
+    private ElasticIndexer testIndexer;
     @Inject
-    Client client;
+    private Client client;
 
     @Before
     public void configureIndexer() {
