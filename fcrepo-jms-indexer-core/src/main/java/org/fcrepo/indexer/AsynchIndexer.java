@@ -59,6 +59,8 @@ public abstract class AsynchIndexer<Content, Result> implements
             }
         }, executorService());
         executorService().submit(task);
+        LOGGER.debug("Issued task to execution pool for identifier: {}",
+                identifier);
         return task;
     }
 

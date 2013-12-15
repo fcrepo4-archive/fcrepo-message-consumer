@@ -21,6 +21,7 @@ import static java.lang.Thread.sleep;
 import static java.nio.charset.Charset.defaultCharset;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.jena.riot.WebContent.contentTypeN3Alt1;
 import static org.fcrepo.indexer.solr.SolrIndexer.CONFIGURATION_FOLDER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +29,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -44,7 +46,6 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.fcrepo.indexer.solr.SolrIndexer;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class SolrMappingsIT extends IndexingIT {
 
     private static final Logger LOGGER = getLogger(SolrMappingsIT.class);
 
-    private static final long TIMEOUT = 15000;
+    private static final long TIMEOUT = 20000;
 
     private static final long TIME_TO_WAIT_STEP = 1000;
 
@@ -148,13 +149,13 @@ public class SolrMappingsIT extends IndexingIT {
      * @throws SolrServerException
      * @throws InterruptedException
      */
-    @Ignore("Waiting on https://www.pivotaltracker.com/story/show/61942638")
+    //@Ignore("Waiting on https://www.pivotaltracker.com/story/show/61942638")
     @Test
     public void testOneResourceCustomMapping() throws ClientProtocolException, IOException,
         SolrServerException, InterruptedException {
 
         final String mappingUrl =
-            serverAddress + CONFIGURATION_FOLDER + "dc/fedora:object";
+            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book";
 
         LOGGER.debug("Creating index mapping at URL: {}...", mappingUrl);
 
@@ -170,7 +171,7 @@ public class SolrMappingsIT extends IndexingIT {
                 .getStatusLine().getStatusCode());
 
         LOGGER.debug("Creating indexable resource...");
-        final String uri = serverAddress + "testCollection/testOneResourcePid";
+        final String uri = serverAddress + "testCollection/testOneResourceCustomMappingPid";
         final HttpPost createRequest = new HttpPost(uri);
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
@@ -180,17 +181,22 @@ public class SolrMappingsIT extends IndexingIT {
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      <http://id.loc.gov/authorities/subjects/sh2012004374> ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
+                    + "rdf:type  <http://fedora.info/definitions/v4/indexingtest#book> ;"
                     + "indexing:hasIndexingTransformation \"dc\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
-        createRequest.addHeader("Content-Type", WebContent.contentTypeN3Alt1);
+        createRequest.addHeader("Content-Type", contentTypeN3Alt1);
         LOGGER.debug("Creating object with RDF:\n{}", objectRdf);
         response = client.execute(createRequest);
         assertEquals("Failed to create test resource!", SC_CREATED, response
                 .getStatusLine().getStatusCode());
 
         LOGGER.debug("Waiting for our resource to be indexed...");
-        final String q = "title:\"500 Easy Microwave Meals\"";
+        final String q =
+            "subject:"
+                    + URLEncoder
+                            .encode("http://id.loc.gov/authorities/subjects/sh2012004374",
+                                    "UTF-8");
         LOGGER.debug("Checking for our record with query: {}", q);
         final SolrQuery query = new SolrQuery(q);
         List<SolrDocument> results = indexServer.query(query).getResults();
@@ -201,6 +207,8 @@ public class SolrMappingsIT extends IndexingIT {
             sleep(TIME_TO_WAIT_STEP);
             LOGGER.debug("Checking for presence of appropriate index record...");
             results = indexServer.query(query).getResults();
+            LOGGER.debug("Found {} records with appropriate subject,", results
+                    .size());
             success = results.size() == 1;
         }
         assertTrue(
