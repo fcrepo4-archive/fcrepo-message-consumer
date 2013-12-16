@@ -280,8 +280,17 @@
         <directory>src/main/resources</directory>
       </resource>
     </resources>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=512m</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
-
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <dependencies>
