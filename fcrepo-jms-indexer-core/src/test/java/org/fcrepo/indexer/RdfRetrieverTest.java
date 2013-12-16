@@ -6,6 +6,7 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -17,13 +18,11 @@ import java.io.StringWriter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -44,8 +43,12 @@ public class RdfRetrieverTest {
     @Mock
     private StatusLine mockStatusLine;
 
+    private final Triple testTriple =
+            create(createURI("info:test"), createURI("info:test"),
+                    createURI("info:test"));
+
     @Before
-    public void setUp() throws ClientProtocolException, IOException {
+    public void setUp() throws IOException {
         initMocks(this);
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
                 mockResponse);
@@ -56,9 +59,6 @@ public class RdfRetrieverTest {
     @Test
     public void testSimpleRetrieval() throws IOException {
         final String testId = "testSimpleRetrieval";
-        final Triple testTriple =
-            create(createURI("info:test"), createURI("info:test"),
-                    createURI("info:test"));
         final Model input = createDefaultModel();
         input.add(input.asStatement(testTriple));
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
@@ -88,6 +88,18 @@ public class RdfRetrieverTest {
     @Test(expected = RuntimeException.class)
     public void testOtherFailedRetrieval() throws IOException {
         final String testId = "testFailedRetrieval";
+        when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
+        when(mockEntity.getContent()).thenThrow(new IOException());
+        new RdfRetriever(testId, mockClient).get();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testYetOtherFailedRetrieval() throws IOException {
+        final String testId = "testFailedRetrieval";
+        reset(mockClient);
+        when(mockClient.execute(any(HttpUriRequest.class))).thenThrow(
+                new IOException());
+        when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenThrow(new IOException());
         new RdfRetriever(testId, mockClient).get();
     }

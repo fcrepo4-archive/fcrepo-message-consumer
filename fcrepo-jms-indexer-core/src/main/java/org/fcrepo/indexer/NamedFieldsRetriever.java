@@ -26,9 +26,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Map;
-
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -59,8 +56,8 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
     private Gson gson;
 
-    private static final Type typeToken =
-        new TypeToken<Map<String, Collection<String>>>() {}.getType();
+    private static final Type typeToken = new TypeToken<NamedFields>() {}
+            .getType();
 
     private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);
 
@@ -83,7 +80,7 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
     @Override
     public NamedFields get() {
-        LOGGER.debug("Retrieving RDF representation from: {}", uri);
+        LOGGER.debug("Retrieving RDF representation for: {}", uri);
         try {
             final Model rdf = rdfr.get();
             if (!rdf.contains(createResource(uri), INDEXING_TRANSFORM_PREDICATE)) {
