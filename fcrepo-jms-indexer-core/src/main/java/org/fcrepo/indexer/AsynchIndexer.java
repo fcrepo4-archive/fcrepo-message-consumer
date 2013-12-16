@@ -19,6 +19,8 @@ package org.fcrepo.indexer;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
+
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -49,7 +51,8 @@ public abstract class AsynchIndexer<Content, Result> implements
         final Content content) throws IOException {
         LOGGER.debug("Received update for identifier: {}", identifier);
 
-        final ListenableFutureTask<Result> task = updateSynch(identifier, content);
+        final ListenableFutureTask<Result> task =
+            ListenableFutureTask.create(updateSynch(identifier, content));
         task.addListener(new Runnable() {
             @Override
             public void run() {
@@ -68,7 +71,8 @@ public abstract class AsynchIndexer<Content, Result> implements
     public ListenableFuture<Result> remove(final String identifier)
         throws IOException {
         LOGGER.debug("Received remove for identifier: {}", identifier);
-        final ListenableFutureTask<Result> task = removeSynch(identifier);
+        final ListenableFutureTask<Result> task =
+            ListenableFutureTask.create(removeSynch(identifier));
         task.addListener(new Runnable() {
             @Override
             public void run() {
@@ -85,14 +89,14 @@ public abstract class AsynchIndexer<Content, Result> implements
      * @param identifier
      * @return
      */
-    public abstract ListenableFutureTask<Result> removeSynch(final String identifier);
+    public abstract Callable<Result> removeSynch(final String identifier);
 
     /**
      * @param identifier
      * @param content
      * @return
      */
-    public abstract ListenableFutureTask<Result> updateSynch(final String identifier,
+    public abstract Callable<Result> updateSynch(final String identifier,
             final Content content);
 
 }

@@ -284,7 +284,6 @@
 
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${checkstyle.plugin.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.fcrepo</groupId>
