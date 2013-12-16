@@ -130,6 +130,7 @@ public class NamedFieldsRetrieverTest {
         assertEquals(testUri, results.get("id").iterator().next());
     }
 
-    private static final Logger LOGGER = getLogger(NamedFieldsRetrieverTest.class);
+    private static final Logger LOGGER =
+        getLogger(NamedFieldsRetrieverTest.class);
 
 }
