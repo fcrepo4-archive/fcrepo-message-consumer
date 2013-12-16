@@ -94,8 +94,9 @@ public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
     /**
      * @param gson the Gson engine to set
      */
-    public void setGson(final Gson gson) {
+    public NamedFieldsDeserializer setGson(final Gson gson) {
         this.gson = gson;
+        return this;
     }
 
 }
