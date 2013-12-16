@@ -32,7 +32,6 @@ import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.NamedFields;
 import org.slf4j.Logger;
 
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
@@ -76,21 +75,21 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
     }
 
     @Override
-    public ListenableFutureTask<ActionResponse> removeSynch(final String id) {
-        return ListenableFutureTask.create(new Callable<ActionResponse>() {
+    public Callable<ActionResponse> removeSynch(final String id) {
+        return new Callable<ActionResponse>() {
 
             @Override
             public ActionResponse call() throws Exception {
                 return client.prepareDelete(getIndexName(),
                         getSearchIndexType(), id).execute().actionGet();
             }
-        });
+        };
     }
 
     @Override
-    public ListenableFutureTask<ActionResponse> updateSynch(final String id,
+    public Callable<ActionResponse> updateSynch(final String id,
             final NamedFields content) {
-        return ListenableFutureTask.create(new Callable<ActionResponse>() {
+        return new Callable<ActionResponse>() {
 
             @Override
             public ActionResponse call() throws Exception {
@@ -98,7 +97,7 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
                         .execute().actionGet();
 
             }
-        });
+        };
     }
 
     @Override
