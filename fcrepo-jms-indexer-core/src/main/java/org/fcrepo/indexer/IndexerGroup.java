@@ -127,7 +127,9 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Set indexers for this group.
-     **/
+     *
+     * @param indexers
+     */
     public void setIndexers(final Set<Indexer<Object>> indexers) {
         this.indexers = indexers;
         LOGGER.debug("Using indexer complement: {} ", indexers);
@@ -135,7 +137,9 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Get indexers set for this group.
-     **/
+     *
+     * @return indexers
+     */
     public Set<Indexer<Object>> getIndexers() {
         return indexers;
     }
@@ -197,6 +201,8 @@ public class IndexerGroup implements MessageListener {
                                 content = nfr.get();
                                 hasContent = true;
                             } catch (final AbsentTransformPropertyException e) {
+                                LOGGER.error("Failed to retrieve indexable content:"
+                                        + "could not find transform property!");
                                 hasContent = false;
                             }
                             break;
@@ -204,12 +210,8 @@ public class IndexerGroup implements MessageListener {
                             LOGGER.debug(
                                     "Retrieving RDF for: {}, (may be cached) to index to {}...",
                                     pid, indexer);
-                            try {
-                                content = rdfr.get();
-                                hasContent = true;
-                            } catch (final AbsentTransformPropertyException e1) {
-                                hasContent = false;
-                            }
+                            content = rdfr.get();
+                            hasContent = true;
                             break;
                         default:
                             hasContent = true;
@@ -243,9 +245,6 @@ public class IndexerGroup implements MessageListener {
 
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
-        } catch (final AbsentTransformPropertyException e2) {
-            // cannot be thrown here: simply an artifact of Java's crappy type
-            // system
         }
     }
 

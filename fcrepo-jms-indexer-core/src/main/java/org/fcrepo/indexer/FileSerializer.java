@@ -17,13 +17,15 @@
 package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
+import static java.util.Locale.US;
 import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,13 +46,15 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
     private static final Logger LOGGER = getLogger(FileSerializer.class);
 
     private static SimpleDateFormat fmt =
-        new SimpleDateFormat("yyyyMMddHHmmss");
+        new SimpleDateFormat("yyyyMMddHHmmss", US);
 
     private File path;
 
     /**
      * Set path to write files.
-    **/
+     *
+     * @param pathName
+     */
     public void setPath( final String pathName ) {
         this.path = new File(pathName);
         if (!this.path.exists()) {
@@ -59,7 +63,9 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
     }
     /**
      * Return path where files are written.
-    **/
+     *
+     * @return
+     */
     public String getPath() {
         return path.getAbsolutePath();
     }
@@ -82,13 +88,17 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
             @Override
             public File call() {
                 // write content to disk
-                try (Writer w = new FileWriter(file)) {
+                try (
+                    Writer w =
+                        new OutputStreamWriter(new FileOutputStream(file),
+                                "UTF8")) {
                     if (content.isEmpty()) {
                         w.write("");
                     } else {
                         w.write(content.toString());
                     }
                 } catch (final IOException e) {
+                    LOGGER.error("Failed to write to file: {}", file);
                     propagate(e);
                 }
                 return file;

@@ -36,16 +36,22 @@ public interface Indexer<Content> {
 
     /**
      * Create or update an index entry for the object.
+     *
+     * @param id
+     * @param content
      * @return the results of addition
-    **/
-    public ListenableFuture<?> update(final String pid, final Content content) throws IOException;
+     * @throws IOException
+     */
+    public ListenableFuture<?> update(final String id, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
-     * @return the results of removal
      *
-    **/
-    public ListenableFuture<?> remove(final String pid) throws IOException;
+     * @param id
+     * @return the results of removal
+     * @throws IOException
+     */
+    public ListenableFuture<?> remove(final String id) throws IOException;
 
     /**
      * @return What kind of indexer this is.
