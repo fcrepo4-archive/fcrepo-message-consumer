@@ -75,9 +75,15 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
      * @return
     **/
     @Override
-    public Callable<File> updateSynch(final String pid, final NamedFields content) {
+    public Callable<File> updateSynch(final String id, final NamedFields content) {
+
+        if (id.endsWith("/")) {
+            throw new IllegalArgumentException(
+                    "Identifiers for use with this indexer may not end in '/'!");
+        }
+
         // timestamped filename
-        String fn = pid + "." + fmt.format(new Date());
+        String fn = id + "@" + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
             fn = substringAfterLast(fn, "/");
         }

@@ -19,25 +19,37 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
 import static org.apache.solr.core.CoreContainer.createAndLoad;
+import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
 import org.fcrepo.indexer.NamedFields;
 import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 
 
@@ -50,9 +62,18 @@ public class SolrIndexerTest {
 
     private final String solrHome = "target/test-classes/solr";
 
-    private SolrIndexer indexer;
+    private SolrIndexer testIndexer;
 
-    private SolrServer server;
+    final CoreContainer container =
+            createAndLoad(solrHome, new File(solrHome, "solr.xml"));
+
+    private SolrServer server = new EmbeddedSolrServer(container, "testCore");
+
+    @Mock
+    private SolrServer mockServer;
+
+    @Mock
+    private UpdateResponse mockUpdateResponse;
 
     private static final Logger LOGGER = getLogger(SolrIndexerTest.class);
 
@@ -60,20 +81,79 @@ public class SolrIndexerTest {
 
     private static final long TIME_TO_WAIT_STEP = 1000;
 
+    private static Boolean successfulExecution = false;
+
 
     @Before
     public void setUp() throws Exception {
-        final CoreContainer container =
-            createAndLoad(solrHome, new File(solrHome, "solr.xml"));
         LOGGER.debug("Using Solr home: {}", new File(container.getSolrHome())
                 .getAbsolutePath());
-        server = new EmbeddedSolrServer(container, "testCore");
-        indexer = new SolrIndexer(server);
+        testIndexer = new SolrIndexer(server);
+        initMocks(this);
+    }
+
+    @Test
+    public void testMutatesWithBadResults() throws SolrServerException, IOException,
+        InterruptedException, ExecutionException {
+        final String id = "testBadUpdate:" + randomUUID();
+        final SolrIndexer hold = testIndexer;
+        when(mockServer.add(any(SolrInputDocument.class))).thenReturn(
+                mockUpdateResponse);
+        when(mockServer.deleteById(any(String.class))).thenReturn(
+                mockUpdateResponse);
+        // update failure
+        when(mockUpdateResponse.getStatus()).thenReturn(1);
+        testIndexer = new SolrIndexer(mockServer);
+        final Collection<String> values = asList(id);
+        final NamedFields testContent = new NamedFields(of("id", values));
+
+        UpdateResponse result = testIndexer.update(id, testContent).get();
+        assertEquals("Got wrong update response code!", 1, result.getStatus());
+        result = testIndexer.remove(id).get();
+        assertEquals("Got wrong update response code!", 1, result.getStatus());
+
+
+        testIndexer = hold;
+    }
+
+    @Test(expected = ExecutionException.class)
+    public void testUpdateThatExplodes() throws SolrServerException,
+        IOException, InterruptedException, ExecutionException {
+        final String id = "testExplodingUpdate:" + randomUUID();
+        final SolrIndexer hold = testIndexer;
+        // update failure
+        when(mockServer.add(any(SolrInputDocument.class))).thenThrow(
+                new SolrServerException("Expected."));
+
+        testIndexer = new SolrIndexer(mockServer);
+        final Collection<String> values = asList(id);
+        final NamedFields testContent = new NamedFields(of("id", values));
+
+        testIndexer.update(id, testContent).get();
+        testIndexer = hold;
+    }
+
+    @Test(expected = ExecutionException.class)
+    public void testUpdateWithAlternateExplosion() throws SolrServerException,
+        IOException, InterruptedException, ExecutionException {
+        final String id = "testExplodingUpdate2:" + randomUUID();
+        final SolrIndexer hold = testIndexer;
+        // update failure
+        when(mockServer.add(any(SolrInputDocument.class))).thenThrow(
+                new IOException("Expected."));
+
+        testIndexer = new SolrIndexer(mockServer);
+        final Collection<String> values = asList(id);
+        final NamedFields testContent = new NamedFields(of("id", values));
+
+        testIndexer.update(id, testContent).get();
+        testIndexer = hold;
     }
 
     @Test
     public void testUpdate() throws SolrServerException, IOException, InterruptedException {
         doUpdate("456");
+
     }
 
     private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
@@ -82,7 +162,7 @@ public class SolrIndexerTest {
         LOGGER.debug(
                 "Trying update operation with identifier: {} and content: \"{}\".",
                 pid, testContent);
-        indexer.update(pid, testContent);
+        testIndexer.update(pid, testContent);
 
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
@@ -102,7 +182,7 @@ public class SolrIndexerTest {
     public void testRemove() throws IOException, SolrServerException, InterruptedException {
         final String pid = "123";
         doUpdate(pid);
-        indexer.remove(pid);
+        testIndexer.remove(pid);
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
         Boolean success = results.size() == 0;
@@ -116,5 +196,31 @@ public class SolrIndexerTest {
         }
         assertTrue("Found our record when we shouldn't have!", success);
     }
+
+    @Test
+    public void testGetIndexerType() {
+        assertEquals("Got wrong testIndexer type!", NAMEDFIELDS, testIndexer
+                .getIndexerType());
+    }
+
+    @Test
+    public void testExecutorService() throws InterruptedException {
+        testIndexer.executorService().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                successfulExecution = true;
+
+            }});
+        final Long start = currentTimeMillis();
+        while (!successfulExecution && (currentTimeMillis() - start ) < TIMEOUT) {
+            sleep(TIME_TO_WAIT_STEP);
+        }
+        assertTrue(
+                "Failed to execute a task in this indexer's executor service before "
+                        + TIMEOUT + "ms!", successfulExecution);
+    }
+
+
 
 }
