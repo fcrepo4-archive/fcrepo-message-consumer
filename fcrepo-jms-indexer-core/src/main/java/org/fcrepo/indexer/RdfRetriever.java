@@ -73,7 +73,8 @@ public class RdfRetriever implements Supplier<Model> {
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (
                     Reader r =
-                        new InputStreamReader(response.getEntity().getContent())) {
+                        new InputStreamReader(
+                                response.getEntity().getContent(), "UTF8")) {
                     return createDefaultModel().read(r, "", "N3");
                 }
             } else {

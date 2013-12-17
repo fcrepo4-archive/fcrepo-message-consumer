@@ -79,7 +79,7 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
         return new Callable<ActionResponse>() {
 
             @Override
-            public ActionResponse call() throws Exception {
+            public ActionResponse call() {
                 return client.prepareDelete(getIndexName(),
                         getSearchIndexType(), id).execute().actionGet();
             }
@@ -92,7 +92,7 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
         return new Callable<ActionResponse>() {
 
             @Override
-            public ActionResponse call() throws Exception {
+            public ActionResponse call() {
                 return client.prepareIndex(indexName, searchIndexType, id)
                         .execute().actionGet();
 

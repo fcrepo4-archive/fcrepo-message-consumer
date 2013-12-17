@@ -64,6 +64,8 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
     /**
      * @param uri
      * @param client
+     * @param rdfr Used to determine the transform to use with this indexing
+     *        step
      */
     public NamedFieldsRetriever(final String uri, final HttpClient client,
         final Supplier<Model> rdfr) {
@@ -108,7 +110,8 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
             }
             try (
                 Reader r =
-                    new InputStreamReader(response.getEntity().getContent())) {
+                    new InputStreamReader(response.getEntity().getContent(),
+                            "UTF8")) {
                 return gson.fromJson(r, typeToken);
             }
 
