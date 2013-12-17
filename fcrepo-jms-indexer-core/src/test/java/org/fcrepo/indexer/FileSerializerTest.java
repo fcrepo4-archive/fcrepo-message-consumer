@@ -18,19 +18,24 @@ package org.fcrepo.indexer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.text.SimpleDateFormat;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Arrays.asList;
+import static java.util.Locale.US;
+import static java.util.UUID.randomUUID;
+import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * @author Esmé Cowles
@@ -38,8 +43,11 @@ import static org.junit.Assert.assertTrue;
  * @date Aug 19, 2013
  */
 public class FileSerializerTest {
-    private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmssSSS");
+
+    private static SimpleDateFormat fmt = new SimpleDateFormat("HHmmss", US);
+
     private FileSerializer serializer;
+
     private File path;
 
     @Before
@@ -51,23 +59,25 @@ public class FileSerializerTest {
 
     @Test
     public void pathTest() throws IOException {
-        // should automatically create path
+        // should automatically create directory
         assertTrue("Path not found: " + path.getAbsolutePath() + "!", path
                 .exists());
-        assertTrue("Not a dir: " + path.getAbsolutePath() + "!", path
-                .isDirectory());
+        assertTrue("Path was not a dirextory: " + path.getAbsolutePath() + "!",
+                path.isDirectory());
     }
 
     @Test
     public void updateTest() throws IOException, InterruptedException, ExecutionException {
+        final String testId = "updateTest:" + randomUUID();
         final Collection<String> values = asList("value1", "value2");
         final NamedFields testContent =
             new NamedFields(of("testProperty", values));
-        serializer.update("abc123", testContent);
+
+        final File f = serializer.update(testId, testContent).get();
 
         // file should exist
-        final File f = path.listFiles()[0];
-        assertTrue("Filename doesn't match", f.getName().startsWith("abc123"));
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(testId));
 
         // content should be 'test content'
         final String content = new String(readAllBytes(f.toPath()));
@@ -76,16 +86,39 @@ public class FileSerializerTest {
     }
 
     @Test
-    public void removeTest() throws IOException {
+    public void removeTest() throws IOException, InterruptedException, ExecutionException {
+        final String testId = "removeTest:" + randomUUID();
+
         // should write empty file to disk
-        serializer.remove("def456");
+        final File f = serializer.remove(testId).get();
 
         // file should exist
-        final File f = path.listFiles()[0];
-        assertTrue("Filename doesn't match", f.getName().startsWith("def456"));
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(testId));
 
-        // content should be ''
-        final String content = new String( Files.readAllBytes(f.toPath()) );
-        assertEquals("Content doesn't match", "", content);
+        // content should be empty
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't match", content.isEmpty());
     }
+
+    @Test
+    public void testGetPath() {
+        assertEquals("Got wrong path!", path.getAbsolutePath(), serializer
+                .getPath());
+    }
+
+    @Test
+    public void testGetIndexerType() {
+        assertEquals("Got wrong indexer type!", NAMEDFIELDS, serializer
+                .getIndexerType());
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testBadId() throws IOException {
+        final String testId = "testBadId/";
+        serializer.update(testId, null);
+    }
+
+    private static final Logger LOGGER = getLogger(FileSerializerTest.class);
+
 }
