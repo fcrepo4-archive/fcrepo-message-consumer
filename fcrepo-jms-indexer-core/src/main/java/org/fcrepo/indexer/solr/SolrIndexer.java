@@ -29,15 +29,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.inject.Inject;
-
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
-import org.fcrepo.indexer.IndexerGroup;
 import org.fcrepo.indexer.NamedFields;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,11 +71,9 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
     private static final Logger LOGGER = getLogger(SolrIndexer.class);
 
-    @Inject
-    private IndexerGroup indexerGroup;
-
     /**
      * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
+     * @param solrServer
      */
     @Autowired
     public SolrIndexer(final SolrServer solrServer) {
@@ -92,7 +87,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         return new Callable<UpdateResponse>() {
 
             @Override
-            public UpdateResponse call() throws Exception {
+            public UpdateResponse call() {
                 try {
                     LOGGER.debug(
                             "Executing request to Solr index for identifier: {} with fields: {}",
@@ -149,7 +144,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         return new Callable<UpdateResponse>() {
 
             @Override
-            public UpdateResponse call() throws Exception {
+            public UpdateResponse call() {
                 try {
                     final UpdateResponse resp = server.deleteById(pid);
                     if (resp.getStatus() == 0) {

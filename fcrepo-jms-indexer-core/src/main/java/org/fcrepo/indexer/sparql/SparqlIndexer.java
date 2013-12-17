@@ -16,7 +16,6 @@
 
 package org.fcrepo.indexer.sparql;
 
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.hp.hpl.jena.sparql.util.Context.emptyContext;
 import static com.hp.hpl.jena.update.UpdateExecutionFactory.createRemoteForm;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -81,13 +81,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     public Callable<Void> updateSynch(final String pid,
         final Model model) {
         LOGGER.debug("Received update for: {}", pid);
-        // first remove old data
-        try {
-            remove(pid);
-        } catch (final IOException e) {
-            propagate(e);
-        }
-
+        removeSynch(pid);
         // build a list of triples
         final StmtIterator triples = model.listStatements();
         final QuadDataAcc add = new QuadDataAcc();
@@ -114,7 +108,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
-        final HashSet<String> uris = new HashSet<>();
+        final Set<String> uris = new HashSet<>();
         while ( results.hasNext() ) {
             final Triple triple = results.next();
 
@@ -164,7 +158,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
             return new Callable<Void>() {
 
                 @Override
-                public Void call() throws Exception {
+                public Void call() {
                     return null;
                 }
             };
@@ -225,10 +219,13 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
     /**
      * Count the number of triples in the triplestore for a Fedora object.
-    **/
-    public int countTriples(final String pid) {
+     *
+     * @param uri
+     * @return the number of triples
+     */
+    public int countTriples(final String uri) {
         // perform describe query
-        final String describeQuery = "DESCRIBE <" + pid + ">";
+        final String describeQuery = "DESCRIBE <" + uri + ">";
         final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
