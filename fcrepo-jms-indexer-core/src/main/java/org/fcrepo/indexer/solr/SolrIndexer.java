@@ -166,13 +166,6 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         };
     }
 
-    /**
-     * @return the {@link SolrServer} in use
-     */
-    public SolrServer getServer() {
-        return server;
-    }
-
     @Override
     public IndexerType getIndexerType() {
         return NAMEDFIELDS;
