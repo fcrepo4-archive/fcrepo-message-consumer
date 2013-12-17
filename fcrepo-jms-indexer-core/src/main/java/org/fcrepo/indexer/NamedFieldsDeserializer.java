@@ -16,6 +16,7 @@
 
 package org.fcrepo.indexer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.builder;
 import static com.google.common.collect.Maps.transformValues;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -60,8 +61,10 @@ public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 
             @Override
             public List<String> apply(final JsonElement input) {
+                final JsonElement json =
+                    checkNotNull(input, "Cannot transform null!");
                 final ImmutableList.Builder<String> b = builder();
-                for (final JsonElement value : input.getAsJsonArray()) {
+                for (final JsonElement value : json.getAsJsonArray()) {
                     b.add(value.getAsString());
                 }
                 return b.build();
@@ -93,6 +96,7 @@ public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 
     /**
      * @param gson the Gson engine to set
+     * @return this object for continued use
      */
     public NamedFieldsDeserializer setGson(final Gson gson) {
         this.gson = gson;
