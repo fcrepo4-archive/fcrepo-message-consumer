@@ -16,6 +16,22 @@
 
 package org.fcrepo.indexer;
 
+import com.google.common.base.Supplier;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.fcrepo.kernel.utils.EventType;
+import org.slf4j.Logger;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import java.io.Reader;
+import java.util.Set;
+
 import static com.google.common.base.Suppliers.memoize;
 import static com.google.common.base.Throwables.propagate;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
@@ -25,24 +41,6 @@ import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
-
-import java.io.Reader;
-import java.util.Set;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.fcrepo.kernel.utils.EventType;
-import org.slf4j.Logger;
-
-import com.google.common.base.Supplier;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
  * MessageListener implementation that retrieves objects from the repository and
@@ -156,11 +154,19 @@ public class IndexerGroup implements MessageListener {
             propagate(e);
         }
         try {
+            final String pid;
             // get pid and eventType from message
-            final String pid =
-                message.getStringProperty(IDENTIFIER_HEADER_NAME);
             final String eventType =
                 message.getStringProperty(EVENT_TYPE_HEADER_NAME);
+            if (eventType.contains("PROPERTY")) {
+                // it seems the URL is for the property, not the node on which
+                // the property is set...
+                final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+                pid = id.substring(0, id.lastIndexOf('/'));
+            } else {
+                pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+            }
+
 
             LOGGER.debug("Discovered pid: {} in message.", pid);
             LOGGER.debug("Discovered event type: {} in message.", eventType);
