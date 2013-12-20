@@ -108,6 +108,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
                                 resp.getStatus(), id);
                     }
                     LOGGER.debug("Received result from Solr request.");
+                    server.commit();
                     return resp;
                 } catch (final SolrServerException | IOException e) {
                     LOGGER.error("Update exception: {}!", e);
