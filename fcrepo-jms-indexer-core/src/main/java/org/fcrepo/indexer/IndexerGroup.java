@@ -59,24 +59,24 @@ public class IndexerGroup implements MessageListener {
 
     private Set<Indexer<Object>> indexers;
 
-    private final HttpClient httpClient;
+    private HttpClient httpClient;
 
     /**
      * Identifier message header
      */
-    private static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
+    static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
             + "identifier";
 
     /**
      * Event type message header
      */
-    private static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
+    static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
             + "eventType";
 
     /**
      * Type of event that qualifies as a removal.
      */
-    private static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
+    static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
             + EventType.valueOf(NODE_REMOVED).toString();
 
     public static final String INDEXER_NAMESPACE =
@@ -140,6 +140,25 @@ public class IndexerGroup implements MessageListener {
      */
     public Set<Indexer<Object>> getIndexers() {
         return indexers;
+    }
+
+    /**
+     * Set HttpClient for this group.  In the constructor a default is set
+     * but this allows it to be customized.
+     *
+     * @param client
+     */
+    public void setHttpClient(final HttpClient client) {
+        this.httpClient = client;
+    }
+
+    /**
+     * Gets the HttpClient used by this class.
+     *
+     * @return
+     */
+    public HttpClient getHttpClient() {
+        return this.httpClient;
     }
 
     /**
