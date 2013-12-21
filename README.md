@@ -176,6 +176,14 @@ Sesame requires a little more setup to run with the tests, since by default it u
 
 Solr can be installed embedded into a jetty server (recommended for test) or in a tomcat container (recommended for production).  Download install and configuration are here: https://cwiki.apache.org/confluence/display/solr/Getting+Started
 
-## Caveat: Blank Nodes
+### Maven Build
+
+Use the following MAVEN_OPTS on build
+
+   ``` sh
+   MAVEN_OPTS=-Xmx750M -XX:maxPermSize=300M clean install
+   ```
+
+### Caveat: Blank Nodes
 
 Fedora doesn't currently support blank nodes.
