@@ -6,7 +6,7 @@
     <version>4.0.0-alpha-3-SNAPSHOT</version>
   </parent>
   <artifactId>fcrepo-jms-indexer-elasticsearch</artifactId>
-  <name>Fedora JMS-driven indexer for Elasticsearch</name>
+  <name>${project.artifactId}</name>
   <description>Fedora JMS-driven indexer for Elasticsearch</description>
   
   <properties>
