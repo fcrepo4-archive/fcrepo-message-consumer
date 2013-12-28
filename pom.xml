@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0.0-alpha-3-SNAPSHOT</version>
+    <version>4.0.0-alpha-3</version>
   </parent>
 
   <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
@@ -26,7 +26,7 @@
     
     <solr.version>4.6.0</solr.version>
     <!-- default, for execution without custom argLine -->
-    <argLine></argLine>
+    <argLine />
   </properties>
 
   <modules>
@@ -41,7 +41,7 @@
     <developerConnection>scm:git:git@github.com:futures/${project_name}.git
     </developerConnection>
     <url>https://github.com/futures/${project_name}</url>
-    <tag>HEAD</tag>
+    <tag>fcrepo-jms-indexer-pluggable-4.0.0-alpha-3</tag>
   </scm>
 
   <dependencyManagement>
@@ -153,34 +153,34 @@
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-api</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-kernel</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-transform</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-jms</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>${project.version}</version>
+        <version>4.0.0-alpha-3</version>
         <scope>test</scope>
         <type>test-jar</type>
       </dependency>
