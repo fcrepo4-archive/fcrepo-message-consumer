@@ -14,9 +14,16 @@
   <packaging>jar</packaging>
 
   <dependencies>
+  
+  <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-jms-indexer-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>javax.jms</groupId>
       <artifactId>jms-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -121,36 +128,7 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki</artifactId>
       <scope>test</scope>
-<!--       <exclusions>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-      </exclusions> -->
     </dependency>
-    <!-- Start of Solr Indexer libs -->
-    <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-core</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!--   <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-test-framework</artifactId>
-    </dependency> -->
-    <!--  HttpClient are used for create standardalone SolrIndexer Server client.
-     They seem to be included with Solr 3.6.2?
-     Ver 4.2.5 aim to fit JENA included version -->
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-    </dependency>
-    <!-- End of Solr Indexer libs -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
@@ -165,7 +143,16 @@
       </resource>
     </resources>
     <plugins>
-
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>1.2</version>
@@ -245,9 +232,24 @@
             </goals>
           </execution>
         </executions>
-
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-remote-resources-plugin</artifactId>
+        <version>1.5</version>
+        <configuration>
+          <resourceBundles>
+            <resourceBundle>org.fcrepo:fcrepo-jms-indexer-api:${project.version}</resourceBundle>
+          </resourceBundles>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
@@ -263,18 +265,4 @@
     </plugins>
   </build>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-facet</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 </project>

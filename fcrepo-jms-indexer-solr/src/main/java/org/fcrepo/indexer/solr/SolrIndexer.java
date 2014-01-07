@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.inject.Inject;
+
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -37,13 +39,11 @@ import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.NamedFields;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.google.common.collect.Maps.EntryTransformer;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * A Solr Indexer (stub) implementation that adds some basic information to a
+ * An {@link Indexer} implementation that adds some basic information to a
  * Solr index server.
  *
  * @author ajs6f
@@ -68,14 +68,12 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     private ListeningExecutorService executorService =
         listeningDecorator(newFixedThreadPool(THREAD_POOL_SIZE));
 
-
     private static final Logger LOGGER = getLogger(SolrIndexer.class);
 
     /**
-     * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
      * @param solrServer
      */
-    @Autowired
+    @Inject
     public SolrIndexer(final SolrServer solrServer) {
         this.server = solrServer;
     }
@@ -117,7 +115,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         };
     }
 
-    protected SolrInputDocument fromMap(final Map<String, Collection<String>> fields) {
+    protected static SolrInputDocument fromMap(final Map<String, Collection<String>> fields) {
         LOGGER.debug("Constructing new SolrInputDocument...");
         return new SolrInputDocument(transformEntries(fields,
                 collection2solrInputField));
@@ -139,23 +137,23 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         };
 
     @Override
-    public Callable<UpdateResponse> removeSynch(final String pid) {
-        LOGGER.debug("Received request for removal of: {}", pid);
+    public Callable<UpdateResponse> removeSynch(final String id) {
+        LOGGER.debug("Received request for removal of: {}", id);
         return new Callable<UpdateResponse>() {
 
             @Override
             public UpdateResponse call() {
                 try {
-                    final UpdateResponse resp = server.deleteById(pid);
+                    final UpdateResponse resp = server.deleteById(id);
                     if (resp.getStatus() == 0) {
                         LOGGER.debug("Remove request was successful for: {}",
-                                pid);
+                                id);
                         server.commit();
 
                     } else {
                         LOGGER.error(
-                                "Remove request has error, code: {} for pid: {}",
-                                resp.getStatus(), pid);
+                                "Remove request for identifier: {} returned error code: {} ",
+                                id, resp.getStatus());
                     }
                     return resp;
                 } catch (final SolrServerException | IOException e) {

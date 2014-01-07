@@ -3,32 +3,32 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:context="http://www.springframework.org/schema/context"
   xmlns:c="http://www.springframework.org/schema/c"
-  xmlns:p="http://www.springframework.org/schema/p"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
 
-  <!-- sparql-update indexer -->
-  <bean id="sparqlUpdate" class="org.fcrepo.indexer.sparql.SparqlIndexer"
-    p:queryBase="http://localhost:${test.fuseki.port:3030}/test/query"
-    p:updateBase="http://localhost:${test.fuseki.port:3030}/test/update"
-    p:formUpdates="false"/>
+  <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer"/>
 
-  <!-- test indexer -->
-  <bean id="testIndexer" class="org.fcrepo.indexer.TestIndexer"/>
+  <bean class="java.io.File" id="solrConfig">
+    <constructor-arg index="0" value="target/test-classes/solr/solr.xml"/>
+  </bean>
 
-  <!-- file serializer -->
-  <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer"
-    p:path="./target/test-classes/fileSerializer/"/>
+  <!--Embedded Server  -->
+  <bean id="multiCore" class="org.apache.solr.core.CoreContainer"
+    factory-method="createAndLoad" c:solrHome="target/test-classes/solr"
+    c:configFile-ref="solrConfig"/>
+
+  <bean id="solrServer"
+    class="org.apache.solr.client.solrj.embedded.EmbeddedSolrServer"
+    c:coreContainer-ref="multiCore" c:coreName="testCore"/>
+  <!-- Solr Indexer END-->
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <property name="repositoryURL" value="http://localhost:${test.port:8080}"/>
     <property name="indexers">
       <set value-type="org.fcrepo.indexer.Indexer">
-        <ref bean="testIndexer"/>
-        <ref bean="fileSerializer"/>
-        <ref bean="sparqlUpdate"/>
+        <ref bean="solrIndexer"/>
       </set>
     </property>
   </bean>

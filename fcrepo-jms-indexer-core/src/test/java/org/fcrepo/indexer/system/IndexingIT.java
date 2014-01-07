@@ -79,33 +79,14 @@ public abstract class IndexingIT {
         LOGGER.debug("Installing indexing type information...");
         update = new HttpPost(serverAddress + "fcr:nodetypes");
         update.setHeader("Content-Type", "text/cnd");
-        HttpEntity cnd =
+        final HttpEntity cnd =
             new StringEntity(Files.toString(new File(
-                    "target/classes/indexing.cnd"), defaultCharset()));
+                    "target/maven-shared-archive-resources/indexing.cnd"),
+                    defaultCharset()));
         update.setEntity(cnd);
         response = client.execute(update);
         assertEquals("Failed to install indexing type information!",
                 SC_NO_CONTENT, response.getStatusLine().getStatusCode());
-
-        LOGGER.debug("Installing indexing test type information...");
-        update = new HttpPost(serverAddress + "fcr:nodetypes");
-        update.setHeader("Content-Type", "text/cnd");
-        cnd =
-            new StringEntity(Files.toString(new File(
-                    "target/test-classes/indexingtest.cnd"), defaultCharset()));
-        update.setEntity(cnd);
-        response = client.execute(update);
-        assertEquals("Failed to install indexing test type information!",
-                SC_NO_CONTENT, response.getStatusLine().getStatusCode());
-        /*HttpGet nsRequest = new HttpGet(serverAddress + "fcr:namespaces");
-        nsRequest.setHeader("Content-Type", WebContent.contentTypeN3Alt1);
-        LOGGER.debug("Now registered namespaces include:\n{}", IOUtils
-                .toString(client.execute(nsRequest).getEntity().getContent()));
-        nsRequest = new HttpGet(serverAddress + "fcr:nodetypes");
-        nsRequest.setHeader("Content-Type", WebContent.contentTypeN3Alt1);
-        LOGGER.debug("and registered node types:\n{}", IOUtils.toString(client
-                .execute(nsRequest).getEntity().getContent()));*/
-
     }
 
 

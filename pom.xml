@@ -18,13 +18,13 @@
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
     <project_name>${project.artifactId}</project_name>
 
+    <fedora.version>4.0.0-alpha-4-SNAPSHOT</fedora.version>
     <spring.version>3.2.0.RELEASE</spring.version>
     <activemq.version>5.7.0</activemq.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <logback.version>1.0.13</logback.version>
-    
-    <solr.version>4.6.0</solr.version>
+
     <!-- default, for execution without custom argLine -->
     <argLine></argLine>
   </properties>
@@ -33,6 +33,8 @@
     <module>fcrepo-jms-indexer-core</module>
     <module>fcrepo-jms-indexer-webapp</module>
     <module>fcrepo-jms-indexer-elasticsearch</module>
+    <module>fcrepo-jms-indexer-solr</module>
+    <module>fcrepo-jms-indexer-api</module>
   </modules>
 
   <scm>
@@ -153,34 +155,34 @@
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-api</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-kernel</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-transform</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-jms</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>${project.version}</version>
+        <version>${fedora.version}</version>
         <scope>test</scope>
         <type>test-jar</type>
       </dependency>
@@ -190,20 +192,6 @@
         <artifactId>jena-fuseki</artifactId>
         <version>1.0.0</version>
         <scope>test</scope>
-      <!--     <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-          </exclusion>
-        </exclusions> -->
       </dependency>
 
       <dependency>
@@ -211,66 +199,17 @@
         <artifactId>jena-core</artifactId>
         <version>2.10.1</version>
       </dependency>
-
-      <!-- Start of Solr Indexer libs -->
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-core</artifactId>
-        <version>${solr.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-test-framework</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <!--  HttpMime are used for create standardalone SolrIndexer Server client.
-       They seem to be included with Solr 3.6.2?
-       Ver 4.2.5 aim to fit JENA included version -->
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpmime</artifactId>
-        <version>4.2.5</version>
-      </dependency>
-      <!-- End of Solr Indexer libs -->
       
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-spatial</artifactId>
-        <version>${solr.version}</version>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.6</version>
       </dependency>
+      
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-queries</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-analyzers-common</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-queryparser</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-solrj</artifactId>
-        <version>${solr.version}</version>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.7</version>
       </dependency>
 
     </dependencies>

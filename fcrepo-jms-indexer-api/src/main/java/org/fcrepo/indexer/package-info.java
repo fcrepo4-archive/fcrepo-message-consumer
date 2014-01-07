@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * 
+ */
+/**
+ * @author ajs6f
+ * @date Jan 7, 2014
+ */
 
 package org.fcrepo.indexer;
-
-import java.io.InputStream;
-import java.util.concurrent.Callable;
-
-/**
- * Implemented by classes that retrieve indexable content for a resource.
- *
- * @author ajs6f
- * @date Dec 6, 2013
- */
-public interface IndexableContentRetriever extends Callable<InputStream> {
-
-}

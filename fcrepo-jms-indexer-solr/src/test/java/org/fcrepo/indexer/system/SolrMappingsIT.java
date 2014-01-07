@@ -46,6 +46,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.fcrepo.indexer.solr.SolrIndexer;
+import org.fcrepo.indexer.system.IndexingIT;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -155,7 +156,7 @@ public class SolrMappingsIT extends IndexingIT {
         SolrServerException, InterruptedException {
 
         final String mappingUrl =
-            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book";
+            serverAddress + CONFIGURATION_FOLDER + "dc/indexing:indexable";
 
         LOGGER.debug("Creating index mapping at URL: {}...", mappingUrl);
 
@@ -181,7 +182,6 @@ public class SolrMappingsIT extends IndexingIT {
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      <http://id.loc.gov/authorities/subjects/sh2012004374> ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
-                    + "rdf:type  <http://fedora.info/definitions/v4/indexingtest#book> ;"
                     + "indexing:hasIndexingTransformation \"dc\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
