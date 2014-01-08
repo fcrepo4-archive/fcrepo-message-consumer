@@ -37,6 +37,7 @@
     <module>fcrepo-jms-indexer-solr</module>
     <module>fcrepo-jms-indexer-api</module>
     <module>fcrepo-jms-indexer-sparql</module>
+    <module>fcrepo-jms-indexer-runtime</module>
   </modules>
 
   <scm>
@@ -300,6 +301,13 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <dependencies>
