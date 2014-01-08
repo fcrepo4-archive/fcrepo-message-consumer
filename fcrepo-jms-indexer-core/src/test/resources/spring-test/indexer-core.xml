@@ -8,12 +8,7 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
 
-  <!-- sparql-update indexer -->
-  <bean id="sparqlUpdate" class="org.fcrepo.indexer.sparql.SparqlIndexer"
-    p:queryBase="http://localhost:${test.fuseki.port:3030}/test/query"
-    p:updateBase="http://localhost:${test.fuseki.port:3030}/test/update"
-    p:formUpdates="false"/>
-
+  
   <!-- test indexer -->
   <bean id="testIndexer" class="org.fcrepo.indexer.TestIndexer"/>
 
@@ -28,7 +23,6 @@
       <set value-type="org.fcrepo.indexer.Indexer">
         <ref bean="testIndexer"/>
         <ref bean="fileSerializer"/>
-        <ref bean="sparqlUpdate"/>
       </set>
     </property>
   </bean>

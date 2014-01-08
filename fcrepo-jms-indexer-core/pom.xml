@@ -110,8 +110,6 @@
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel</artifactId>
     </dependency>
-    
-
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms</artifactId>
@@ -125,14 +123,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-fuseki</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.2.4</version>
+    </dependency>
+    <!-- required for MODE: not yet clear why -->
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analyzers-common</artifactId>
+      <version>4.6.0</version>
     </dependency>
   </dependencies>
 

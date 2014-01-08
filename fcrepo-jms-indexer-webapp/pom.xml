@@ -57,6 +57,22 @@
       <artifactId>httpmime</artifactId>
       <scope>compile</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-jms-indexer-sparql</artifactId>
+      <version>${project.version}</version>
+      <!-- <exclusions>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions> -->
+    </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>

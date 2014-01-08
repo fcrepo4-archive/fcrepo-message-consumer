@@ -9,10 +9,6 @@
   <artifactId>fcrepo-jms-indexer-solr</artifactId>
   <name>Solr indexer</name>
   
-  <properties>
-    <solr.version>4.6.0</solr.version>
-  </properties>
-  
   <dependencies>
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -114,72 +110,6 @@
     </dependency>
   </dependencies>
   
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-facet</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-core</artifactId>
-        <version>${solr.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <!-- used for standalone SolrServer.
-       Ver 4.2.5 aim to fit JENA included version -->
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpmime</artifactId>
-        <version>4.2.5</version>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-spatial</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-queries</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-analyzers-common</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-queryparser</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-solrj</artifactId>
-        <version>${solr.version}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
   <build>
     <plugins>
       <plugin>

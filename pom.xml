@@ -21,6 +21,7 @@
     <fedora.version>4.0.0-alpha-4-SNAPSHOT</fedora.version>
     <spring.version>3.2.0.RELEASE</spring.version>
     <activemq.version>5.7.0</activemq.version>
+    <solr.version>4.6.0</solr.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <logback.version>1.0.13</logback.version>
@@ -35,6 +36,7 @@
     <module>fcrepo-jms-indexer-elasticsearch</module>
     <module>fcrepo-jms-indexer-solr</module>
     <module>fcrepo-jms-indexer-api</module>
+    <module>fcrepo-jms-indexer-sparql</module>
   </modules>
 
   <scm>
@@ -191,7 +193,6 @@
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-fuseki</artifactId>
         <version>1.0.0</version>
-        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -212,6 +213,73 @@
         <version>1.7</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-facet</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-core</artifactId>
+        <version>${solr.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <!-- used for standalone SolrServer.
+       Ver 4.2.5 aim to fit JENA included version -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>4.2.5</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-spatial</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-queries</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-analyzers-common</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-queryparser</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-fileupload</groupId>
+        <artifactId>commons-fileupload</artifactId>
+        <version>1.2.2</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
