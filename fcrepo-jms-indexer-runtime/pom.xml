@@ -25,6 +25,10 @@
       <version>4.2.1</version>
       <type>bundle</type>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -50,7 +54,29 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.fcrepo</groupId>
+                  <artifactId>fcrepo-jms-indexer-core</artifactId>
+                  <version>${project.version}</version>
+                  <type>bundle</type>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/bundle</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
   </build>

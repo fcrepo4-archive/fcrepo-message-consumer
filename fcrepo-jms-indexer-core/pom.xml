@@ -11,7 +11,7 @@
   <artifactId>fcrepo-jms-indexer-core</artifactId>
   <name>${project.artifactId}</name>
   <description>Fedora JMS Indexer Core</description>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <dependencies>
   
@@ -259,6 +259,11 @@
             <test.fuseki.port>${test.fuseki.port}</test.fuseki.port>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
       </plugin>
     </plugins>
   </build>

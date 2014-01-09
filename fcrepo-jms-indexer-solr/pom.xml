@@ -8,6 +8,7 @@
   </parent>
   <artifactId>fcrepo-jms-indexer-solr</artifactId>
   <name>Solr indexer</name>
+  <packaging>bundle</packaging>
   
   <dependencies>
     <dependency>
@@ -128,6 +129,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
       </plugin>
     </plugins>
   </build>

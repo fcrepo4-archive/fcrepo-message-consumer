@@ -9,6 +9,8 @@
   <name>${project.artifactId}</name>
   <description>Fedora JMS-driven indexer for Elasticsearch</description>
   
+  <packaging>bundle</packaging>
+  
   <properties>
     <es.lucene.version>4.6.0</es.lucene.version>
   </properties>
@@ -126,4 +128,14 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
