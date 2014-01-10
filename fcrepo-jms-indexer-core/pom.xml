@@ -15,17 +15,26 @@
 
   <dependencies>
   
-  <dependency>
+    <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms-indexer-api</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-kernel-api</artifactId>
+      <version>4.0.0-alpha-4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>javax.jms</groupId>
       <artifactId>jms-api</artifactId>
       <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>apache-jena-libs</artifactId>
+      <type>pom</type>
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
@@ -35,7 +44,28 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+    <!-- required for MODE: not yet clear why -->
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analyzers-common</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-spring</artifactId>
@@ -66,19 +96,6 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -89,6 +106,7 @@
           <groupId>org.apache.lucene</groupId>
         </exclusion>
       </exclusions>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -108,10 +126,6 @@
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
-      <artifactId>fcrepo-kernel</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms</artifactId>
       <scope>test</scope>
     </dependency>
@@ -121,16 +135,10 @@
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
-
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.2.4</version>
-    </dependency>
-    <!-- required for MODE: not yet clear why -->
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-analyzers-common</artifactId>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-kernel</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -234,7 +242,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-remote-resources-plugin</artifactId>
-        <version>1.5</version>
         <configuration>
           <resourceBundles>
             <resourceBundle>org.fcrepo:fcrepo-jms-indexer-api:${project.version}</resourceBundle>

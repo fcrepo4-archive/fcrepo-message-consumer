@@ -19,15 +19,26 @@
 
 package org.fcrepo.indexer.runtime;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static java.lang.Runtime.getRuntime;
 import static java.lang.System.exit;
-import static java.lang.System.out;
-import static org.fcrepo.indexer.runtime.OSGiUtils.getFrameworkFactory;
+import static java.lang.System.getProperty;
+import static java.util.ServiceLoader.load;
+import static org.apache.felix.main.AutoProcessor.AUTO_DEPLOY_ACTION_PROPERY;
+import static org.apache.felix.main.AutoProcessor.AUTO_DEPLOY_DIR_PROPERY;
+import static org.apache.felix.main.AutoProcessor.process;
+import static org.osgi.framework.Bundle.STOPPING;
+import static org.osgi.framework.Constants.FRAMEWORK_STORAGE;
 import static org.osgi.framework.FrameworkEvent.WAIT_TIMEDOUT;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.util.Map;
 
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
+import org.slf4j.Logger;
 
 /**
  * @author ajs6f
@@ -37,17 +48,32 @@ public class Main {
 
     private static final int SHUTDOWN_TIMEOUT = 20000;
 
-    private final FrameworkFactory frameworkFactory = getFrameworkFactory();
+    private static final String INDEXER_HOME_PROP_NAME =
+        "org.fcrepo.indexer.home";
+
+    private static final String AUTODEPLOY_DIR_PROP_NAME =
+        "felix.auto.deploy.dir";
+
+    // take the first available
+    private final FrameworkFactory frameworkFactory = load(
+            FrameworkFactory.class).iterator().next();
 
     private Framework framework;
 
+    private static final Logger LOGGER = getLogger(Main.class);
+
     /**
      * Default constructor.
-     *
-     * @param args
      */
-    public Main(final String[] args) {
-        framework = frameworkFactory.newFramework(null);
+    public Main() {
+        framework = frameworkFactory.newFramework(getConfig());
+    }
+
+    private static Map<String, String> getConfig() {
+        return of(FRAMEWORK_STORAGE, getProperty(INDEXER_HOME_PROP_NAME,
+                "indexer"), AUTO_DEPLOY_DIR_PROPERY, getProperty(
+                AUTODEPLOY_DIR_PROP_NAME, "bundle"),
+                AUTO_DEPLOY_ACTION_PROPERY, "install,update,start,uninstall");
     }
 
     /**
@@ -55,48 +81,80 @@ public class Main {
      */
     public void start() throws BundleException {
         framework.start();
-        out.println("Started internal OSGi framework...");
+        LOGGER.info("Started internal OSGi framework...");
+        getRuntime().addShutdownHook(new Thread("OSGi Framework Shutdown Hook") {
 
+            @Override
+            public void run() {
+                try {
+                    if (framework != null) {
+                        if (framework.getState() != STOPPING) {
+
+                            framework.stop();
+                            framework.waitForStop(0);
+                        }
+                    }
+                } catch (final Exception e) {
+                    LOGGER.error("Error stopping internal OSGi framework: ", e);
+                }
+            }
+        });
     }
 
     /**
      * @throws BundleException
-     * @throws InterruptedException
      */
-    public Integer stop() throws BundleException, InterruptedException {
+    public void init() throws BundleException {
+        framework.init();
+        LOGGER.info("Initialized internal OSGi framework...");
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public void stop() throws Throwable {
         framework.stop();
-        out.println("Stopping internal OSGi framework...");
+        LOGGER.info("Stopping internal OSGi framework...");
         final FrameworkEvent result = framework.waitForStop(SHUTDOWN_TIMEOUT);
         final Throwable t = result.getThrowable();
         if (t == null) {
             if (result.getType() == WAIT_TIMEDOUT) {
-                out.println("Failed to shut down in " + SHUTDOWN_TIMEOUT
+                throw new Timeout("Failed to shut down in " + SHUTDOWN_TIMEOUT
                         + " ms!");
-                return 1;
-            } else {
-                return 0;
             }
         } else {
-            out.println(t.getLocalizedMessage());
-            return 1;
+            throw t;
         }
 
     }
 
     /**
      * @param args
-     * @throws BundleException
      */
     public static void main(final String[] args) {
-        final Main m = new Main(args);
+
+        final Main m = new Main();
 
         try {
+            m.init();
+            process(getConfig(), m.framework.getBundleContext());
             m.start();
-            exit(m.stop());
-        } catch (final BundleException | InterruptedException e) {
-            e.printStackTrace();
+            System.in.read();
+            m.stop();
+            exit(0);
+        } catch (final Throwable t) {
+            LOGGER.error("", t);
+            exit(1);
         }
+    }
 
+    private class Timeout extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        public Timeout(final String msg) {
+            super(msg);
+        }
     }
 
 }

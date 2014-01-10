@@ -16,7 +16,7 @@
 
 package org.fcrepo.indexer.runtime;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
@@ -28,10 +28,13 @@ public class SanityTest {
     @Test
     public void runOnce() throws IOException, BundleException,
         InterruptedException {
-        final Main m = new Main(null);
+        final Main m = new Main();
         m.start();
-        final Integer result = m.stop();
-        final Integer expected = 0;
-        assertEquals("Didn't successfully run a launcher!", expected, result);
+        try {
+            m.stop();
+        } catch (final Throwable e) {
+            fail("Failed to launch and shutdown a runtime.");
+        }
+
     }
 }

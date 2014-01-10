@@ -109,6 +109,11 @@
       <artifactId>fcrepo-jms</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-kernel</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <build>
@@ -116,7 +121,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-remote-resources-plugin</artifactId>
-        <version>1.5</version>
         <configuration>
           <resourceBundles>
             <resourceBundle>org.fcrepo:fcrepo-jms-indexer-api:${project.version}</resourceBundle>

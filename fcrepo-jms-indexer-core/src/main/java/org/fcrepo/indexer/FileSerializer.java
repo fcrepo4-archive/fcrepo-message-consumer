@@ -18,7 +18,6 @@ package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
 import static java.util.Locale.US;
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -85,7 +84,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
         // timestamped filename
         String fn = id + "@" + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
-            fn = substringAfterLast(fn, "/");
+            fn = fn.substring(fn.lastIndexOf('/'));
         }
         final File file = new File(path, fn);
         LOGGER.debug("Updating to file: {}", file);

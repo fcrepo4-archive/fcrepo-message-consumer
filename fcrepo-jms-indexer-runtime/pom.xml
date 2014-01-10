@@ -29,6 +29,12 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-jms-indexer-core</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -58,20 +64,12 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy</id>
-            <phase>package</phase>
             <goals>
-              <goal>copy</goal>
+              <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.fcrepo</groupId>
-                  <artifactId>fcrepo-jms-indexer-core</artifactId>
-                  <version>${project.version}</version>
-                  <type>bundle</type>
-                </artifactItem>
-              </artifactItems>
+              <!-- we use the provided scope to indicate material to be packaged with -->
+              <includeScope>provided</includeScope>
               <outputDirectory>${project.build.directory}/bundle</outputDirectory>
             </configuration>
           </execution>
