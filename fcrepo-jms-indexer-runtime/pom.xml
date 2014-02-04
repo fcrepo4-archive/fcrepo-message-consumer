@@ -24,7 +24,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -64,7 +63,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -153,6 +152,38 @@
       <artifactId>jackson-mapper-asl</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.webconsole</artifactId>
+      <version>4.2.0</version>
+      <type>bundle</type>
+      <scope>provided</scope>
+    </dependency>
+    <!-- supports Felix web console -->
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.bundles</groupId>
+      <artifactId>json</artifactId>
+      <version>20090211_1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr</artifactId>
+      <version>1.8.0</version>
+      <type>bundle</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+      <version>1.9.6</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   
   <repositories>
@@ -193,8 +224,8 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <!-- we use the provided scope to indicate material to be packaged with -->
-              <includeScope>provided</includeScope>
+              <!-- we use the provided scope to indicate material to be packaged with but not
+              baked into the artifact -->
               <outputDirectory>${project.build.directory}/bundle</outputDirectory>
             </configuration>
           </execution>

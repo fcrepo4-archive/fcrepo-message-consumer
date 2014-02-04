@@ -19,7 +19,6 @@
 
 package org.fcrepo.indexer.runtime;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.System.exit;
 import static java.lang.System.getProperty;
@@ -32,6 +31,7 @@ import static org.osgi.framework.Constants.FRAMEWORK_STORAGE;
 import static org.osgi.framework.FrameworkEvent.WAIT_TIMEDOUT;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.framework.BundleException;
@@ -70,13 +70,20 @@ public class Main {
     }
 
     /**
-     * @return Parsed conf from System properties
+     * @return Parsed configuration from System properties
      */
     public static Map<String, String> getConfig() {
-        return of(FRAMEWORK_STORAGE, getProperty(INDEXER_HOME_PROP_NAME,
-                "indexer"), AUTO_DEPLOY_DIR_PROPERY, getProperty(
-                AUTODEPLOY_DIR_PROP_NAME, "bundle"),
-                AUTO_DEPLOY_ACTION_PROPERY, "install,update,start,uninstall");
+        final Map<String, String> config = new HashMap<>();
+        final String indexerHome =
+            getProperty(INDEXER_HOME_PROP_NAME, "indexer");
+        config.put(FRAMEWORK_STORAGE, indexerHome);
+        LOGGER.info("Using indexer home: {}", indexerHome);
+        final String autoDeployDir =
+            getProperty(AUTODEPLOY_DIR_PROP_NAME, "bundle");
+        config.put(AUTO_DEPLOY_DIR_PROPERY, autoDeployDir);
+        LOGGER.info("Using auto-deploy directory: {}", autoDeployDir);
+        config.put(AUTO_DEPLOY_ACTION_PROPERY, "install,update,start,uninstall");
+        return config;
     }
 
     /**
