@@ -62,16 +62,16 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
     private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);
 
     /**
-     * @param uri
+     * @param resourceUri
      * @param client
-     * @param rdfr Used to determine the transform to use with this indexing
+     * @param rdfRetriever Used to determine the transform to use with this indexing
      *        step
      */
-    public NamedFieldsRetriever(final String uri, final HttpClient client,
-        final Supplier<Model> rdfr) {
-        this.uri = uri;
+    public NamedFieldsRetriever(final String resourceUri, final HttpClient client,
+        final Supplier<Model> rdfRetriever) {
+        this.uri = resourceUri;
         this.httpClient = client;
-        this.rdfr = rdfr;
+        this.rdfr = rdfRetriever;
         final NamedFieldsDeserializer deserializer =
             new NamedFieldsDeserializer();
         this.gson =

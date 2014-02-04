@@ -28,6 +28,9 @@ import java.util.Map;
  */
 public class NamedFields extends HashMap<String, Collection<String>> {
 
+    public static final String CONFIGURATION_FOLDER =
+            "fedora:system/fedora:transform/fedora:ldpath/";
+
     /**
      * Default constructor
      *

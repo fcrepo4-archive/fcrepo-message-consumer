@@ -22,7 +22,7 @@ import static java.nio.charset.Charset.defaultCharset;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.apache.jena.riot.WebContent.contentTypeN3Alt1;
-import static org.fcrepo.indexer.solr.SolrIndexer.CONFIGURATION_FOLDER;
+import static org.fcrepo.indexer.NamedFields.CONFIGURATION_FOLDER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -72,9 +72,6 @@ public class SolrMappingsIT extends IndexingIT {
     private static final long TIMEOUT = 20000;
 
     private static final long TIME_TO_WAIT_STEP = 1000;
-
-    @Inject
-    private SolrIndexer testSolrIndexer;
 
     @Test
     public void testOneResource() throws ClientProtocolException, IOException,

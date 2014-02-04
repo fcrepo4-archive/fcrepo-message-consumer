@@ -52,8 +52,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  */
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
-    public static final String CONFIGURATION_FOLDER =
-        "fedora:system/fedora:transform/fedora:ldpath/";
 
     // TODO make index-time boost somehow adjustable, or something
     public static final Long INDEX_TIME_BOOST = 1L;
