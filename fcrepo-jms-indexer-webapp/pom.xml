@@ -7,7 +7,7 @@
   </parent>
 
   <artifactId>fcrepo-jms-indexer-webapp</artifactId>
-  <name>${project.artifactId}</name>
+  <name>Indexer Deployable Web Application</name>
   <description>Fedora JMS Indexer Web Application</description>
   <packaging>war</packaging>
 

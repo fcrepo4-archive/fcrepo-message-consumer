@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>fcrepo-jms-indexer-core</artifactId>
-  <name>${project.artifactId}</name>
+  <name>Fedora JMS Indexer Core Module</name>
   <description>Fedora JMS Indexer Core</description>
   <packaging>bundle</packaging>
 
@@ -48,7 +48,7 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-osgi</artifactId>
       <type>bundle</type>
-      <version>4.3.1</version>
+      <version>4.2.3</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>

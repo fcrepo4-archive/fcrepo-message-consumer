@@ -48,10 +48,10 @@ public class Main {
 
     private static final int SHUTDOWN_TIMEOUT = 20000;
 
-    private static final String INDEXER_HOME_PROP_NAME =
+    public static final String INDEXER_HOME_PROP_NAME =
         "org.fcrepo.indexer.home";
 
-    private static final String AUTODEPLOY_DIR_PROP_NAME =
+    public static final String AUTODEPLOY_DIR_PROP_NAME =
         "felix.auto.deploy.dir";
 
     // take the first available
@@ -69,7 +69,10 @@ public class Main {
         framework = frameworkFactory.newFramework(getConfig());
     }
 
-    private static Map<String, String> getConfig() {
+    /**
+     * @return Parsed conf from System properties
+     */
+    public static Map<String, String> getConfig() {
         return of(FRAMEWORK_STORAGE, getProperty(INDEXER_HOME_PROP_NAME,
                 "indexer"), AUTO_DEPLOY_DIR_PROPERY, getProperty(
                 AUTODEPLOY_DIR_PROP_NAME, "bundle"),
@@ -129,6 +132,13 @@ public class Main {
     }
 
     /**
+     * @return the {@link Framework} in use
+     */
+    public Framework framework() {
+        return framework;
+    }
+
+    /**
      * @param args
      */
     public static void main(final String[] args) {
@@ -137,7 +147,7 @@ public class Main {
 
         try {
             m.init();
-            process(getConfig(), m.framework.getBundleContext());
+            process(getConfig(), m.framework().getBundleContext());
             m.start();
             System.in.read();
             m.stop();

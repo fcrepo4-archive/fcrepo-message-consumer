@@ -6,7 +6,7 @@
     <version>4.0.0-alpha-4-SNAPSHOT</version>
   </parent>
   <artifactId>fcrepo-jms-indexer-sparql</artifactId>
-  <name>SPARQL indexer</name>
+  <name>SPARQL Indexer Module</name>
   <description>Indexes into services that are equipped with a SPARQL Update interface</description>
   
   <dependencies>

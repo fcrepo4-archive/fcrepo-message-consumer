@@ -16,20 +16,48 @@
 
 package org.fcrepo.indexer.runtime;
 
+import static java.lang.System.setProperty;
+import static java.util.Collections.list;
+import static org.apache.felix.main.AutoProcessor.process;
+import static org.fcrepo.indexer.runtime.Main.AUTODEPLOY_DIR_PROP_NAME;
+import static org.fcrepo.indexer.runtime.Main.INDEXER_HOME_PROP_NAME;
+import static org.fcrepo.indexer.runtime.Main.getConfig;
 import static org.junit.Assert.fail;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
+import java.util.Dictionary;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.slf4j.Logger;
 
 public class SanityTest {
 
+    private static final Logger LOGGER = getLogger(SanityTest.class);
+
+    @Before
+    public void setDirectories() {
+        setProperty(AUTODEPLOY_DIR_PROP_NAME, "target/bundle");
+        setProperty(INDEXER_HOME_PROP_NAME, "target/indexer");
+    }
+
     @Test
-    public void runOnce() throws IOException, BundleException,
-        InterruptedException {
+    public void runOnce() throws BundleException {
         final Main m = new Main();
+        m.init();
+        process(getConfig(), m.framework().getBundleContext());
         m.start();
+        for (final Bundle b : m.framework().getBundleContext().getBundles()) {
+            LOGGER.debug("Found bundle: {} at: {} in state: {}", b
+                    .getSymbolicName(), b.getLocation(), b.getState());
+            final Dictionary<String, String> d = b.getHeaders();
+
+            for (final String key : list(d.keys())) {
+                LOGGER.debug("with header: {} = {}", key, d.get(key));
+            }
+        }
         try {
             m.stop();
         } catch (final Throwable e) {

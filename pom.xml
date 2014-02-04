@@ -9,8 +9,8 @@
   </parent>
 
   <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
-  <name>${project.artifactId}</name>
-  <description>Fedora JMS Indexer</description>
+  <name>Fedora JMS-driven Indexer</name>
+  <description>Indexer application accepting JMS messages from a Fedora repository</description>
   <packaging>pom</packaging>
 
   <properties>
