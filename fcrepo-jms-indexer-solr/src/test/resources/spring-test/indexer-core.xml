@@ -22,15 +22,19 @@
     class="org.apache.solr.client.solrj.embedded.EmbeddedSolrServer"
     c:coreContainer-ref="multiCore" c:coreName="testCore"/>
   <!-- Solr Indexer END-->
-
-  <!-- Message Driven POJO (MDP) that manages individual indexers -->
-  <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://localhost:${test.port:8080}"/>
-    <property name="indexers">
+  
+  <bean id="indexers" class="org.fcrepo.indexer.util.SetInstance">
+    <qualifier type="org.ops4j.pax.cdi.api.OsgiService"/>
+    <property name="backingSet">
       <set value-type="org.fcrepo.indexer.Indexer">
         <ref bean="solrIndexer"/>
       </set>
     </property>
+  </bean>
+
+  <!-- Message Driven POJO (MDP) that manages individual indexers -->
+  <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
+    <property name="repositoryURL" value="http://localhost:${test.port:8080}"/>
   </bean>
 
 </beans>

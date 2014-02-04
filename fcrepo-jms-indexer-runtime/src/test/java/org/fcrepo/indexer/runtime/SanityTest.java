@@ -17,7 +17,6 @@
 package org.fcrepo.indexer.runtime;
 
 import static java.lang.System.setProperty;
-import static java.util.Collections.list;
 import static org.apache.felix.main.AutoProcessor.process;
 import static org.fcrepo.indexer.runtime.Main.AUTODEPLOY_DIR_PROP_NAME;
 import static org.fcrepo.indexer.runtime.Main.INDEXER_HOME_PROP_NAME;
@@ -54,9 +53,9 @@ public class SanityTest {
                     .getSymbolicName(), b.getLocation(), b.getState());
             final Dictionary<String, String> d = b.getHeaders();
 
-            for (final String key : list(d.keys())) {
+            /*for (final String key : list(d.keys())) {
                 LOGGER.debug("with header: {} = {}", key, d.get(key));
-            }
+            }*/
         }
         try {
             m.stop();

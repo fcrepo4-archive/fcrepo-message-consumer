@@ -18,10 +18,8 @@ package org.fcrepo.indexer.system;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
-import static java.nio.charset.Charset.defaultCharset;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.http.HttpEntity;
@@ -29,17 +27,18 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.fcrepo.indexer.IndexingNamespace;
 import org.junit.Before;
 
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.fcrepo.indexer.IndexerGroup.INDEXER_NAMESPACE;
 import static org.junit.Assert.assertEquals;
-import org.slf4j.Logger;
 
-import com.google.common.io.Files;
+import org.slf4j.Logger;
 
 
 public abstract class IndexingIT {
@@ -79,10 +78,7 @@ public abstract class IndexingIT {
         LOGGER.debug("Installing indexing type information...");
         update = new HttpPost(serverAddress + "fcr:nodetypes");
         update.setHeader("Content-Type", "text/cnd");
-        final HttpEntity cnd =
-            new StringEntity(Files.toString(new File(
-                    "target/maven-shared-archive-resources/indexing.cnd"),
-                    defaultCharset()));
+        final HttpEntity cnd = new InputStreamEntity(IndexingNamespace.CND());
         update.setEntity(cnd);
         response = client.execute(update);
         assertEquals("Failed to install indexing type information!",

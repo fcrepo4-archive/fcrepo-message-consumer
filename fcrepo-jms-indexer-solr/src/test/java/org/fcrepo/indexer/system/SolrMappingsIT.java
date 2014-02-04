@@ -40,12 +40,10 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.jena.riot.WebContent;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
-import org.fcrepo.indexer.solr.SolrIndexer;
 import org.fcrepo.indexer.system.IndexingIT;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,7 +89,7 @@ public class SolrMappingsIT extends IndexingIT {
                     + "indexing:hasIndexingTransformation \"default\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
-        createRequest.addHeader("Content-Type", WebContent.contentTypeN3Alt1);
+        createRequest.addHeader("Content-Type", contentTypeN3Alt1);
         LOGGER.debug("Creating object with RDF:\n{}", objectRdf);
         HttpResponse response = client.execute(createRequest);
         assertEquals("Failed to create test resource!", SC_CREATED, response

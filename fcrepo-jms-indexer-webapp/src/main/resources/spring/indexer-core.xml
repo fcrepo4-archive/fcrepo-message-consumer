@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.sparql.SparqlIndexer">
 
     <!-- fuseki -->
-    <property name="queryBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/query"/>
-    <property name="updateBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/update"/>
+    <property name="queryBase"
+      value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/query"/>
+    <property name="updateBase"
+      value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/update"/>
     <property name="formUpdates">
       <value type="java.lang.Boolean">false</value>
     </property>
@@ -25,30 +27,34 @@
 
   <!-- file serializer -->
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
-    <property name="path" value="${file.serializer.dir:./target/test-classes/fileSerializer/}"/>
+    <property name="path"
+      value="${file.serializer.dir:./target/test-classes/fileSerializer/}"/>
   </bean>
-  
+
   <!-- Solr Indexer START-->
-    <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer">
-    <constructor-arg ref="solrServer" />
-    </bean>
-<!--Standardalone solr Server  -->
+  <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer"/>
+  
+  <!--Standardalone solr Server  -->
   <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
-    <constructor-arg index="0" value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/" />
+    <constructor-arg index="0"
+      value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/"/>
   </bean>
-<!-- Solr Indexer END-->
+  <!-- Solr Indexer END-->
+
+  <bean id="indexers" class="org.fcrepo.indexer.util.SetInstance">
+    <qualifier type="org.ops4j.pax.cdi.api.OsgiService"/>
+    <property name="backingSet">
+      <set value-type="org.fcrepo.indexer.Indexer">
+        <ref bean="fileSerializer"/>
+        <ref bean="sparqlUpdate"/>
+      </set>
+    </property>
+  </bean>
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest" />
-    <property name="indexers">
-      <set>
-        <ref bean="fileSerializer"/>
-        <ref bean="sparqlUpdate"/>
-        <!--To enable solr Indexer, please uncomment line below  -->
-<!--         <ref bean="solrIndexer"/> -->
-      </set>
-    </property>
+    <property name="repositoryURL"
+      value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest"/>
   </bean>
 
 </beans>

@@ -88,7 +88,7 @@ public class SolrIndexerTest {
     public void setUp() throws Exception {
         LOGGER.debug("Using Solr home: {}", new File(container.getSolrHome())
                 .getAbsolutePath());
-        testIndexer = new SolrIndexer(server);
+        testIndexer = new SolrIndexer().server(server);
         initMocks(this);
     }
 
@@ -103,7 +103,7 @@ public class SolrIndexerTest {
                 mockUpdateResponse);
         // update failure
         when(mockUpdateResponse.getStatus()).thenReturn(1);
-        testIndexer = new SolrIndexer(mockServer);
+        testIndexer = new SolrIndexer().server(mockServer);
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 
@@ -125,7 +125,7 @@ public class SolrIndexerTest {
         when(mockServer.add(any(SolrInputDocument.class))).thenThrow(
                 new SolrServerException("Expected."));
 
-        testIndexer = new SolrIndexer(mockServer);
+        testIndexer = new SolrIndexer().server(mockServer);
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 
@@ -142,7 +142,7 @@ public class SolrIndexerTest {
         when(mockServer.add(any(SolrInputDocument.class))).thenThrow(
                 new IOException("Expected."));
 
-        testIndexer = new SolrIndexer(mockServer);
+        testIndexer = new SolrIndexer().server(mockServer);
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 

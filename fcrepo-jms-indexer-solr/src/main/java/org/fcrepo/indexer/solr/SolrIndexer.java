@@ -38,7 +38,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.NamedFields;
+import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.slf4j.Logger;
+
 import com.google.common.collect.Maps.EntryTransformer;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -50,13 +52,15 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * @author yecao
  * @date Nov 2013
  */
+@OsgiServiceProvider
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
 
     // TODO make index-time boost somehow adjustable, or something
     public static final Long INDEX_TIME_BOOST = 1L;
 
-    private final SolrServer server;
+    @Inject
+    private SolrServer server;
 
     /**
      * Number of threads to use for operating against the index.
@@ -69,11 +73,9 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     private static final Logger LOGGER = getLogger(SolrIndexer.class);
 
     /**
-     * @param solrServer
+     * Default constructor.
      */
-    @Inject
-    public SolrIndexer(final SolrServer solrServer) {
-        this.server = solrServer;
+    public SolrIndexer() {
     }
 
     @Override
@@ -170,6 +172,16 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     @Override
     public ListeningExecutorService executorService() {
         return executorService;
+    }
+
+
+    /**
+     * @param solrServer the server to set
+     * @return this object for continued use
+     */
+    public SolrIndexer server(final SolrServer solrServer) {
+        this.server = solrServer;
+        return this;
     }
 
 

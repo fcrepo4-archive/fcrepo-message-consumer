@@ -20,20 +20,27 @@ import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.fcrepo.indexer.util.SetInstance;
 import org.fcrepo.kernel.utils.EventType;
+import org.ops4j.pax.cdi.api.OsgiService;
 import org.slf4j.Logger;
 
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
 import java.io.Reader;
 import java.util.Set;
 
 import static com.google.common.base.Suppliers.memoize;
 import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.Sets.newHashSet;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.vocabulary.RDF.type;
@@ -57,7 +64,9 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
-    private Set<Indexer<Object>> indexers;
+    @Inject
+    @OsgiService
+    private Instance<Indexer<Object>> indexers;
 
     private HttpClient httpClient;
 
@@ -128,8 +137,9 @@ public class IndexerGroup implements MessageListener {
      *
      * @param indexers
      */
-    public void setIndexers(final Set<Indexer<Object>> indexers) {
-        this.indexers = indexers;
+    public void setIndexers(final Set<Indexer<Object>> indexerSet) {
+        this.indexers =
+            new SetInstance<Indexer<Object>>().setBackingSet(indexerSet);
         LOGGER.debug("Using indexer complement: {} ", indexers);
     }
 
@@ -139,12 +149,12 @@ public class IndexerGroup implements MessageListener {
      * @return indexers
      */
     public Set<Indexer<Object>> getIndexers() {
-        return indexers;
+        return newHashSet(indexers.iterator());
     }
 
     /**
-     * Set HttpClient for this group.  In the constructor a default is set
-     * but this allows it to be customized.
+     * Set HttpClient for this group. In the constructor a default is set but
+     * this allows it to be customized.
      *
      * @param client
      */
@@ -180,12 +190,12 @@ public class IndexerGroup implements MessageListener {
             if (eventType.contains("PROPERTY")) {
                 // it seems the URL is for the property, not the node on which
                 // the property is set...
-                final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+                final String id =
+                    message.getStringProperty(IDENTIFIER_HEADER_NAME);
                 pid = id.substring(0, id.lastIndexOf('/'));
             } else {
                 pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
             }
-
 
             LOGGER.debug("Discovered pid: {} in message.", pid);
             LOGGER.debug("Discovered event type: {} in message.", eventType);
@@ -222,7 +232,7 @@ public class IndexerGroup implements MessageListener {
                             LOGGER.debug(
                                     "Retrieving named fields for: {}, (may be cached) to index to {}...",
                                     pid, indexer);
-                            try  {
+                            try {
                                 content = nfr.get();
                                 hasContent = true;
                             } catch (final AbsentTransformPropertyException e) {
