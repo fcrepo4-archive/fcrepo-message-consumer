@@ -79,6 +79,7 @@ public class SparqlIndexerTest {
 
     @Test
     public void testUpdateSynch() {
+        // TODO: This is a mere placeholder test to be further implemented later.
         Model model = ModelFactory.createDefaultModel();
         testIndexer.updateSynch("", model);
     }

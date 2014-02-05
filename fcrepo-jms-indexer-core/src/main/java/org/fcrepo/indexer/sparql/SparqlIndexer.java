@@ -143,13 +143,17 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     }
 
     /**
-     * Determine whether uri2 is a sub-URI of uri1, defined as uri1 starting
-     * with uri2, plus an option suffix starting with a hash (#) or slash (/)
+     * Determine whether arg candidate is a sub-URI of arg resource, defined as candidate-URI starting
+     * with resource-URI, plus an option suffix starting with a hash (#) or slash (/)
      * suffix.
     **/
-    private boolean matches( final String uri1, final String uri2 ) {
-        return uri1.equals(uri2) || uri2.startsWith(uri1 + "/")
-            || uri2.startsWith(uri1 + "#");
+    private boolean matches( final String resource, final String candidate) {
+        // All triples that will match this logic are ones that:
+        // - have a candidate subject or object that equals the target resource of removal, or
+        // - have a candidate subject or object that is prefixed with the resource of removal
+        //    (therefore catching all children).
+        return resource.equals(candidate) || candidate.startsWith(resource + "/")
+            || candidate.startsWith(resource + "#");
     }
 
     private Callable<Void> exec(final UpdateRequest update) {
