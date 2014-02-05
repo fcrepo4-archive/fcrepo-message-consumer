@@ -104,7 +104,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
         final String describeQuery = "DESCRIBE <" + subject + ">";
-        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
@@ -131,7 +131,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         qexec.close();
 
         // build update commands
-        final UpdateRequest del = new UpdateRequest();
+        final UpdateRequest del = buildUpdateRequest();
         for (final String uri : uris) {
             final String cmd = "DELETE WHERE { <" + uri + "> ?p ?o }";
             LOGGER.debug("Executing: {}", cmd);
@@ -143,13 +143,17 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     }
 
     /**
-     * Determine whether uri2 is a sub-URI of uri1, defined as uri1 starting
-     * with uri2, plus an option suffix starting with a hash (#) or slash (/)
+     * Determine whether arg candidate is a sub-URI of arg resource, defined as candidate-URI starting
+     * with resource-URI, plus an option suffix starting with a hash (#) or slash (/)
      * suffix.
     **/
-    private boolean matches( final String uri1, final String uri2 ) {
-        return uri1.equals(uri2) || uri1.startsWith(uri2 + "/")
-            || uri1.startsWith(uri2 + "#");
+    private boolean matches( final String resource, final String candidate) {
+        // All triples that will match this logic are ones that:
+        // - have a candidate subject or object that equals the target resource of removal, or
+        // - have a candidate subject or object that is prefixed with the resource of removal
+        //    (therefore catching all children).
+        return resource.equals(candidate) || candidate.startsWith(resource + "/")
+            || candidate.startsWith(resource + "#");
     }
 
     private Callable<Void> exec(final UpdateRequest update) {
@@ -226,7 +230,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     public int countTriples(final String uri) {
         // perform describe query
         final String describeQuery = "DESCRIBE <" + uri + ">";
-        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // count triples
@@ -271,5 +275,18 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         return executorService;
     }
 
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected QueryEngineHTTP buildQueryEngineHTTP(String describeQuery) {
+        return new QueryEngineHTTP( queryBase, describeQuery );
+    }
+
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected UpdateRequest buildUpdateRequest() {
+        return new UpdateRequest();
+    }
 
 }
