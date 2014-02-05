@@ -104,7 +104,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
         final String describeQuery = "DESCRIBE <" + subject + ">";
-        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // build list of triples to delete
@@ -131,7 +131,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         qexec.close();
 
         // build update commands
-        final UpdateRequest del = new UpdateRequest();
+        final UpdateRequest del = buildUpdateRequest();
         for (final String uri : uris) {
             final String cmd = "DELETE WHERE { <" + uri + "> ?p ?o }";
             LOGGER.debug("Executing: {}", cmd);
@@ -148,8 +148,8 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * suffix.
     **/
     private boolean matches( final String uri1, final String uri2 ) {
-        return uri1.equals(uri2) || uri1.startsWith(uri2 + "/")
-            || uri1.startsWith(uri2 + "#");
+        return uri1.equals(uri2) || uri2.startsWith(uri1 + "/")
+            || uri2.startsWith(uri1 + "#");
     }
 
     private Callable<Void> exec(final UpdateRequest update) {
@@ -226,7 +226,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     public int countTriples(final String uri) {
         // perform describe query
         final String describeQuery = "DESCRIBE <" + uri + ">";
-        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, describeQuery );
+        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
         // count triples
@@ -271,5 +271,18 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         return executorService;
     }
 
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected QueryEngineHTTP buildQueryEngineHTTP(String describeQuery) {
+        return new QueryEngineHTTP( queryBase, describeQuery );
+    }
+
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected UpdateRequest buildUpdateRequest() {
+        return new UpdateRequest();
+    }
 
 }
