@@ -37,6 +37,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.graph.Node_URI;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import com.hp.hpl.jena.sparql.modify.UpdateProcessRemote;
 import com.hp.hpl.jena.sparql.modify.request.QuadDataAcc;
@@ -232,6 +233,25 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         final String describeQuery = "DESCRIBE <" + uri + ">";
         final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
+
+        // count triples
+        int triples = 0;
+        while ( results.hasNext() ) {
+            results.next();
+            triples++;
+        }
+        qexec.close();
+
+        return triples;
+    }
+
+    /**
+     * Perform a SPARQL search and return the number of triples returned.
+    **/
+    public int searchTriples(final String searchQuery) {
+        // perform describe query
+        final QueryEngineHTTP qexec = new QueryEngineHTTP( queryBase, searchQuery );
+        final ResultSet results = qexec.execSelect();
 
         // count triples
         int triples = 0;
