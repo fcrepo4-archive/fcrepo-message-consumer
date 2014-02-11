@@ -51,8 +51,8 @@ public class SparqlIndexerIT {
     private SparqlIndexer sparqlIndexer;
 
     private static final String fooRDF =
-        "@prefix fcrepo: <http://fcrepo.org/repository#> .\n" +
-        "@prefix fedora: <http://fcrepo.org/repository/rest-api#> .\n" +
+        "@prefix fcrepo: <http://fedora.info/definitions/v4/repository#> .\n" +
+        "@prefix fedora: <http://fedora.info/definitions/v4/rest-api#> .\n" +
         "<" + uri + ">\n" +
         " fcrepo:hasChild <" + uri + "/barDS> ;\n" +
         " fcrepo:hasParent <" + uri + "> ;\n" +
@@ -69,6 +69,14 @@ public class SparqlIndexerIT {
         // triples should be present in the triplestore
         assertEquals("Triples should be present!", 3, sparqlIndexer
                 .countTriples(uri));
+
+        // SPARQL search should work
+        String sparqlQuery =
+                "PREFIX  fcrepo: <http://fedora.info/definitions/v4/repository#> \n" +
+                "SELECT  ?p \n" +
+                "WHERE \n" +
+                "{ ?p fcrepo:hasParent ?c }";
+        assertEquals("Triple should return from search!",1,sparqlIndexer.searchTriples(sparqlQuery));
 
         // remove object
         sparqlIndexer.remove(uri);
