@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static java.lang.Thread.sleep;
+import static org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countQueryTriples;
+import static org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countDescribeTriples;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -51,8 +53,8 @@ public class SparqlIndexerIT {
     private SparqlIndexer sparqlIndexer;
 
     private static final String fooRDF =
-        "@prefix fcrepo: <http://fcrepo.org/repository#> .\n" +
-        "@prefix fedora: <http://fcrepo.org/repository/rest-api#> .\n" +
+        "@prefix fcrepo: <http://fedora.info/definitions/v4/repository#> .\n" +
+        "@prefix fedora: <http://fedora.info/definitions/v4/repository/rest-api#> .\n" +
         "<" + uri + ">\n" +
         " fcrepo:hasChild <" + uri + "/barDS> ;\n" +
         " fcrepo:hasParent <" + uri + "> ;\n" +
@@ -67,8 +69,15 @@ public class SparqlIndexerIT {
         waitForTriples(3);
 
         // triples should be present in the triplestore
-        assertEquals("Triples should be present!", 3, sparqlIndexer
-                .countTriples(uri));
+        assertEquals("Triples should be present!", 3, countDescribeTriples(uri));
+
+        // SPARQL search should work
+        final String sparqlQuery =
+                "PREFIX  fcrepo: <http://fedora.info/definitions/v4/repository#> \n" +
+                        "SELECT  ?p \n" +
+                        "WHERE \n" +
+                        "{ ?p fcrepo:hasParent ?c }";
+        assertEquals("Triple should return from search!", 1, countQueryTriples(sparqlQuery));
 
         // remove object
         sparqlIndexer.remove(uri);
@@ -76,20 +85,19 @@ public class SparqlIndexerIT {
         waitForTriples(0);
 
         // triples should not be present in the triplestore
-        assertTrue("Triples should not be present!", sparqlIndexer
-                .countTriples(uri) == 0);
+        assertTrue("Triples should not be present!", countDescribeTriples(uri) == 0);
     }
 
-    private void waitForTriples(final int expectTriples) throws InterruptedException {
+    private static void waitForTriples(final int expectTriples) throws InterruptedException {
         long elapsed = 0;
         final long restingWait = 500;
         final long maxWait = 15000; // 15 seconds
 
-        int count = sparqlIndexer.countTriples(uri);
+        int count = countDescribeTriples(uri);
         while ((count < expectTriples) && (elapsed < maxWait)) {
             LOGGER.debug("Discovered {} triples, waiting for {}...", count, expectTriples);
             sleep(restingWait);
-            count = sparqlIndexer.countTriples(uri);
+            count = countDescribeTriples(uri);
 
             elapsed += restingWait;
         }
