@@ -221,29 +221,6 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         return callable;
     }
 
-    /**
-     * Count the number of triples in the triplestore for a Fedora object.
-     *
-     * @param uri
-     * @return the number of triples
-     */
-    public int countTriples(final String uri) {
-        // perform describe query
-        final String describeQuery = "DESCRIBE <" + uri + ">";
-        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
-        final Iterator<Triple> results = qexec.execDescribeTriples();
-
-        // count triples
-        int triples = 0;
-        while ( results.hasNext() ) {
-            results.next();
-            triples++;
-        }
-        qexec.close();
-
-        return triples;
-    }
-
     @Override
     public IndexerType getIndexerType() {
         return RDF;
