@@ -181,7 +181,7 @@ Solr can be installed embedded into a jetty server (recommended for test) or in 
 Use the following MAVEN_OPTS on build
 
    ``` sh
-   MAVEN_OPTS=-Xmx750M -XX:maxPermSize=300M clean install
+   MAVEN_OPTS=-Xmx750M -XX:MaxPermSize=300M clean install
    ```
 
 ### Caveat: Blank Nodes
