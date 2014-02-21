@@ -40,7 +40,7 @@
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}/rest" />
+    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}${fcrepo.context:/}rest" />
     <property name="indexers">
       <set>
         <ref bean="fileSerializer"/>
