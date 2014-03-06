@@ -38,7 +38,6 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.fcrepo.indexer.AsynchIndexer;
 import org.fcrepo.indexer.NamedFields;
-import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Maps.EntryTransformer;
@@ -52,7 +51,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * @author yecao
  * @date Nov 2013
  */
-@OsgiServiceProvider
+
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
 

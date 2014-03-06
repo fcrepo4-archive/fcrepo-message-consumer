@@ -13,7 +13,9 @@
     <logger name="org.fcrepo" additivity="false" level="INFO">
         <appender-ref ref="STDOUT"/>
     </logger>
-    <logger name="org.apache.felix" additivity="false" level="DEBUG">
+    <logger name="org.apache.karaf" additivity="false" level="DEBUG">
+        <appender-ref ref="STDOUT"/>
+    </logger><logger name="org.apache.aries" additivity="false" level="INFO">
         <appender-ref ref="STDOUT"/>
     </logger>
     <root additivity="false" level="INFO">

@@ -26,7 +26,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.fcrepo.indexer.util.SetInstance;
 import org.fcrepo.kernel.utils.EventType;
-import org.ops4j.pax.cdi.api.OsgiService;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
@@ -65,7 +64,6 @@ public class IndexerGroup implements MessageListener {
     private String repositoryURL;
 
     @Inject
-    @OsgiService
     private Instance<Indexer<Object>> indexers;
 
     private HttpClient httpClient;

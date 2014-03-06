@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.fcrepo</groupId>
+    <artifactId>modules</artifactId>
+    <version>4.0.0-alpha-4-SNAPSHOT</version>
+  </parent>
+  <artifactId>solr-indexer-kar</artifactId>
+  <packaging>kar</packaging>
+  <name>KAR packaging for Solr Indexer Module</name>
+  
+    <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-jms-indexer-solr</artifactId>
+      <type>bundle</type>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>

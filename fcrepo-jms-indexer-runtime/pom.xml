@@ -10,283 +10,91 @@
   <name>Indexer OSGi Runtime</name>
   <description>Runtime for Fedora's indexer using the OSGi framework</description>
 
+  <packaging>karaf-assembly</packaging>
+
   <properties>
     <felix.version>4.2.1</felix.version>
     <owb.version>1.2.1</owb.version>
+    <karaf.version>3.0.0</karaf.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.karaf</groupId>
+        <artifactId>karaf</artifactId>
+        <type>pom</type>
+        <scope>import</scope>
+        <version>${karaf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.karaf.features</groupId>
+        <artifactId>standard</artifactId>
+        <type>pom</type>
+        <scope>import</scope>
+        <version>${karaf.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- <dependencies> <dependency> <groupId>org.apache.karaf</groupId> <artifactId>karaf</artifactId> 
+    <type>pom</type> <version>${karaf.version}</version> </dependency> <dependency> 
+    <groupId>org.apache.karaf.features</groupId> <artifactId>standard</artifactId> 
+    <type>pom</type> <scope>provided</scope> <version>${karaf.version}</version> 
+    </dependency> <dependency> <groupId>org.apache.karaf.features</groupId> <artifactId>framework</artifactId> 
+    <type>pom</type> <scope>provided</scope> <version>${karaf.version}</version> 
+    <exclusions> <exclusion> <groupId>org.apache.servicemix.bundles</groupId> 
+    <artifactId>org.apache.servicemix.bundles.junit</artifactId> </exclusion> 
+    </exclusions> </dependency> <dependency> <groupId>ch.qos.logback</groupId> 
+    <artifactId>logback-classic</artifactId> </dependency> <dependency> <groupId>org.slf4j</groupId> 
+    <artifactId>slf4j-api</artifactId> <scope>compile</scope> </dependency> <dependency> 
+    <groupId>org.apache.karaf</groupId> <artifactId>org.apache.karaf.main</artifactId> 
+    <type>bundle</type> <version>${karaf.version}</version> </dependency> <dependency> 
+    <groupId>org.slf4j</groupId> <artifactId>jcl-over-slf4j</artifactId> <scope>compile</scope> 
+    </dependency> </dependencies> -->
   <dependencies>
     <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.main</artifactId>
-      <version>4.2.1</version>
-      <type>bundle</type>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.fcrepo</groupId>
-      <artifactId>fcrepo-jms-indexer-core</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
+      <!-- scope is compile so all features (there is only one) are installed 
+        into startup.properties and the feature repo itself is not installed -->
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>framework</artifactId>
+      <type>kar</type>
       <exclusions>
         <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient-osgi</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient-cache</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.jena</groupId>
-          <artifactId>jena-iri</artifactId>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.junit</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>4.3.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient-osgi</artifactId>
-      <version>4.2.3</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient-cache</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore-osgi</artifactId>
-      <version>4.2.3</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient-cache</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient-cache</artifactId>
-      <version>4.2.3</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.clerezza.ext</groupId>
-      <artifactId>org.apache.jena</artifactId>
-      <scope>provided</scope>
-      <version>0.7-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.clerezza.ext</groupId>
-      <artifactId>javax.mail</artifactId>
-      <scope>provided</scope>
-      <version>0.5-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.jms</artifactId>
-      <scope>provided</scope>
-      <version>10.0-b28</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.http.bundle</artifactId>
-      <version>2.2.2</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.2.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <!-- supports Felix web console -->
-    <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.bundles</groupId>
-      <artifactId>json</artifactId>
-      <version>20090211_1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.scr</artifactId>
-      <version>1.8.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.scr.annotations</artifactId>
-      <version>1.9.6</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.cdi</groupId>
-      <artifactId>pax-cdi-api</artifactId>
-      <version>0.6.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openwebbeans</groupId>
-      <artifactId>openwebbeans-spi</artifactId>
-      <version>${owb.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.openwebbeans</groupId>
-      <artifactId>openwebbeans-impl</artifactId>
-      <version>${owb.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.cdi</groupId>
-      <artifactId>pax-cdi-openwebbeans</artifactId>
-      <version>0.6.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.cdi</groupId>
-      <artifactId>pax-cdi-extender</artifactId>
-      <version>0.6.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.cdi</groupId>
-      <artifactId>pax-cdi-extension</artifactId>
-      <version>0.6.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.enterprise</groupId>
-      <artifactId>cdi-api</artifactId>
-      <version>1.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jcdi_1.0_spec</artifactId>
-      <version>1.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-atinject_1.0_spec</artifactId>
-      <version>1.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-interceptor_1.1_spec</artifactId>
-      <version>1.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-el_2.2_spec</artifactId>
-      <version>1.0.4</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.1_spec</artifactId>
-      <version>1.1.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-validation_1.0_spec</artifactId>
-      <version>1.1</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openwebbeans</groupId>
-      <artifactId>openwebbeans-el22</artifactId>
-      <version>${owb.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_3.0_spec</artifactId>
-      <version>1.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
+      <!-- scope is runtime so the feature repo is listed in the features 
+        service config file, and features may be installed using the karaf-maven-plugin 
+        configuration -->
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>standard</artifactId>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
-  
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <!-- no startupFeatures -->
+          <bootFeatures>
+            <feature>standard</feature>
+            <feature>management</feature>
+          </bootFeatures>
+          <!-- no installedFeatures -->
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <repositories>
     <repository>
       <id>Apache</id>
@@ -294,46 +102,5 @@
     </repository>
   </repositories>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>org.fcrepo.indexer.runtime.Main</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <!-- we use the provided scope to indicate material to be packaged with but not
-              baked into the artifact -->
-              <outputDirectory>${project.build.directory}/bundle</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-
-  </build>
 
 </project>

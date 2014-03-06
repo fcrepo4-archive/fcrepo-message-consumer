@@ -38,6 +38,7 @@
     <module>fcrepo-jms-indexer-api</module>
     <module>fcrepo-jms-indexer-sparql</module>
     <module>fcrepo-jms-indexer-runtime</module>
+    <module>modules</module>
   </modules>
 
   <scm>

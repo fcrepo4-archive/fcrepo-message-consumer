@@ -58,7 +58,7 @@ public class FileSerializerTest {
     }
 
     @Test
-    public void pathTest() throws IOException {
+    public void pathTest() {
         // should automatically create directory
         assertTrue("Path not found: " + path.getAbsolutePath() + "!", path
                 .exists());

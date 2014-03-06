@@ -77,9 +77,8 @@ public class RdfRetriever implements Supplier<Model> {
                                 response.getEntity().getContent(), "UTF8")) {
                     return createDefaultModel().read(r, "", "N3");
                 }
-            } else {
-                throw new HttpException(response.getStatusLine().toString());
             }
+            throw new HttpException(response.getStatusLine().toString());
         } catch (IOException | HttpException e) {
             throw propagate(e);
         }

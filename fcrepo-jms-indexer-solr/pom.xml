@@ -8,6 +8,7 @@
   </parent>
   <artifactId>fcrepo-jms-indexer-solr</artifactId>
   <name>Solr Indexer Module</name>
+  <description>Connects the Fedora JMS-driven Indexer to Apache Solr</description>
   <packaging>bundle</packaging>
   
   <dependencies>
@@ -21,8 +22,8 @@
       <artifactId>javax.inject</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-core</artifactId>
+      <groupId>org.apache.stanbol</groupId>
+      <artifactId>org.apache.stanbol.commons.solr.core</artifactId>
       <exclusions>
         <exclusion>
           <artifactId>log4j</artifactId>
@@ -37,6 +38,8 @@
             <artifactId>httpmime</artifactId>
         </exclusion>
       </exclusions>
+      <version>0.11.0</version>
+      <type>bundle</type>
     </dependency>
 
     <dependency>
@@ -114,28 +117,6 @@
       <artifactId>fcrepo-kernel</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.ops4j.pax.cdi</groupId>
-      <artifactId>pax-cdi-api</artifactId>
-      <version>0.6.0</version>
-      <type>bundle</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.enterprise</groupId>
-      <artifactId>cdi-api</artifactId>
-      <version>1.0</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
   
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-      </plugin>
-    </plugins>
-  </build>
 </project>
