@@ -132,7 +132,7 @@ public class NamedFieldsRetrieverTest {
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
                 mockResponse);
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
-        final String fakeJson = "[{\"id\" : [\"" + testUri + "\"]}]";
+        final String fakeJson = "{\"id\" : [\"" + testUri + "\"]}";
         LOGGER.debug("Using fake JSON: {}", fakeJson);
         try (
             InputStream mockJson =

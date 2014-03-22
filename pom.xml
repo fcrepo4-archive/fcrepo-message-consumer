@@ -163,6 +163,11 @@
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
+        <artifactId>fcrepo-kernel-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-kernel</artifactId>
         <version>${project.version}</version>
       </dependency>

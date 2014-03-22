@@ -39,7 +39,7 @@ public class NamedFieldsDeserializerTest {
     @Test
     public void testReadGoodJson() throws IOException{
         final String testUri = "testUri";
-        final String fakeJson = "[{\"id\" : [\"" + testUri + "\"]}]";
+        final String fakeJson = "{\"id\" : [\"" + testUri + "\"]}";
         LOGGER.debug("Using fake JSON: {}", fakeJson);
         try (
             Reader r = new StringReader(fakeJson);
@@ -53,7 +53,7 @@ public class NamedFieldsDeserializerTest {
     @Test(expected=IllegalStateException.class)
     public void testReadBadJson() throws IOException{
         final String testUri = "testUri";
-        final String fakeJson = "[{\"id\" : \"" + testUri + "\"}]";
+        final String fakeJson = "{\"id\" : \"" + testUri + "\"}";
         LOGGER.debug("Using fake JSON: {}", fakeJson);
         try (
             Reader r = new StringReader(fakeJson);
