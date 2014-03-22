@@ -177,7 +177,7 @@ public class IndexerGroup implements MessageListener {
             // get pid and eventType from message
             final String eventType =
                 message.getStringProperty(EVENT_TYPE_HEADER_NAME);
-            if (eventType.contains("PROPERTY")) {
+            if (eventType.contains("PROPERTY") && !eventType.contains("NODE_ADDED")) {
                 // it seems the URL is for the property, not the node on which
                 // the property is set...
                 final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
