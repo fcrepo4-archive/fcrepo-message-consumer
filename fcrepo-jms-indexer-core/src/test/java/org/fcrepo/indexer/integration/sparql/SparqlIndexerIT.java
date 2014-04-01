@@ -77,7 +77,7 @@ public class SparqlIndexerIT {
                         "SELECT  ?p \n" +
                         "WHERE \n" +
                         "{ ?p fcrepo:hasParent ?c }";
-        assertEquals("Triple should return from search!", 1, countQueryTriples(sparqlQuery));
+        assertEquals("Triple should return from search!", 3, countQueryTriples(sparqlQuery));
 
         // remove object
         sparqlIndexer.remove(uri);
