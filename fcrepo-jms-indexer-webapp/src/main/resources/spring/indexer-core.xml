@@ -15,11 +15,11 @@
 
     <!-- sesame -->
     <!--
-    <property name="queryBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test"/>
-    <property name="updateBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test/statements"/>
-    <property name="formUpdates">
-      <value type="java.lang.Boolean">true</value>
-    </property>
+        <property name="queryBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test"/>
+        <property name="updateBase" value="http://${sesame.host:localhost}:${sesame.port:8081}/openrdf-sesame/repositories/test/statements"/>
+        <property name="formUpdates">
+        <value type="java.lang.Boolean">true</value>
+        </property>
     -->
   </bean>
 
@@ -27,16 +27,19 @@
   <bean id="fileSerializer" class="org.fcrepo.indexer.FileSerializer">
     <property name="path" value="${file.serializer.dir:./target/test-classes/fileSerializer/}"/>
   </bean>
-  
+
+
   <!-- Solr Indexer START-->
-    <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer">
+  <bean id="solrIndexer" class="org.fcrepo.indexer.solr.SolrIndexer">
     <constructor-arg ref="solrServer" />
-    </bean>
-<!--Standardalone solr Server  -->
+  </bean>
+
+  <!--Standardalone solr Server  -->
   <bean id="solrServer" class="org.apache.solr.client.solrj.impl.HttpSolrServer">
     <constructor-arg index="0" value="http://${fcrepo.host:localhost}:${solrIndexer.port:8983}/solr/" />
   </bean>
-<!-- Solr Indexer END-->
+  <!-- Solr Indexer END-->
+
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
@@ -46,9 +49,15 @@
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
         <!--To enable solr Indexer, please uncomment line below  -->
-<!--         <ref bean="solrIndexer"/> -->
+        <!--         <ref bean="solrIndexer"/> -->
       </set>
     </property>
+
+    <!-- If your Fedora instance requires authentication, enter the
+         credentials here. Leave blank if your repo is open. -->
+    <property name="fedoraAuth" value="" /> <!-- i.e., BASIC -->
+    <property name="fedoraUsername" value="" /> <!-- i.e., manager, tomcat, etc. -->
+    <property name="fedoraPassword" value="" />
   </bean>
 
 </beans>

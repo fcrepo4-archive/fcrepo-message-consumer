@@ -57,6 +57,10 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
+    private String fedoraAuth;
+    private String fedoraUsername;
+    private String fedoraPassword;
+
     private Set<Indexer<Object>> indexers;
 
     private HttpClient httpClient;
@@ -121,6 +125,48 @@ public class IndexerGroup implements MessageListener {
      **/
     public String getRepositoryURL() {
         return repositoryURL;
+    }
+
+    /**
+     * Set Fedora auth type.
+     **/
+    public void setFedoraAuth(final String fedoraAuth) {
+        this.fedoraAuth = fedoraAuth;
+    }
+
+    /**
+     * Get Fedora auth type.
+     **/
+    public String getFedoraAuth() {
+        return fedoraAuth;
+    }
+
+    /**
+     * Set Fedora username.
+     **/
+    public void setFedoraUsername(final String fedoraUsername) {
+        this.fedoraUsername = fedoraUsername;
+    }
+
+    /**
+     * Get Fedora username.
+     **/
+    public String getFedoraUsername() {
+        return fedoraUsername;
+    }
+
+    /**
+     * Set Fedora password.
+     **/
+    public void setFedoraPassword(final String fedoraPassword) {
+        this.fedoraPassword = fedoraPassword;
+    }
+
+    /**
+     * Get Fedora password.
+     **/
+    public String getFedoraPassword() {
+        return fedoraPassword;
     }
 
     /**
@@ -194,7 +240,7 @@ public class IndexerGroup implements MessageListener {
             LOGGER.debug("It is {} that this is a removal operation.", removal);
             final String uri = getRepositoryURL() + pid;
             final Supplier<Model> rdfr =
-                memoize(new RdfRetriever(uri, httpClient));
+                memoize(new RdfRetriever(uri, httpClient, fedoraAuth, fedoraUsername, fedoraPassword));
             final Supplier<NamedFields> nfr =
                 memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
             Boolean indexable = false;
