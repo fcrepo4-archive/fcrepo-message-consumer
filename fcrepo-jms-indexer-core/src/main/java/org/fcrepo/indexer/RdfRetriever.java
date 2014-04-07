@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import org.apache.commons.codec.binary.Base64;
+
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -50,6 +52,10 @@ public class RdfRetriever implements Supplier<Model> {
 
     private final String identifier;
 
+    private String fedoraAuth;
+    private String fedoraUsername;
+    private String fedoraPassword;
+
     private final HttpClient httpClient;
 
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
@@ -63,9 +69,29 @@ public class RdfRetriever implements Supplier<Model> {
         this.httpClient = client;
     }
 
+    /**
+     * @param identifier
+     * @param client
+     */
+    public RdfRetriever(final String identifier, final HttpClient client,
+                        final String fedoraAuth, final String fedoraUsername, final String fedoraPassword) {
+        this.identifier = identifier;
+        this.httpClient = client;
+        this.fedoraAuth = fedoraAuth;
+        this.fedoraUsername = fedoraUsername;
+        this.fedoraPassword = fedoraPassword;
+    }
+
     @Override
     public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
+        if (!"".equals(this.fedoraAuth)) {
+            final String creds = this.fedoraUsername + ":" + this.fedoraPassword;
+            LOGGER.debug("Adding BASIC authentication: {}...", creds);
+            final String encoding =
+                new String(Base64.encodeBase64(creds.getBytes()));
+            request.setHeader("Authorization", this.fedoraAuth + " " + encoding);
+        }
         request.addHeader("Accept", RDF_SERIALIZATION);
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
@@ -85,4 +111,45 @@ public class RdfRetriever implements Supplier<Model> {
         }
     }
 
+    /**
+     * Set Fedora auth type.
+     **/
+    public void setFedoraAuth(final String fedoraAuth) {
+        this.fedoraAuth = fedoraAuth;
+    }
+
+    /**
+     * Get Fedora auth type.
+     **/
+    public String getFedoraAuth() {
+        return fedoraAuth;
+    }
+
+    /**
+     * Set Fedora username.
+     **/
+    public void setFedoraUsername(final String fedoraUsername) {
+        this.fedoraUsername = fedoraUsername;
+    }
+
+    /**
+     * Get Fedora username.
+     **/
+    public String getFedoraUsername() {
+        return fedoraUsername;
+    }
+
+    /**
+     * Set Fedora password.
+     **/
+    public void setFedoraPassword(final String fedoraPassword) {
+        this.fedoraPassword = fedoraPassword;
+    }
+
+    /**
+     * Get Fedora password.
+     **/
+    public String getFedoraPassword() {
+        return fedoraPassword;
+    }
 }
