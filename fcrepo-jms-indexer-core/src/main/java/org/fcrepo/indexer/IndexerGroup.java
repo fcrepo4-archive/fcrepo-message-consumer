@@ -294,15 +294,21 @@ public class IndexerGroup implements MessageListener {
     **/
     public void reindex() {
         reindexed = new HashSet<String>();
-        reindex( getRepositoryURL() );
+        reindexURI( getRepositoryURL(), true );
     }
 
     /**
-     * Reindex a resource and all of its children.
+     * Reindex a resource (and optionally all of its children).
      * @param uri The resource URI to reindex.
+     * @param recursive If true, also recursively reindex all children.
     **/
-    private void reindex( final String uri ) {
-        LOGGER.debug("Reindexing {}", uri);
+    public void reindex( final String uri, boolean recursive ) {
+        reindexed = new HashSet<String>();
+        reindexURI( uri, recursive );
+    }
+
+    private void reindexURI( final String uri, boolean recursive ) {
+        LOGGER.debug("Reindexing {}, recursive: {}", uri, recursive);
         if ( !reindexed.contains(uri) ) {
             // index() will check for indexable mixin
             index( uri, REINDEX_EVENT_TYPE );
@@ -312,13 +318,16 @@ public class IndexerGroup implements MessageListener {
         reindexed.add( uri );
 
         // check for children (rdf should be cached...)
-        final Supplier<Model> rdfr = memoize(new RdfRetriever(uri, httpClient));
-        final Model model = rdfr.get();
-        NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
-        while ( children.hasNext() ) {
-            final String child = children.nextNode().asResource().getURI();
-            if ( !reindexed.contains(child) ) {
-                reindex( child );
+        if ( recursive ) {
+            final Supplier<Model> rdfr
+                = memoize(new RdfRetriever(uri, httpClient));
+            final Model model = rdfr.get();
+            NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
+            while ( children.hasNext() ) {
+                final String child = children.nextNode().asResource().getURI();
+                if ( !reindexed.contains(child) ) {
+                    reindexURI( child, true );
+                }
             }
         }
     }
