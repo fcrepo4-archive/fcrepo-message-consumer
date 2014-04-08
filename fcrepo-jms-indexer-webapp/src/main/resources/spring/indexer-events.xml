@@ -9,7 +9,8 @@
   <context:property-placeholder/>
 
   <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="failover:tcp://${jms.host:localhost}:${jms.port:61616}"/>
+    <!--The Reconnect query params allow the broker not to block on start-up-->
+    <property name="brokerURL" value="failover:(tcp://${jms.host:localhost}:${jms.port:61616})?startupMaxReconnectAttempts=1&amp;initialReconnectDelay=1"/>
   </bean>
 
   <!-- ActiveMQ queue to listen for events -->
