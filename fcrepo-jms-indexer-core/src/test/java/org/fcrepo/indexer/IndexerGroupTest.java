@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -121,6 +122,14 @@ public class IndexerGroupTest {
         verify(indexer, atLeastOnce()).update(anyString(), any());
     }
 
+    @Test
+    public void testReindex() throws Exception {
+        mockContent("", true, null);
+        when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
+        indexerGroup.reindex();
+        verify(indexer,atLeastOnce()).update(eq(repoUrl), any());
+    }
+
     private Message createUnindexableMessage(String eventType, String identifier) throws Exception {
         return createMockMessage(false, eventType, identifier, false, null, false);
     }
@@ -154,16 +163,19 @@ public class IndexerGroupTest {
         }
         if (identifier != null) {
             when(m.getStringProperty(IndexerGroup.IDENTIFIER_HEADER_NAME)).thenReturn(identifier);
-            final HttpResponse r = mock(HttpResponse.class);
-            final StatusLine s = mock(StatusLine.class);
-            when(s.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-            when(r.getStatusLine()).thenReturn(s);
-            final HttpEntity e = mock(HttpEntity.class);
-            when(e.getContent()).thenReturn(new ByteArrayInputStream(getIndexableTriples(property ? parentId(identifier) : identifier, indexable, indexerName).getBytes("UTF-8")));
-            when(r.getEntity()).thenReturn(e);
-            when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
+            mockContent(property ? parentId(identifier) : identifier, indexable, indexerName);
         }
         return m;
+    }
+    private void mockContent(String identifier, boolean indexable, String indexerName) throws Exception {
+        final HttpResponse r = mock(HttpResponse.class);
+        final StatusLine s = mock(StatusLine.class);
+        when(s.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+        when(r.getStatusLine()).thenReturn(s);
+        final HttpEntity e = mock(HttpEntity.class);
+        when(e.getContent()).thenReturn(new ByteArrayInputStream(getIndexableTriples(identifier, indexable, indexerName).getBytes("UTF-8")));
+        when(r.getEntity()).thenReturn(e);
+        when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
     }
 
     private String parentId(String identifier) {
