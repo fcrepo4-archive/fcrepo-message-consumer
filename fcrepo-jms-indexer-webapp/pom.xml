@@ -90,6 +90,35 @@
 
   <build>
     <plugins>
+
+      <!--Bring in F4 webapp for integration testing-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.8</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.fcrepo</groupId>
+                  <artifactId>fcrepo-webapp</artifactId>
+                  <version>${project.version}</version>
+                  <type>war</type>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <destFileName>f4.war</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <artifactId>maven-war-plugin</artifactId>
         <configuration>
@@ -121,27 +150,6 @@
       </plugin>
 
       <plugin>
-        <!--ActiveMQ must start before Jetty, since the MessageConsumer blocks on-->
-        <!--JMS connection-->
-        <groupId>org.apache.activemq.tooling</groupId>
-        <artifactId>maven-activemq-plugin</artifactId>
-        <version>5.7.0</version>
-        <executions>
-          <execution>
-            <id>start-activemq</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <configUri>broker:(tcp://localhost:${jms.port})</configUri>
-              <fork>true</fork>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <configuration>
@@ -149,10 +157,12 @@
           <stopKey>STOP</stopKey>
           <webApp>
             <contextPath>${test.context.path}</contextPath>
+            <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
           </webApp>
 
         </configuration>
         <executions>
+
           <execution>
             <id>start-jetty</id>
             <phase>pre-integration-test</phase>
@@ -174,9 +184,26 @@
                   <name>jms.port</name>
                   <value>${jms.port}</value>
                 </systemProperty>
+                <systemProperty>
+                  <name>fcrepo.port</name>
+                  <value>${test.port}</value>
+                </systemProperty>
+                <systemProperty>
+                  <name>fcrepo.context</name>
+                  <value>/f4/</value>
+                </systemProperty>
               </systemProperties>
+
+              <contextHandlers>
+                <contextHandler implementation="org.eclipse.jetty.webapp.WebAppContext">
+                  <war>${project.build.directory}/f4.war</war>
+                  <contextPath>/f4</contextPath>
+                </contextHandler>
+              </contextHandlers>
+
             </configuration>
           </execution>
+
           <execution>
             <id>stop-jetty</id>
             <phase>post-integration-test</phase>

@@ -118,4 +118,35 @@ public class IndexerGroupIT extends IndexingIT {
 
     }
 
+    @Test
+    public void testIndexerGroupReindex() throws Exception {
+        // create sample records
+        final String[] pids = { "a1", "a1/b1", "a1/b2", "a1/b1/c1" };
+        for ( String pid : pids ) {
+            doIndexerGroupUpdateTest(serverAddress + pid);
+        }
+
+        // clear test indexer lists of updated records
+        testIndexer.clear();
+
+        // reindex everything
+        indexerGroup.reindex();
+
+        // records should be reindexed
+        synchronized (testIndexer) {
+            for ( String pid : pids ) {
+                final String uri = serverAddress + pid;
+                final Long start = currentTimeMillis();
+                while (!testIndexer.receivedUpdate(uri) 
+                        && (currentTimeMillis() - start < TIMEOUT)) {
+                    LOGGER.debug("Waiting for " + uri);
+                    testIndexer.wait(1000);
+                }
+
+                assertTrue("Record should have been reindexed: " + uri,
+                        testIndexer.receivedUpdate(uri));
+            }
+        }
+    }
+
 }

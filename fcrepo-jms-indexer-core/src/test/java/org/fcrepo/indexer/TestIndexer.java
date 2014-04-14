@@ -42,6 +42,12 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     private final Set<String> updates = new HashSet<>();
     private final Set<String> removes = new HashSet<>();
 
+    public void clear() {
+        LOGGER.debug("Clearing updates and removes");
+        updates.clear();
+        removes.clear();
+    }
+
     @Override
     public Callable<Boolean> updateSynch(final String identifier,
         final NoContent content) {

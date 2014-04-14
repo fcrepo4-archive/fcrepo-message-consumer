@@ -16,4 +16,17 @@
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 
+  <servlet>
+    <servlet-name>FedoraIndexer</servlet-name>
+    <servlet-class>org.fcrepo.indexer.webapp.FedoraIndexer</servlet-class>
+    <init-param>
+        <param-name>beanName</param-name>
+        <param-value>indexerGroup</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>FedoraIndexer</servlet-name>
+    <url-pattern>/reindex/*</url-pattern>
+  </servlet-mapping>
+
 </web-app>
