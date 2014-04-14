@@ -35,6 +35,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -66,6 +67,8 @@ public class RdfRetrieverTest {
     public void setUp() throws IOException {
         initMocks(this);
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
+                mockResponse);
+        when(mockClient.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(
                 mockResponse);
         when(mockResponse.getEntity()).thenReturn(mockEntity);
         when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);

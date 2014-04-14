@@ -22,6 +22,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.fcrepo.kernel.utils.EventType;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +60,9 @@ public class IndexerGroupTest {
     @Mock
     private HttpClient httpClient;
 
+    @Mock
+    private HttpClientContext httpContext;
+
     private Set<Indexer<Object>> indexers;
 
     @Mock
@@ -75,6 +79,7 @@ public class IndexerGroupTest {
 
         indexerGroup = new IndexerGroup();
         indexerGroup.setHttpClient(httpClient);
+        indexerGroup.setHttpContext(httpContext);
         indexerGroup.setIndexers(indexers);
         indexerGroup.setRepositoryURL(repoUrl);
     }
@@ -162,6 +167,7 @@ public class IndexerGroupTest {
             when(e.getContent()).thenReturn(new ByteArrayInputStream(getIndexableTriples(property ? parentId(identifier) : identifier, indexable, indexerName).getBytes("UTF-8")));
             when(r.getEntity()).thenReturn(e);
             when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
+            when(httpClient.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(r);
         }
         return m;
     }
