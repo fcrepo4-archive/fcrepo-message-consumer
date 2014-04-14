@@ -21,20 +21,17 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.protocol.BasicHttpContext;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import java.net.URI;
 import java.io.Reader;
 import java.util.HashSet;
 import java.util.Set;
@@ -71,7 +68,7 @@ public class IndexerGroup implements MessageListener {
     private Set<Indexer<Object>> indexers;
 
     private HttpClient httpClient;
-    private HttpClientContext httpContext;
+    private BasicHttpContext httpContext;
 
     private Set<String> reindexed;
 
@@ -127,7 +124,7 @@ public class IndexerGroup implements MessageListener {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         this.httpClient = new DefaultHttpClient(connMann);
-        this.httpContext = new HttpClientContext();
+        this.httpContext = new BasicHttpContext();
     }
 
     /**
@@ -201,7 +198,7 @@ public class IndexerGroup implements MessageListener {
      *
      * @param context
      */
-    public void setHttpContext(final HttpClientContext context) {
+    public void setHttpContext(final BasicHttpContext context) {
         this.httpContext = context;
     }
 
@@ -245,11 +242,10 @@ public class IndexerGroup implements MessageListener {
     private void index( final String uri, final String eventType ) {
         // If the Fedora instance requires authentication, set it up here
         if (this.fedoraUsername != null && !"".equals(this.fedoraUsername)) {
-            URI fedoraUri = URI.create(getRepositoryURL());
-            final BasicCredentialsProvider cred = new BasicCredentialsProvider();
-            cred.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
-                                new UsernamePasswordCredentials(this.fedoraUsername, this.fedoraPassword));
-            this.httpContext.setCredentialsProvider(cred);
+            final String creds = this.fedoraUsername + ":" + this.fedoraPassword;
+            final String encoding = new String(Base64.encodeBase64(creds.getBytes()));
+
+            this.httpContext.setAttribute("Authorization", "BASIC " + encoding);
         }
 
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
