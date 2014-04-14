@@ -31,6 +31,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
@@ -51,6 +54,7 @@ public class RdfRetriever implements Supplier<Model> {
     private final String identifier;
 
     private final HttpClient httpClient;
+    private final HttpContext httpContext;
 
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
 
@@ -61,6 +65,17 @@ public class RdfRetriever implements Supplier<Model> {
     public RdfRetriever(final String identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
+        this.httpContext = new BasicHttpContext();
+    }
+
+    /**
+     * @param identifier
+     * @param client
+     */
+    public RdfRetriever(final String identifier, final HttpClient client, final HttpContext context) {
+        this.identifier = identifier;
+        this.httpClient = client;
+        this.httpContext = context;
     }
 
     @Override
@@ -69,7 +84,7 @@ public class RdfRetriever implements Supplier<Model> {
         request.addHeader("Accept", RDF_SERIALIZATION);
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
-            final HttpResponse response = httpClient.execute(request);
+            final HttpResponse response = httpClient.execute(request, this.httpContext);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (
                     Reader r =
@@ -84,5 +99,4 @@ public class RdfRetriever implements Supplier<Model> {
             throw propagate(e);
         }
     }
-
 }
