@@ -21,9 +21,11 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.protocol.BasicHttpContext;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
@@ -60,9 +62,13 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
+    private String fedoraUsername;
+    private String fedoraPassword;
+
     private Set<Indexer<Object>> indexers;
 
     private HttpClient httpClient;
+    private BasicHttpContext httpContext;
 
     private Set<String> reindexed;
 
@@ -118,6 +124,7 @@ public class IndexerGroup implements MessageListener {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         this.httpClient = new DefaultHttpClient(connMann);
+        this.httpContext = new BasicHttpContext();
     }
 
     /**
@@ -132,6 +139,20 @@ public class IndexerGroup implements MessageListener {
      **/
     public String getRepositoryURL() {
         return repositoryURL;
+    }
+
+    /**
+     * Set Fedora username.
+     **/
+    public void setFedoraUsername(final String fedoraUsername) {
+        this.fedoraUsername = fedoraUsername;
+    }
+
+    /**
+     * Set Fedora password.
+     **/
+    public void setFedoraPassword(final String fedoraPassword) {
+        this.fedoraPassword = fedoraPassword;
     }
 
     /**
@@ -173,6 +194,15 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
+     * Set HttpContext for this group, where we can add authorization information.
+     *
+     * @param context
+     */
+    public void setHttpContext(final BasicHttpContext context) {
+        this.httpContext = context;
+    }
+
+    /**
      * Handle a JMS message representing an object update or deletion event.
      **/
     @Override
@@ -210,6 +240,14 @@ public class IndexerGroup implements MessageListener {
      * Index a resource.
     **/
     private void index( final String uri, final String eventType ) {
+        // If the Fedora instance requires authentication, set it up here
+        if (this.fedoraUsername != null && !"".equals(this.fedoraUsername)) {
+            final String creds = this.fedoraUsername + ":" + this.fedoraPassword;
+            final String encoding = new String(Base64.encodeBase64(creds.getBytes()));
+
+            this.httpContext.setAttribute("Authorization", "BASIC " + encoding);
+        }
+
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =
