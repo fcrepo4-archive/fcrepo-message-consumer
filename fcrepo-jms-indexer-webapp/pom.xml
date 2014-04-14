@@ -91,6 +91,31 @@
   <build>
     <plugins>
 
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>set-system-properties</goal>
+            </goals>
+            <configuration>
+              <properties>
+                <property>
+                  <name>fcrepo.username</name>
+                  <value>${fedora.repo.username}</value>
+                </property>
+                <property>
+                  <name>fcrepo.password</name>
+                  <value>${fedora.repo.password}</value>
+                </property>
+              </properties>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!--Bring in F4 webapp for integration testing-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -212,31 +237,6 @@
             </goals>
             <configuration>
               <stopPort>${jetty.port.stop}</stopPort>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>properties-maven-plugin</artifactId>
-        <version>1.0-alpha-2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>set-system-properties</goal>
-            </goals>
-            <configuration>
-              <properties>
-                <property>
-                  <name>fedora.repo.username</name>
-                  <value>${fedora.repo.username}</value>
-                </property>
-                <property>
-                  <name>fedora.repo.password</name>
-                  <value>${fedora.repo.password}</value>
-                </property>
-              </properties>
             </configuration>
           </execution>
         </executions>

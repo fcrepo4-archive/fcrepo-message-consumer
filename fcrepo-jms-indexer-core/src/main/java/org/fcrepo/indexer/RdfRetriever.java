@@ -26,14 +26,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.apache.commons.codec.binary.Base64;
-
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 import org.slf4j.Logger;
@@ -67,7 +65,7 @@ public class RdfRetriever implements Supplier<Model> {
     public RdfRetriever(final String identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
-        this.httpContext = new HttpClientContext();
+        this.httpContext = new BasicHttpContext();
     }
 
     /**

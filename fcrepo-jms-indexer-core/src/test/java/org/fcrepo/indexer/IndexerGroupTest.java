@@ -22,7 +22,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.BasicHttpContext;
 import org.fcrepo.kernel.utils.EventType;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class IndexerGroupTest {
     private HttpClient httpClient;
 
     @Mock
-    private HttpClientContext httpContext;
+    private BasicHttpContext httpContext;
 
     private Set<Indexer<Object>> indexers;
 
@@ -181,7 +181,7 @@ public class IndexerGroupTest {
         when(e.getContent()).thenReturn(new ByteArrayInputStream(getIndexableTriples(identifier, indexable, indexerName).getBytes("UTF-8")));
         when(r.getEntity()).thenReturn(e);
         when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
-        when(httpClient.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(r);
+        when(httpClient.execute(any(HttpUriRequest.class), any(BasicHttpContext.class))).thenReturn(r);
     }
 
     private String parentId(String identifier) {
