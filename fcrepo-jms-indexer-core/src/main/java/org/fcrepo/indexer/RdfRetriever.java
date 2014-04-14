@@ -33,6 +33,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.HttpContext;
+
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
@@ -52,11 +55,8 @@ public class RdfRetriever implements Supplier<Model> {
 
     private final String identifier;
 
-    private String fedoraAuth;
-    private String fedoraUsername;
-    private String fedoraPassword;
-
     private final HttpClient httpClient;
+    private final HttpContext httpContext;
 
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
 
@@ -67,35 +67,26 @@ public class RdfRetriever implements Supplier<Model> {
     public RdfRetriever(final String identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
+        this.httpContext = new HttpClientContext();
     }
 
     /**
      * @param identifier
      * @param client
      */
-    public RdfRetriever(final String identifier, final HttpClient client,
-                        final String fedoraAuth, final String fedoraUsername, final String fedoraPassword) {
+    public RdfRetriever(final String identifier, final HttpClient client, final HttpContext context) {
         this.identifier = identifier;
         this.httpClient = client;
-        this.fedoraAuth = fedoraAuth;
-        this.fedoraUsername = fedoraUsername;
-        this.fedoraPassword = fedoraPassword;
+        this.httpContext = context;
     }
 
     @Override
     public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
-        if (!"".equals(this.fedoraAuth)) {
-            final String creds = this.fedoraUsername + ":" + this.fedoraPassword;
-            LOGGER.debug("Adding BASIC authentication: {}...", creds);
-            final String encoding =
-                new String(Base64.encodeBase64(creds.getBytes()));
-            request.setHeader("Authorization", this.fedoraAuth + " " + encoding);
-        }
         request.addHeader("Accept", RDF_SERIALIZATION);
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
-            final HttpResponse response = httpClient.execute(request);
+            final HttpResponse response = httpClient.execute(request, this.httpContext);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (
                     Reader r =
@@ -109,47 +100,5 @@ public class RdfRetriever implements Supplier<Model> {
         } catch (IOException | HttpException e) {
             throw propagate(e);
         }
-    }
-
-    /**
-     * Set Fedora auth type.
-     **/
-    public void setFedoraAuth(final String fedoraAuth) {
-        this.fedoraAuth = fedoraAuth;
-    }
-
-    /**
-     * Get Fedora auth type.
-     **/
-    public String getFedoraAuth() {
-        return fedoraAuth;
-    }
-
-    /**
-     * Set Fedora username.
-     **/
-    public void setFedoraUsername(final String fedoraUsername) {
-        this.fedoraUsername = fedoraUsername;
-    }
-
-    /**
-     * Get Fedora username.
-     **/
-    public String getFedoraUsername() {
-        return fedoraUsername;
-    }
-
-    /**
-     * Set Fedora password.
-     **/
-    public void setFedoraPassword(final String fedoraPassword) {
-        this.fedoraPassword = fedoraPassword;
-    }
-
-    /**
-     * Get Fedora password.
-     **/
-    public String getFedoraPassword() {
-        return fedoraPassword;
     }
 }

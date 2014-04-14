@@ -55,9 +55,8 @@
 
     <!-- If your Fedora instance requires authentication, enter the
          credentials here. Leave blank if your repo is open. -->
-    <property name="fedoraAuth" value="" /> <!-- i.e., BASIC -->
-    <property name="fedoraUsername" value="" /> <!-- i.e., manager, tomcat, etc. -->
-    <property name="fedoraPassword" value="" />
+    <property name="fedoraUsername" value="${fedora.repo.username}" /> <!-- i.e., manager, tomcat, etc. -->
+    <property name="fedoraPassword" value="${fedora.repo.password}" />
   </bean>
 
 </beans>

@@ -20,7 +20,11 @@ import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.fcrepo.kernel.utils.EventType;
@@ -29,6 +33,7 @@ import org.slf4j.Logger;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import java.net.URI;
 import java.io.Reader;
 import java.util.Set;
 
@@ -57,13 +62,13 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
-    private String fedoraAuth;
     private String fedoraUsername;
     private String fedoraPassword;
 
     private Set<Indexer<Object>> indexers;
 
     private HttpClient httpClient;
+    private HttpClientContext httpContext;
 
     /**
      * Identifier message header
@@ -111,6 +116,7 @@ public class IndexerGroup implements MessageListener {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         this.httpClient = new DefaultHttpClient(connMann);
+        this.httpContext = new HttpClientContext();
     }
 
     /**
@@ -128,20 +134,6 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
-     * Set Fedora auth type.
-     **/
-    public void setFedoraAuth(final String fedoraAuth) {
-        this.fedoraAuth = fedoraAuth;
-    }
-
-    /**
-     * Get Fedora auth type.
-     **/
-    public String getFedoraAuth() {
-        return fedoraAuth;
-    }
-
-    /**
      * Set Fedora username.
      **/
     public void setFedoraUsername(final String fedoraUsername) {
@@ -149,24 +141,10 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
-     * Get Fedora username.
-     **/
-    public String getFedoraUsername() {
-        return fedoraUsername;
-    }
-
-    /**
      * Set Fedora password.
      **/
     public void setFedoraPassword(final String fedoraPassword) {
         this.fedoraPassword = fedoraPassword;
-    }
-
-    /**
-     * Get Fedora password.
-     **/
-    public String getFedoraPassword() {
-        return fedoraPassword;
     }
 
     /**
@@ -208,6 +186,15 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
+     * Set HttpContext for this group, where we can add authorization information.
+     *
+     * @param context
+     */
+    public void setHttpContext(final HttpClientContext context) {
+        this.httpContext = context;
+    }
+
+    /**
      * Handle a JMS message representing an object update or deletion event.
      **/
     @Override
@@ -236,11 +223,21 @@ public class IndexerGroup implements MessageListener {
             LOGGER.debug("Discovered pid: {} in message.", pid);
             LOGGER.debug("Discovered event type: {} in message.", eventType);
 
+            // If the Fedora instance requires authentication, set it up here
+            if (this.fedoraUsername != null && !"".equals(this.fedoraUsername)) {
+                URI fedoraUri = URI.create(getRepositoryURL());
+                final BasicCredentialsProvider cred = new BasicCredentialsProvider();
+                cred.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
+                                    new UsernamePasswordCredentials(this.fedoraUsername, this.fedoraPassword));
+
+                this.httpContext.setCredentialsProvider(cred);
+            }
+
             final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
             LOGGER.debug("It is {} that this is a removal operation.", removal);
             final String uri = getRepositoryURL() + pid;
             final Supplier<Model> rdfr =
-                memoize(new RdfRetriever(uri, httpClient, fedoraAuth, fedoraUsername, fedoraPassword));
+                memoize(new RdfRetriever(uri, httpClient, this.httpContext));
             final Supplier<NamedFields> nfr =
                 memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
             Boolean indexable = false;
