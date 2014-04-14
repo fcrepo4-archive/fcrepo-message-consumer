@@ -16,16 +16,25 @@
 
 package org.fcrepo.indexer;
 
+import junit.framework.Assert;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.fcrepo.kernel.utils.EventType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -36,8 +45,9 @@ import java.util.Set;
 import static javax.jcr.observation.Event.NODE_ADDED;
 import static javax.jcr.observation.Event.PROPERTY_CHANGED;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -51,14 +61,16 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author Michael Durbin
  */
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"javax.net.ssl.*", "org.slf4j.*", "javax.xml.parsers.*", "org.apache.xerces.*"})
+@PrepareForTest({DefaultHttpClient.class})
 public class IndexerGroupTest {
 
     private IndexerGroup indexerGroup;
 
     private String repoUrl;
 
-    @Mock
-    private HttpClient httpClient;
+    private DefaultHttpClient httpClient;
 
     private Set<Indexer<Object>> indexers;
 
@@ -68,23 +80,33 @@ public class IndexerGroupTest {
     @Before
     public void setUp() {
         initMocks(this);
+        httpClient = PowerMockito.mock(DefaultHttpClient.class);
 
-        repoUrl = "fake:fake";
+        repoUrl = "http://example.org:80";
 
-        indexers = new HashSet<Indexer<Object>>();
+        indexers = new HashSet<>();
         indexers.add(indexer);
 
-        indexerGroup = new IndexerGroup();
-        indexerGroup.setHttpClient(httpClient);
-        indexerGroup.setIndexers(indexers);
-        indexerGroup.setRepositoryURL(repoUrl);
+        indexerGroup = new IndexerGroup(repoUrl, indexers, httpClient);
     }
 
     @Test
-    public void testGetters() {
+    public void testSanityConstructor() {
+        indexerGroup = new IndexerGroup(repoUrl, indexers, "user", "pass");
         assertEquals(repoUrl, indexerGroup.getRepositoryURL());
-        assertEquals(indexers, indexerGroup.getIndexers());
-        assertEquals(httpClient, indexerGroup.getHttpClient());
+    }
+
+    @Test
+    public void testCreateHttpClient() {
+        DefaultHttpClient client = IndexerGroup.createHttpClient(repoUrl, "user", "pass");
+        assertNotNull(client);
+
+        CredentialsProvider provider = client.getCredentialsProvider();
+        Credentials credentials = provider.getCredentials(new AuthScope("example.org", 80));
+        assertNotNull("Credentials should not be null!", credentials);
+
+        assertEquals("user", credentials.getUserPrincipal().getName());
+        assertEquals("pass", credentials.getPassword());
     }
 
     @Test

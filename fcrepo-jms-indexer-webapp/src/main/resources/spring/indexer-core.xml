@@ -40,15 +40,20 @@
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}${fcrepo.context:/}rest" />
-    <property name="indexers">
+    <constructor-arg name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}${fcrepo.context:/}rest" />
+    <constructor-arg name="indexers">
       <set>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
         <!--To enable solr Indexer, please uncomment line below  -->
 <!--         <ref bean="solrIndexer"/> -->
       </set>
-    </property>
+    </constructor-arg>
+
+    <!-- If your Fedora instance requires authentication, enter the
+         credentials here. Leave blank if your repo is open. -->
+    <constructor-arg name="fedoraUsername" value="${fcrepo.username:}" /> <!-- i.e., manager, tomcat, etc. -->
+    <constructor-arg name="fedoraPassword" value="${fcrepo.password:}" />
   </bean>
 
 </beans>

@@ -18,6 +18,7 @@ package org.fcrepo.indexer;
 import static com.hp.hpl.jena.graph.NodeFactory.createURI;
 import static com.hp.hpl.jena.graph.Triple.create;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.junit.Assert.assertTrue;
@@ -40,7 +41,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
-
 
 public class RdfRetrieverTest {
 
@@ -90,7 +90,6 @@ public class RdfRetrieverTest {
         final Model result = testRetriever.get();
         assertTrue("Didn't find our test triple!", result.contains(result
                 .asStatement(testTriple)));
-
     }
 
     @Test(expected = RuntimeException.class)
@@ -119,4 +118,27 @@ public class RdfRetrieverTest {
         new RdfRetriever(testId, mockClient).get();
     }
 
+    @Test
+    public void testAuthRetrieval() throws IOException {
+        final String testId = "testAuthRetrieval";
+        final Model input = createDefaultModel();
+        input.add(input.asStatement(testTriple));
+        when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
+        try (StringWriter w = new StringWriter()) {
+            input.write(w, "N3");
+            try (
+                InputStream rdf =
+                    new ByteArrayInputStream(w.toString().getBytes())) {
+                when(mockEntity.getContent()).thenReturn(rdf);
+            }
+        }
+        new RdfRetriever(testId, mockClient).get();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testAuthForbiddenRetrieval(){
+        final String testId = "testAuthForbiddenRetrieval";
+        when(mockStatusLine.getStatusCode()).thenReturn(SC_FORBIDDEN);
+        new RdfRetriever(testId, mockClient).get();
+    }
 }
