@@ -187,3 +187,33 @@ Use the following MAVEN_OPTS on build
 ### Caveat: Blank Nodes
 
 Fedora doesn't currently support blank nodes.
+
+## Authenticated repo
+
+If REST calls to you Fedora repository require BASIC authentication,
+you'll need to set two system variables in your servlet container,
+`fcrepo.username` and `fcrepo.password`. In Jetty/Maven 3, you can set
+some values in your [settings.xml](https://maven.apache.org/settings.html)
+file that will later be set to these two system variables:
+
+``` xml
+<profiles>
+  <profile>
+    <id>fcrepo</id>
+    <activation>
+      <activeByDefault>true</activeByDefault>
+    </activation>
+    <properties>
+      <fedora.repo.username>example</fedora.repo.username>
+      <fedora.repo.password>xxxxxxxx</fedora.repo.password>
+    </properties>
+  </profile>
+</profiles>
+```
+
+In Tomcat 7 you can set the following command line options in
+your `conf/setenv.sh` file:
+
+``` sh
+JAVA_OPTS="$JAVA_OPTS -Dfcrepo.username=example -Dfcrepo.password=xxxxxxxx "
+```
