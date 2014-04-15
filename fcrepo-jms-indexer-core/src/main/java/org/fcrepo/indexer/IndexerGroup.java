@@ -242,16 +242,19 @@ public class IndexerGroup implements MessageListener {
     private void index( final String uri, final String eventType ) {
         // If the Fedora instance requires authentication, set it up here
         if (this.fedoraUsername != null && !"".equals(this.fedoraUsername)) {
-            final String creds = this.fedoraUsername + ":" + this.fedoraPassword;
-            final String encoding = new String(Base64.encodeBase64(creds.getBytes()));
+            LOGGER.debug("Adding BASIC credentials to context for repo requests.");
 
-            this.httpContext.setAttribute("Authorization", "BASIC " + encoding);
+            final String userPass = this.fedoraUsername + ":" + this.fedoraPassword;
+            final String encoding = new String(Base64.encodeBase64(userPass.getBytes()));
+            final String creds = "BASIC " + encoding;
+
+            this.httpContext.setAttribute("fcrepo-creds", creds);
         }
 
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =
-            memoize(new RdfRetriever(uri, httpClient));
+            memoize(new RdfRetriever(uri, httpClient, httpContext));
         final Supplier<NamedFields> nfr =
             memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
         Boolean indexable = false;
