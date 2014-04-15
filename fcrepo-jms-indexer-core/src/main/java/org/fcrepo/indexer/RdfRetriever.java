@@ -82,6 +82,10 @@ public class RdfRetriever implements Supplier<Model> {
     public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
         request.addHeader("Accept", RDF_SERIALIZATION);
+        String creds = (String) this.httpContext.getAttribute("fcrepo-creds");
+        if (creds != null) {
+            request.addHeader("Authorization", creds);
+        }
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
             final HttpResponse response = httpClient.execute(request, this.httpContext);
