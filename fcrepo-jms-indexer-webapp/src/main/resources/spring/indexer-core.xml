@@ -52,8 +52,8 @@
 
     <!-- If your Fedora instance requires authentication, enter the
          credentials here. Leave blank if your repo is open. -->
-    <property name="fedoraUsername" value="${fcrepo.username}" /> <!-- i.e., manager, tomcat, etc. -->
-    <property name="fedoraPassword" value="${fcrepo.password}" />
+    <property name="fedoraUsername" value="${fcrepo.username:}" /> <!-- i.e., manager, tomcat, etc. -->
+    <property name="fedoraPassword" value="${fcrepo.password:}" />
   </bean>
 
 </beans>
