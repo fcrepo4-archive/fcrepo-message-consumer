@@ -190,7 +190,7 @@ Fedora doesn't currently support blank nodes.
 
 ## Authenticated repo
 
-If REST calls to you Fedora repository require BASIC authentication,
+If REST calls to your Fedora repository require BASIC authentication,
 you'll need to set two system variables in your servlet container,
 `fcrepo.username` and `fcrepo.password`. In Jetty/Maven 3, you can set
 some values in your [settings.xml](https://maven.apache.org/settings.html)
