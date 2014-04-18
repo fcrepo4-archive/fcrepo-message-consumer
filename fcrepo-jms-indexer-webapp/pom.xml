@@ -145,6 +145,7 @@
             <portName>jms.port</portName>
             <!-- reserves the stop port for jetty-maven-plugin -->
             <portName>jetty.port.stop</portName>
+            <portName>stomp.port</portName>
           </portNames>
         </configuration>
       </plugin>
@@ -183,6 +184,10 @@
                 <systemProperty>
                   <name>jms.port</name>
                   <value>${jms.port}</value>
+                </systemProperty>
+                <systemProperty>
+                  <name>stomp.port</name>
+                  <value>${stomp.port}</value>
                 </systemProperty>
                 <systemProperty>
                   <name>fcrepo.port</name>
