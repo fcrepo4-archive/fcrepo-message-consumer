@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0.0-alpha-5</version>
+    <version>4.0.0-alpha-6-SNAPSHOT</version>
   </parent>
 
   <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
@@ -41,7 +41,7 @@
     <developerConnection>scm:git:git@github.com:futures/${project_name}.git
     </developerConnection>
     <url>https://github.com/futures/${project_name}</url>
-    <tag>fcrepo-jms-indexer-pluggable-4.0.0-alpha-5</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencyManagement>
@@ -153,39 +153,39 @@
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-api</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-kernel-api</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-kernel</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-transform</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-jms</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.fcrepo</groupId>
         <artifactId>fcrepo-http-commons</artifactId>
-        <version>4.0.0-alpha-5</version>
+        <version>4.0.0-alpha-6-SNAPSHOT</version>
         <scope>test</scope>
         <type>test-jar</type>
       </dependency>
