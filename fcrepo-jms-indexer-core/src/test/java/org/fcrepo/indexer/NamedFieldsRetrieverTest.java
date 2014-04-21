@@ -36,8 +36,8 @@ import java.io.StringReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -53,7 +53,7 @@ public class NamedFieldsRetrieverTest {
     private RdfRetriever mockRetriever;
 
     @Mock
-    private HttpClient mockClient;
+    private DefaultHttpClient mockClient;
 
     @Mock
     private HttpResponse mockResponse;
