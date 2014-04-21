@@ -28,11 +28,9 @@ import java.io.Reader;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 
 import org.slf4j.Logger;
 
@@ -53,8 +51,7 @@ public class RdfRetriever implements Supplier<Model> {
 
     private final String identifier;
 
-    private final HttpClient httpClient;
-    private final HttpContext httpContext;
+    private final DefaultHttpClient httpClient;
 
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
 
@@ -62,33 +59,18 @@ public class RdfRetriever implements Supplier<Model> {
      * @param identifier
      * @param client
      */
-    public RdfRetriever(final String identifier, final HttpClient client) {
+    public RdfRetriever(final String identifier, final DefaultHttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
-        this.httpContext = new BasicHttpContext();
-    }
-
-    /**
-     * @param identifier
-     * @param client
-     */
-    public RdfRetriever(final String identifier, final HttpClient client, final HttpContext context) {
-        this.identifier = identifier;
-        this.httpClient = client;
-        this.httpContext = context;
     }
 
     @Override
     public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
         request.addHeader("Accept", RDF_SERIALIZATION);
-        String creds = (String) this.httpContext.getAttribute("fcrepo-creds");
-        if (creds != null) {
-            request.addHeader("Authorization", creds);
-        }
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
-            final HttpResponse response = httpClient.execute(request, this.httpContext);
+            final HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (
                     Reader r =

@@ -36,7 +36,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.protocol.HttpContext;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -49,10 +49,7 @@ public class RdfRetrieverTest {
     private RdfRetriever testRetriever;
 
     @Mock
-    private HttpClient mockClient;
-
-    @Mock
-    private HttpContext mockContext;
+    private DefaultHttpClient mockClient;
 
     @Mock
     private HttpResponse mockResponse;
@@ -71,8 +68,6 @@ public class RdfRetrieverTest {
     public void setUp() throws IOException {
         initMocks(this);
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
-                mockResponse);
-        when(mockClient.execute(any(HttpUriRequest.class), any(HttpContext.class))).thenReturn(
                 mockResponse);
         when(mockResponse.getEntity()).thenReturn(mockEntity);
         when(mockResponse.getStatusLine()).thenReturn(mockStatusLine);
@@ -139,13 +134,13 @@ public class RdfRetrieverTest {
                 when(mockEntity.getContent()).thenReturn(rdf);
             }
         }
-        new RdfRetriever(testId, mockClient, mockContext).get();
+        new RdfRetriever(testId, mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
     public void testAuthForbiddenRetrieval(){
         final String testId = "testAuthForbiddenRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_FORBIDDEN);
-        new RdfRetriever(testId, mockClient, mockContext).get();
+        new RdfRetriever(testId, mockClient).get();
     }
 }

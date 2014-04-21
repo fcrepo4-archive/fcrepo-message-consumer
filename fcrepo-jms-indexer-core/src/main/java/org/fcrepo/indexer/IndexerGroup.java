@@ -21,11 +21,14 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
@@ -33,6 +36,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import java.io.Reader;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -67,8 +71,7 @@ public class IndexerGroup implements MessageListener {
 
     private Set<Indexer<Object>> indexers;
 
-    private HttpClient httpClient;
-    private BasicHttpContext httpContext;
+    private DefaultHttpClient httpClient;
 
     private Set<String> reindexed;
 
@@ -124,7 +127,6 @@ public class IndexerGroup implements MessageListener {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         this.httpClient = new DefaultHttpClient(connMann);
-        this.httpContext = new BasicHttpContext();
     }
 
     /**
@@ -180,7 +182,7 @@ public class IndexerGroup implements MessageListener {
      *
      * @param client
      */
-    public void setHttpClient(final HttpClient client) {
+    public void setHttpClient(final DefaultHttpClient client) {
         this.httpClient = client;
     }
 
@@ -189,17 +191,8 @@ public class IndexerGroup implements MessageListener {
      *
      * @return
      */
-    public HttpClient getHttpClient() {
+    public DefaultHttpClient getHttpClient() {
         return this.httpClient;
-    }
-
-    /**
-     * Set HttpContext for this group, where we can add authorization information.
-     *
-     * @param context
-     */
-    public void setHttpContext(final BasicHttpContext context) {
-        this.httpContext = context;
     }
 
     /**
@@ -241,20 +234,21 @@ public class IndexerGroup implements MessageListener {
     **/
     private void index( final String uri, final String eventType ) {
         // If the Fedora instance requires authentication, set it up here
-        if (this.fedoraUsername != null && !"".equals(this.fedoraUsername)) {
-            LOGGER.debug("Adding BASIC credentials to context for repo requests.");
+        if (!StringUtils.isBlank(this.fedoraUsername)) {
+            LOGGER.debug("Adding BASIC credentials to client for repo requests.");
 
-            final String userPass = this.fedoraUsername + ":" + this.fedoraPassword;
-            final String encoding = new String(Base64.encodeBase64(userPass.getBytes()));
-            final String creds = "BASIC " + encoding;
+            URI fedoraUri = URI.create(getRepositoryURL());
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
+                                         new UsernamePasswordCredentials(this.fedoraUsername, this.fedoraPassword));
 
-            this.httpContext.setAttribute("fcrepo-creds", creds);
+            httpClient.setCredentialsProvider(credsProvider);
         }
 
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =
-            memoize(new RdfRetriever(uri, httpClient, httpContext));
+            memoize(new RdfRetriever(uri, httpClient));
         final Supplier<NamedFields> nfr =
             memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
         Boolean indexable = false;
