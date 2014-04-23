@@ -39,16 +39,22 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 
-
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"org.slf4j.*", "javax.xml.parsers.*", "org.apache.xerces.*"})
+@PrepareForTest({DefaultHttpClient.class})
 public class RdfRetrieverTest {
 
     private RdfRetriever testRetriever;
 
-    @Mock
     private DefaultHttpClient mockClient;
 
     @Mock
@@ -67,6 +73,7 @@ public class RdfRetrieverTest {
     @Before
     public void setUp() throws IOException {
         initMocks(this);
+        mockClient = PowerMockito.mock(DefaultHttpClient.class);
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
                 mockResponse);
         when(mockResponse.getEntity()).thenReturn(mockEntity);

@@ -26,7 +26,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.fcrepo.kernel.utils.EventType;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -52,13 +57,15 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * @author Michael Durbin
  */
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"javax.net.ssl.*", "org.slf4j.*", "javax.xml.parsers.*", "org.apache.xerces.*"})
+@PrepareForTest({DefaultHttpClient.class})
 public class IndexerGroupTest {
 
     private IndexerGroup indexerGroup;
 
     private String repoUrl;
 
-    @Mock
     private DefaultHttpClient httpClient;
 
     private Set<Indexer<Object>> indexers;
@@ -69,6 +76,7 @@ public class IndexerGroupTest {
     @Before
     public void setUp() {
         initMocks(this);
+        httpClient = PowerMockito.mock(DefaultHttpClient.class);
 
         repoUrl = "fake:fake";
 
