@@ -10,5 +10,4 @@
     base-package="org.fcrepo.kernel.services, org.fcrepo.http, org.fcrepo.serialization, org.fcrepo.indexer, org.fcrepo.transform.http"/>
   <bean class="org.fcrepo.http.commons.session.SessionFactory"/>
   <bean class="org.fcrepo.kernel.identifiers.UUIDPidMinter"/>
-
 </beans>
