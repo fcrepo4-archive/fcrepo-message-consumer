@@ -39,6 +39,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.jena.riot.WebContent;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -81,7 +82,7 @@ public class SolrMappingsIT extends IndexingIT {
 
         LOGGER.debug("Creating indexable resource...");
         final String uri = serverAddress + "testCollection/testOneResourcePid";
-        final HttpPost createRequest = new HttpPost(uri);
+        final HttpPut createRequest = new HttpPut(uri);
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix dc:<http://purl.org/dc/elements/1.1/> ."
@@ -155,7 +156,7 @@ public class SolrMappingsIT extends IndexingIT {
         SolrServerException, InterruptedException {
 
         final String mappingUrl =
-            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book";
+            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book/fcr:content";
 
         LOGGER.debug("Creating index mapping at URL: {}...", mappingUrl);
 
@@ -172,7 +173,7 @@ public class SolrMappingsIT extends IndexingIT {
 
         LOGGER.debug("Creating indexable resource...");
         final String uri = serverAddress + "testCollection/testOneResourceCustomMappingPid";
-        final HttpPost createRequest = new HttpPost(uri);
+        final HttpPut createRequest = new HttpPut(uri);
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix dc:<http://purl.org/dc/elements/1.1/> ."

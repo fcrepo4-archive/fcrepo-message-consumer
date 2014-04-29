@@ -26,7 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.fcrepo.indexer.IndexerGroup;
 import org.fcrepo.indexer.TestIndexer;
@@ -62,7 +62,7 @@ public class IndexerGroupIT extends IndexingIT {
     }
 
     private void doIndexerGroupUpdateTest(final String uri) throws Exception {
-        final HttpPost createRequest = new HttpPost(uri);
+        final HttpPut createRequest = new HttpPut(uri);
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
