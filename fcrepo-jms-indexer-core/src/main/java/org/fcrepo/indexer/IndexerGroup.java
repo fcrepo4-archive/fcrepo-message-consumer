@@ -21,8 +21,14 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-import org.apache.http.client.HttpClient;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
@@ -31,6 +37,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import java.io.Reader;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -60,9 +67,12 @@ public class IndexerGroup implements MessageListener {
 
     private String repositoryURL;
 
+    private String fedoraUsername;
+    private String fedoraPassword;
+
     private Set<Indexer<Object>> indexers;
 
-    private HttpClient httpClient;
+    private DefaultHttpClient httpClient;
 
     private Set<String> reindexed;
 
@@ -118,6 +128,8 @@ public class IndexerGroup implements MessageListener {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         this.httpClient = new DefaultHttpClient(connMann);
+        this.httpClient.setRedirectStrategy(new DefaultRedirectStrategy());
+        this.httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(0, false));
     }
 
     /**
@@ -132,6 +144,20 @@ public class IndexerGroup implements MessageListener {
      **/
     public String getRepositoryURL() {
         return repositoryURL;
+    }
+
+    /**
+     * Set Fedora username.
+     **/
+    public void setFedoraUsername(final String fedoraUsername) {
+        this.fedoraUsername = fedoraUsername;
+    }
+
+    /**
+     * Set Fedora password.
+     **/
+    public void setFedoraPassword(final String fedoraPassword) {
+        this.fedoraPassword = fedoraPassword;
     }
 
     /**
@@ -159,7 +185,7 @@ public class IndexerGroup implements MessageListener {
      *
      * @param client
      */
-    public void setHttpClient(final HttpClient client) {
+    public void setHttpClient(final DefaultHttpClient client) {
         this.httpClient = client;
     }
 
@@ -168,7 +194,7 @@ public class IndexerGroup implements MessageListener {
      *
      * @return
      */
-    public HttpClient getHttpClient() {
+    public DefaultHttpClient getHttpClient() {
         return this.httpClient;
     }
 
@@ -210,6 +236,18 @@ public class IndexerGroup implements MessageListener {
      * Index a resource.
     **/
     private void index( final String uri, final String eventType ) {
+        // If the Fedora instance requires authentication, set it up here
+        if (!StringUtils.isBlank(this.fedoraUsername)) {
+            LOGGER.debug("Adding BASIC credentials to client for repo requests.");
+
+            URI fedoraUri = URI.create(getRepositoryURL());
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
+                                         new UsernamePasswordCredentials(this.fedoraUsername, this.fedoraPassword));
+
+            httpClient.setCredentialsProvider(credsProvider);
+        }
+
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =

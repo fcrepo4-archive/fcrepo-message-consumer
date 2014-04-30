@@ -36,24 +36,31 @@ import java.io.StringReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.slf4j.Logger;
 
 import com.google.common.io.CharStreams;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"org.slf4j.*", "javax.xml.parsers.*", "org.apache.xerces.*"})
+@PrepareForTest({DefaultHttpClient.class})
 public class NamedFieldsRetrieverTest {
 
     @Mock
     private RdfRetriever mockRetriever;
 
-    @Mock
-    private HttpClient mockClient;
+    private DefaultHttpClient mockClient;
 
     @Mock
     private HttpResponse mockResponse;
@@ -85,6 +92,7 @@ public class NamedFieldsRetrieverTest {
     @Before
     public void setUp() throws IOException {
         initMocks(this);
+        mockClient = PowerMockito.mock(DefaultHttpClient.class);
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
                 mockResponse);
         when(mockResponse.getEntity()).thenReturn(mockEntity);

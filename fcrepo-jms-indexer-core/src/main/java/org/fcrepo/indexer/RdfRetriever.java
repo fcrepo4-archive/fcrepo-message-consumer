@@ -28,9 +28,10 @@ import java.io.Reader;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
@@ -50,7 +51,7 @@ public class RdfRetriever implements Supplier<Model> {
 
     private final String identifier;
 
-    private final HttpClient httpClient;
+    private final DefaultHttpClient httpClient;
 
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
 
@@ -58,7 +59,7 @@ public class RdfRetriever implements Supplier<Model> {
      * @param identifier
      * @param client
      */
-    public RdfRetriever(final String identifier, final HttpClient client) {
+    public RdfRetriever(final String identifier, final DefaultHttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
     }
@@ -84,5 +85,4 @@ public class RdfRetriever implements Supplier<Model> {
             throw propagate(e);
         }
     }
-
 }
