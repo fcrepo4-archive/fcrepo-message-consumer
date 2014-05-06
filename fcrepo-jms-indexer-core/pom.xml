@@ -204,29 +204,8 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.fcrepo</groupId>
-            <artifactId>fcrepo-build-tools</artifactId>
-            <version>${fcrepo-build-tools.version}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <consoleOutput>true</consoleOutput>
-          <configLocation>fcrepo-checkstyle/checkstyle.xml</configLocation>
-          <suppressionsLocation>fcrepo-checkstyle/checkstyle-suppressions.xml
-          </suppressionsLocation>
-        </configuration>
-        <executions>
-          <execution>
-            <id>checkstyle</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>

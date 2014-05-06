@@ -26,7 +26,7 @@
     <jena.version>2.11.1</jena.version>
     <httpcomponents.version>4.3.2</httpcomponents.version>
     <httpclient.version>4.3.3</httpclient.version>
-    
+    <checkstyle.plugin.version>2.12.1</checkstyle.plugin.version>
     <solr.version>4.6.0</solr.version>
     <!-- default, for execution without custom argLine -->
     <argLine />
@@ -316,35 +316,43 @@
             <argLine>-Xms512m -Xmx1024m -XX:MaxPermSize=512m ${argLine} </argLine>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.fcrepo</groupId>
+              <artifactId>fcrepo-build-tools</artifactId>
+              <version>${fcrepo-build-tools.version}</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <consoleOutput>true</consoleOutput>
+            <logViolationsToConsole>true</logViolationsToConsole>
+            <failsOnError>true</failsOnError>
+            <failOnViolation>true</failOnViolation>
+            <violationSeverity>warning</violationSeverity>
+            <configLocation>fcrepo-checkstyle/checkstyle.xml</configLocation>
+            <suppressionsLocation>fcrepo-checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+          </configuration>
+          <executions>
+            <execution>
+              <id>checkstyle</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.fcrepo</groupId>
-            <artifactId>fcrepo-build-tools</artifactId>
-            <version>${fcrepo-build-tools.version}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <consoleOutput>true</consoleOutput>
-          <configLocation>fcrepo-checkstyle/checkstyle.xml</configLocation>
-          <suppressionsLocation>fcrepo-checkstyle/checkstyle-suppressions.xml
-          </suppressionsLocation>
-        </configuration>
-        <executions>
-          <execution>
-            <id>checkstyle</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
-
     </plugins>
   </build>
 
