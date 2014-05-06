@@ -16,14 +16,13 @@
 
 package org.fcrepo.indexer;
 
-import junit.framework.Assert;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.fcrepo.kernel.utils.EventType;
@@ -190,7 +189,7 @@ public class IndexerGroupTest {
         return m;
     }
     private void mockContent(String identifier, boolean indexable, String indexerName) throws Exception {
-        final HttpResponse r = mock(HttpResponse.class);
+        final CloseableHttpResponse r = mock(CloseableHttpResponse.class);
         final StatusLine s = mock(StatusLine.class);
         when(s.getStatusCode()).thenReturn(HttpStatus.SC_OK);
         when(r.getStatusLine()).thenReturn(s);

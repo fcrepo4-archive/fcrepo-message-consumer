@@ -19,10 +19,13 @@
     <project_name>${project.artifactId}</project_name>
 
     <spring.version>3.2.0.RELEASE</spring.version>
-    <activemq.version>5.7.0</activemq.version>
+    <activemq.version>5.9.1</activemq.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <logback.version>1.0.13</logback.version>
+    <jena.version>2.11.1</jena.version>
+    <httpcomponents.version>4.3.2</httpcomponents.version>
+    <httpclient.version>4.3.3</httpclient.version>
     
     <solr.version>4.6.0</solr.version>
     <!-- default, for execution without custom argLine -->
@@ -127,7 +130,7 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <!-- https://issues.apache.org/jira/browse/JENA-576 -->
-        <version>4.2.6</version>
+        <version>${httpclient.version}</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -193,7 +196,7 @@
       <dependency>
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-fuseki</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
         <scope>test</scope>
       <!--     <exclusions>
           <exclusion>
@@ -214,7 +217,13 @@
       <dependency>
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-core</artifactId>
-        <version>2.10.1</version>
+        <version>${jena.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-arq</artifactId>
+        <version>${jena.version}</version>
       </dependency>
 
       <!-- Start of Solr Indexer libs -->
@@ -248,7 +257,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
-        <version>4.2.5</version>
+        <version>${httpclient.version}</version>
       </dependency>
       <!-- End of Solr Indexer libs -->
       
@@ -276,6 +285,18 @@
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-solrj</artifactId>
         <version>${solr.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-spring</artifactId>
+        <version>${activemq.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
     </dependencies>
