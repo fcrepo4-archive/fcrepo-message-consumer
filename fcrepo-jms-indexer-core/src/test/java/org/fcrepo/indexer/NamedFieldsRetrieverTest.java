@@ -47,6 +47,9 @@ import com.google.common.io.CharStreams;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 
+/**
+ * @author ajs6f
+ */
 public class NamedFieldsRetrieverTest {
 
     @Mock

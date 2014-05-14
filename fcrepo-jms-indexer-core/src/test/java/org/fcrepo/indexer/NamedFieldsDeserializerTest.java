@@ -28,6 +28,9 @@ import org.slf4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
+/**
+ * @author ajs6f
+ */
 public class NamedFieldsDeserializerTest {
 
     @Test(expected = UnsupportedOperationException.class)

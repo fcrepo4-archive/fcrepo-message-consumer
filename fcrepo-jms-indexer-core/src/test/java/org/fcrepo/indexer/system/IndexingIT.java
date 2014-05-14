@@ -41,7 +41,9 @@ import org.slf4j.Logger;
 
 import com.google.common.io.Files;
 
-
+/**
+ * @author ajs6f
+ */
 public abstract class IndexingIT {
 
     private static final Logger LOGGER = getLogger(IndexingIT.class);
