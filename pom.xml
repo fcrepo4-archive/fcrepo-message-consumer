@@ -328,6 +328,7 @@
             </dependency>
           </dependencies>
           <configuration>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <consoleOutput>true</consoleOutput>
             <logViolationsToConsole>true</logViolationsToConsole>
             <failsOnError>true</failsOnError>

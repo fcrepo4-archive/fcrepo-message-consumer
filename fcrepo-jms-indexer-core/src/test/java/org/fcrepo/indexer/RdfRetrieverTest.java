@@ -42,6 +42,9 @@ import org.mockito.Mock;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
 
+/**
+ * @author ajs6f
+ */
 public class RdfRetrieverTest {
 
     private RdfRetriever testRetriever;
