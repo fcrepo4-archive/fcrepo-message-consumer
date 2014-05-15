@@ -23,7 +23,12 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
     </dependency>
-	
+
+    <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -107,8 +112,6 @@
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-kernel</artifactId>
     </dependency>
-    
-
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms</artifactId>
@@ -125,12 +128,6 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki</artifactId>
       <scope>test</scope>
-<!--       <exclusions>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-      </exclusions> -->
     </dependency>
     <!-- Start of Solr Indexer libs -->
     <dependency>
@@ -257,6 +254,13 @@
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-facet</artifactId>
         <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.fcrepo</groupId>
+        <artifactId>fcrepo-jcr-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
