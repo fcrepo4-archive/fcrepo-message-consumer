@@ -39,11 +39,11 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/futures/${project_name}.git
+    <connection>scm:git:git://github.com/fcrepo4/${project_name}.git
     </connection>
-    <developerConnection>scm:git:git@github.com:futures/${project_name}.git
+    <developerConnection>scm:git:git@github.com:fcrepo4/${project_name}.git
     </developerConnection>
-    <url>https://github.com/futures/${project_name}</url>
+    <url>https://github.com/fcrepo4/${project_name}</url>
     <tag>HEAD</tag>
   </scm>
 
