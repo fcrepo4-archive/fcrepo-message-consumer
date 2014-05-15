@@ -51,6 +51,14 @@
     <dependencies>
 
       <dependency>
+        <groupId>org.fcrepo</groupId>
+        <artifactId>fcrepo4-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>javax.jms</groupId>
         <artifactId>jms-api</artifactId>
         <version>1.1-rev-1</version>
@@ -151,46 +159,6 @@
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>${logback.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-http-commons</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-http-api</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-kernel-api</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-kernel</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-transform</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-jms</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.fcrepo</groupId>
-        <artifactId>fcrepo-http-commons</artifactId>
-        <version>4.0.0-alpha-6-SNAPSHOT</version>
-        <scope>test</scope>
-        <type>test-jar</type>
       </dependency>
 
       <dependency>
