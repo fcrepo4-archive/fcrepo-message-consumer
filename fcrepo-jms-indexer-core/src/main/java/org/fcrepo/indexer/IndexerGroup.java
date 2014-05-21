@@ -139,8 +139,8 @@ public class IndexerGroup implements MessageListener {
         if (!isBlank(fedoraUsername) && !isBlank(fedoraPassword)) {
             LOGGER.debug("Adding BASIC credentials to client for repo requests.");
 
-            URI fedoraUri = URI.create(repositoryURL);
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            final URI fedoraUri = URI.create(repositoryURL);
+            final CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
                                          new UsernamePasswordCredentials(fedoraUsername, fedoraPassword));
 
@@ -305,12 +305,12 @@ public class IndexerGroup implements MessageListener {
      * @param uri The resource URI to reindex.
      * @param recursive If true, also recursively reindex all children.
     **/
-    public void reindex( final String uri, boolean recursive ) {
+    public void reindex( final String uri, final boolean recursive ) {
         reindexed = new HashSet<>();
         reindexURI( uri, recursive );
     }
 
-    private void reindexURI( final String uri, boolean recursive ) {
+    private void reindexURI( final String uri, final boolean recursive ) {
         LOGGER.debug("Reindexing {}, recursive: {}", uri, recursive);
         if ( !reindexed.contains(uri) ) {
             // index() will check for indexable mixin
@@ -325,7 +325,7 @@ public class IndexerGroup implements MessageListener {
             final Supplier<Model> rdfr
                 = memoize(new RdfRetriever(uri, httpClient));
             final Model model = rdfr.get();
-            NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
+            final NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
             while ( children.hasNext() ) {
                 final String child = children.nextNode().asResource().getURI();
                 if ( !reindexed.contains(child) ) {

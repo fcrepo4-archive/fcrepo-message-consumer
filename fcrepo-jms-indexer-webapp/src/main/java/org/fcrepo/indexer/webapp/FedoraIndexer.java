@@ -44,9 +44,9 @@ public class FedoraIndexer extends HttpServlet {
     /**
      * Servlet initialization.
     **/
-    public void init( ServletConfig sc ) throws ServletException {
+    public void init( final ServletConfig sc ) throws ServletException {
         super.init(sc);
-        WebApplicationContext ctx
+        final WebApplicationContext ctx
             = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
         indexer = (IndexerGroup)ctx.getBean( sc.getInitParameter("beanName") );
     }
@@ -54,16 +54,16 @@ public class FedoraIndexer extends HttpServlet {
     /**
      * Trigger reindexing.
     **/
-    public void doPost(HttpServletRequest request, HttpServletResponse response)
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response)
         throws ServletException {
-        String recurParam = request.getParameter("recursive");
-        boolean recursive = (recurParam == null || recurParam.equals("true"));
-        String path = request.getPathInfo();
+        final String recurParam = request.getParameter("recursive");
+        final boolean recursive = (recurParam == null || recurParam.equals("true"));
+        final String path = request.getPathInfo();
         indexer.reindex( indexer.getRepositoryURL() + path, recursive );
 
         try {
             response.setContentType("text/plain");
-            PrintWriter out = response.getWriter();
+            final PrintWriter out = response.getWriter();
             out.println("Reindexing started");
         } catch ( Exception ex ) {
             LOGGER.warn("Error sending output");

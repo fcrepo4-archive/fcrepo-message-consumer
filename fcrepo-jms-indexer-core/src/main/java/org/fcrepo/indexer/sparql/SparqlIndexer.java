@@ -254,7 +254,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     /**
      * Note: Protected for Unit Tests to overwrite.
      */
-    protected QueryEngineHTTP buildQueryEngineHTTP(String describeQuery) {
+    protected QueryEngineHTTP buildQueryEngineHTTP(final String describeQuery) {
         return new QueryEngineHTTP( queryBase, describeQuery );
     }
 
