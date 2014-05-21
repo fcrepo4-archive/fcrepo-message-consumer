@@ -54,8 +54,8 @@ public class FedoraIndexerIT {
 
     @Test
     public void testReindex() throws IOException {
-        HttpPost reindex = new HttpPost(serverAddress + "/reindex/");
-        HttpResponse response = client.execute(reindex);
+        final HttpPost reindex = new HttpPost(serverAddress + "/reindex/");
+        final HttpResponse response = client.execute(reindex);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertEquals("Reindexing started\n", EntityUtils.toString(response.getEntity()) );
     }

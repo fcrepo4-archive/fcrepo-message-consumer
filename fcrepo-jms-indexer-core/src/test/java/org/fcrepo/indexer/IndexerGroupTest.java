@@ -96,11 +96,11 @@ public class IndexerGroupTest {
 
     @Test
     public void testCreateHttpClient() {
-        DefaultHttpClient client = IndexerGroup.createHttpClient(repoUrl, "user", "pass");
+        final DefaultHttpClient client = IndexerGroup.createHttpClient(repoUrl, "user", "pass");
         assertNotNull(client);
 
-        CredentialsProvider provider = client.getCredentialsProvider();
-        Credentials credentials = provider.getCredentials(new AuthScope("example.org", 80));
+        final CredentialsProvider provider = client.getCredentialsProvider();
+        final Credentials credentials = provider.getCredentials(new AuthScope("example.org", 80));
         assertNotNull("Credentials should not be null!", credentials);
 
         assertEquals("user", credentials.getUserPrincipal().getName());
@@ -118,7 +118,7 @@ public class IndexerGroupTest {
 
     @Test
     public void testNonIndexableObjectUpdateMessage() throws Exception {
-        String id = "/test";
+        final String id = "/test";
         indexerGroup.onMessage(createUnindexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
         verify(indexer, never()).update(anyString(), any());
@@ -127,7 +127,7 @@ public class IndexerGroupTest {
     @Test
     public void testNamedFieldsIndexableObjectUpdateMessage() throws Exception {
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.NAMEDFIELDS);
-        String id = "/test";
+        final String id = "/test";
         indexerGroup.onMessage(createIndexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
         verify(indexer, atLeastOnce()).update(anyString(), any());
@@ -136,7 +136,7 @@ public class IndexerGroupTest {
     @Test
     public void testRDFIndexablePropertyUpdateMessage() throws Exception {
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
-        String id = "/test/dc:title";
+        final String id = "/test/dc:title";
         indexerGroup.onMessage(createIndexablePropertyMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(PROPERTY_CHANGED).toString(), id));
         verify(indexer, atLeastOnce()).update(anyString(), any());
@@ -150,15 +150,15 @@ public class IndexerGroupTest {
         verify(indexer,atLeastOnce()).update(eq(repoUrl), any());
     }
 
-    private Message createUnindexableMessage(String eventType, String identifier) throws Exception {
+    private Message createUnindexableMessage(final String eventType, final String identifier) throws Exception {
         return createMockMessage(false, eventType, identifier, false, null, false);
     }
 
-    private Message createIndexableMessage(String eventType, String identifier) throws Exception {
+    private Message createIndexableMessage(final String eventType, final String identifier) throws Exception {
         return createMockMessage(false, eventType, identifier, true, "default", false);
     }
 
-    private Message createIndexablePropertyMessage(String eventType, String identifier) throws Exception {
+    private Message createIndexablePropertyMessage(final String eventType, final String identifier) throws Exception {
         return createMockMessage(false, eventType, identifier, true, "default", true);
     }
 
@@ -170,10 +170,15 @@ public class IndexerGroupTest {
      * Creates a mock message an updates the mock HTTPClient to respond to
      * the expected request for that object.
      */
-    private Message createMockMessage(boolean jmsExceptionOnGetMessage, String eventType, String identifier, boolean indexable, String indexerName, boolean property) throws Exception {
-        Message m = mock(Message.class);
+    private Message createMockMessage(final boolean jmsExceptionOnGetMessage,
+                                      final String eventType,
+                                      final String identifier,
+                                      final boolean indexable,
+                                      final String indexerName,
+                                      final boolean property) throws Exception {
+        final Message m = mock(Message.class);
         if (jmsExceptionOnGetMessage) {
-            JMSException e = mock(JMSException.class);
+            final JMSException e = mock(JMSException.class);
             when(m.getJMSMessageID()).thenThrow(e);
         } else {
             when(m.getJMSMessageID()).thenReturn("mocked-message-id");
@@ -187,27 +192,37 @@ public class IndexerGroupTest {
         }
         return m;
     }
-    private void mockContent(String identifier, boolean indexable, String indexerName) throws Exception {
+
+    private void mockContent(final String identifier,
+                             final boolean indexable,
+                             final String indexerName) throws Exception {
         final CloseableHttpResponse r = mock(CloseableHttpResponse.class);
         final StatusLine s = mock(StatusLine.class);
         when(s.getStatusCode()).thenReturn(HttpStatus.SC_OK);
         when(r.getStatusLine()).thenReturn(s);
         final HttpEntity e = mock(HttpEntity.class);
-        when(e.getContent()).thenReturn(new ByteArrayInputStream(getIndexableTriples(identifier, indexable, indexerName).getBytes("UTF-8")));
+        when(e.getContent()).thenReturn(
+                new ByteArrayInputStream(getIndexableTriples(identifier, indexable, indexerName).getBytes("UTF-8")));
         when(r.getEntity()).thenReturn(e);
         when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
     }
 
-    private String parentId(String identifier) {
+    private String parentId(final String identifier) {
         return identifier.substring(0, identifier.lastIndexOf('/'));
     }
 
-    private String getIndexableTriples(String id, boolean indexable, String indexerName) {
+    private String getIndexableTriples(final String id, final boolean indexable, final String indexerName) {
         return "\n" +
-                "<" + repoUrl + id + "> a <http://fedora.info/definitions/v4/rest-api#resource> , <http://fedora.info/definitions/v4/rest-api#object> ;\n" +
-                "\t<http://fedora.info/definitions/v4/repository#primaryType> \"nt:folder\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
-                (indexerName != null ? "\t<http://fedora.info/definitions/v4/indexing#hasIndexingTransformation> \"" + indexerName + "\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" : "") +
-                "\t<http://fedora.info/definitions/v4/repository#uuid> \"b1bfd6b8-b821-48c5-8eb9-05ef47e1b6e6\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
-                "\ta " + (indexable ? "<http://fedora.info/definitions/v4/indexing#indexable> , " : "") + "<http://fedora.info/definitions/v4/rest-api#resource> , <http://fedora.info/definitions/v4/rest-api#object> .\n";
+                "<" + repoUrl + id + "> a <http://fedora.info/definitions/v4/rest-api#resource> , " +
+                "<http://fedora.info/definitions/v4/rest-api#object> ;\n" +
+                "\t<http://fedora.info/definitions/v4/repository#primaryType> \"nt:folder\"^^<http://www.w3" +
+                ".org/2001/XMLSchema#string> ;\n" +
+                (indexerName != null ? "\t<http://fedora.info/definitions/v4/indexing#hasIndexingTransformation> \""
+                        + indexerName + "\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" : "") +
+                "\t<http://fedora.info/definitions/v4/repository#uuid> " +
+                "\"b1bfd6b8-b821-48c5-8eb9-05ef47e1b6e6\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
+                "\ta " + (indexable ? "<http://fedora.info/definitions/v4/indexing#indexable> , " +
+                "" : "") + "<http://fedora.info/definitions/v4/rest-api#resource> , " +
+                "<http://fedora.info/definitions/v4/rest-api#object> .\n";
     }
 }

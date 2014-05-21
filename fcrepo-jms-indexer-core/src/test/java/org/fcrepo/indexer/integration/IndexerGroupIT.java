@@ -136,8 +136,7 @@ public class IndexerGroupIT extends IndexingIT {
             for ( String pid : pids ) {
                 final String uri = serverAddress + pid;
                 final Long start = currentTimeMillis();
-                while (!testIndexer.receivedUpdate(uri) 
-                        && (currentTimeMillis() - start < TIMEOUT)) {
+                while (!testIndexer.receivedUpdate(uri) && (currentTimeMillis() - start < TIMEOUT)) {
                     LOGGER.debug("Waiting for " + uri);
                     testIndexer.wait(1000);
                 }

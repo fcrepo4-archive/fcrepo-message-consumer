@@ -26,7 +26,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import com.hp.hpl.jena.update.UpdateRequest;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -63,9 +62,9 @@ public class SparqlIndexerTest {
     public void testRemoveSynch() {
         testIndexer.removeSynch("info://obj-0");
 
-        String cmd0 = "DELETE WHERE { <" + createURI("info://obj-0") + "> ?p ?o }";
-        String cmd1 = "DELETE WHERE { <" + createURI("info://obj-0/fcr:content") + "> ?p ?o }";
-        String cmd2 = "DELETE WHERE { <" + createURI("info://obj-0/child") + "> ?p ?o }";
+        final String cmd0 = "DELETE WHERE { <" + createURI("info://obj-0") + "> ?p ?o }";
+        final String cmd1 = "DELETE WHERE { <" + createURI("info://obj-0/fcr:content") + "> ?p ?o }";
+        final String cmd2 = "DELETE WHERE { <" + createURI("info://obj-0/child") + "> ?p ?o }";
         Mockito.verify(updateRequest).add(cmd0);
         Mockito.verify(updateRequest).add(cmd1);
         Mockito.verify(updateRequest).add(cmd2);
@@ -74,7 +73,7 @@ public class SparqlIndexerTest {
     @Test
     public void testUpdateSynch() {
         // TODO: This is a mere placeholder test to be further implemented later.
-        Model model = ModelFactory.createDefaultModel();
+        final Model model = ModelFactory.createDefaultModel();
         testIndexer.updateSynch("", model);
     }
 
@@ -89,13 +88,17 @@ public class SparqlIndexerTest {
      */
     private class MockSparqlIndexer extends SparqlIndexer {
 
-        protected QueryEngineHTTP buildQueryEngineHTTP(String describeQuery) {
-            Triple t0 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-0"));
-            Triple t2 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-0/fcr:content"));
-            Triple t1 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-1"));
-            Triple t3 = new Triple(createURI("info://obj-0/child"), createLiteral("p"), createURI("info://obj-1"));
+        protected QueryEngineHTTP buildQueryEngineHTTP(final String describeQuery) {
+            final Triple t0 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-0"));
+            final Triple t2 = new Triple(createURI("info://sub"),
+                                         createLiteral("p"),
+                                         createURI("info://obj-0/fcr:content"));
+            final Triple t1 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-1"));
+            final Triple t3 = new Triple(createURI("info://obj-0/child"),
+                                         createLiteral("p"),
+                                         createURI("info://obj-1"));
 
-            Set<Triple> triples = new HashSet<>();
+            final Set<Triple> triples = new HashSet<>();
             triples.add(t0);
             triples.add(t1);
             triples.add(t2);

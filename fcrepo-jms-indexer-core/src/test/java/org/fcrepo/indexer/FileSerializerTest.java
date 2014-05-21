@@ -112,7 +112,7 @@ public class FileSerializerTest {
                 .getIndexerType());
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testBadId() throws IOException {
         final String testId = "testBadId/";
         serializer.update(testId, null);

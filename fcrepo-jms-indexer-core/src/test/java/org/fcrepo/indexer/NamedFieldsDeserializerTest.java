@@ -33,13 +33,15 @@ import com.google.gson.stream.JsonReader;
  */
 public class NamedFieldsDeserializerTest {
 
+    private static final Logger LOGGER = getLogger(NamedFieldsDeserializerTest.class);
+
     @Test(expected = UnsupportedOperationException.class)
     public void testWrite() throws IOException {
         new NamedFieldsDeserializer().write(null, null);
     }
 
     @Test
-    public void testReadGoodJson() throws IOException{
+    public void testReadGoodJson() throws IOException {
         final String testUri = "testUri";
         final String fakeJson = "{\"id\" : [\"" + testUri + "\"]}";
         LOGGER.debug("Using fake JSON: {}", fakeJson);
@@ -52,8 +54,8 @@ public class NamedFieldsDeserializerTest {
         }
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void testReadBadJson() throws IOException{
+    @Test(expected = IllegalStateException.class)
+    public void testReadBadJson() throws IOException {
         final String testUri = "testUri";
         final String fakeJson = "{\"id\" : \"" + testUri + "\"}";
         LOGGER.debug("Using fake JSON: {}", fakeJson);
@@ -65,9 +67,5 @@ public class NamedFieldsDeserializerTest {
             assertEquals(testUri, results.get("id").iterator().next());
         }
     }
-
-    private static final Logger LOGGER =
-            getLogger(NamedFieldsDeserializerTest.class);
-
 
 }

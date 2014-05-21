@@ -69,8 +69,10 @@ public abstract class IndexingIT {
         client = new DefaultHttpClient(connMann);
         LOGGER.debug("Installing indexing namespace...");
         final String nsSparqlUpdate =
-            "INSERT { <" + INDEXER_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> \"indexing\"."+
-                    "<" + INDEXER_TEST_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> \"indexingtest\"} WHERE { }";
+                "INSERT { <" + INDEXER_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> " +
+                        "\"indexing\"." +
+                        "<" + INDEXER_TEST_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> " +
+                        "\"indexingtest\"} WHERE { }";
         HttpPost update = new HttpPost(serverAddress + "fcr:namespaces");
         update.setEntity(new StringEntity(nsSparqlUpdate));
         update.setHeader("Content-Type", "application/sparql-update");

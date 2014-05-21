@@ -46,7 +46,6 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
 import org.fcrepo.indexer.NamedFields;
-import org.fcrepo.indexer.solr.SolrIndexer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

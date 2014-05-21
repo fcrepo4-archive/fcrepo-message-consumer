@@ -23,6 +23,10 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 
 
+/**
+ * @author ajs6f
+ * @since 2013-12-14
+ */
 public class ElasticClientFactory {
 
     private static Node node = nodeBuilder().node();

@@ -96,7 +96,7 @@ public class RdfRetrieverTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testFailedRetrieval(){
+    public void testFailedRetrieval() {
         final String testId = "testFailedRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_NOT_FOUND);
         new RdfRetriever(testId, mockClient).get();
@@ -139,7 +139,7 @@ public class RdfRetrieverTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testAuthForbiddenRetrieval(){
+    public void testAuthForbiddenRetrieval() {
         final String testId = "testAuthForbiddenRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_FORBIDDEN);
         new RdfRetriever(testId, mockClient).get();

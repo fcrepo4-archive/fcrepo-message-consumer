@@ -31,6 +31,11 @@ public class SparqlIndexerITHelper {
 
     private static String queryBase = "http://localhost:" + getProperty("test.fuseki.port", "3030") + "/test/query";
 
+    /**
+     * No public constructor for utility class
+     */
+    private SparqlIndexerITHelper() {
+    }
 
     /**
      * Count the number of triples in the triplestore for a Fedora object.
@@ -64,7 +69,7 @@ public class SparqlIndexerITHelper {
         return count;
     }
 
-    private static int count(Iterator triples) {
+    private static int count(final Iterator triples) {
         // count triples
         int count = 0;
         while (triples.hasNext()) {
