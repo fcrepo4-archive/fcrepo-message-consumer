@@ -14,8 +14,9 @@
     <bean class="org.fcrepo.jms.observer.JMSTopicPublisher"/>
     
     <!-- translates events from the internal bus to JMS -->
-    <bean class="org.fcrepo.jms.headers.DefaultMessageFactory" />
-    
+    <bean class="org.fcrepo.jms.headers.DefaultMessageFactory">
+      <constructor-arg value="http://localhost:8080/rest"/>
+    </bean>
 
     <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"
         depends-on="jmsBroker">
