@@ -49,6 +49,7 @@ import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.fcrepo.kernel.RdfLexicon.HAS_CHILD;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
+import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -77,6 +78,16 @@ public class IndexerGroup implements MessageListener {
      */
     static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
             + "identifier";
+
+    /**
+     * Properties message header
+     */
+    static final String PROPERTIES_HEADER_NAME = REPOSITORY_NAMESPACE + "properties";
+
+    /**
+     * BaseURL message header
+     */
+    static final String BASE_URL_HEADER_NAME = REPOSITORY_NAMESPACE + "baseURL";
 
     /**
      * Event type message header
@@ -111,6 +122,11 @@ public class IndexerGroup implements MessageListener {
      */
     public static final Resource INDEXABLE_MIXIN =
         createResource(INDEXER_NAMESPACE + "indexable");
+
+    /**
+     * Indicates that a resource is a datastream.
+    **/
+    static final Resource DATASTREAM_TYPE = createResource(RESTAPI_NAMESPACE + "datastream");
 
     private static final Reader EMPTY_CONTENT = null;
 
@@ -187,23 +203,18 @@ public class IndexerGroup implements MessageListener {
             propagate(e);
         }
         try {
-            final String pid;
-            // get pid and eventType from message
+            // get id and eventType from message
             final String eventType =
                 message.getStringProperty(EVENT_TYPE_HEADER_NAME);
-            if (eventType.contains("PROPERTY") && !eventType.contains("NODE_ADDED")) {
-                // it seems the URL is for the property, not the node on which
-                // the property is set...
-                final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
-                pid = id.substring(0, id.lastIndexOf('/'));
-            } else {
-                pid = message.getStringProperty(IDENTIFIER_HEADER_NAME);
-            }
+            final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
+            final String baseURL = message.getStringProperty(BASE_URL_HEADER_NAME);
 
-            LOGGER.debug("Discovered pid: {} in message.", pid);
+            LOGGER.debug("Discovered id: {} in message.", id);
             LOGGER.debug("Discovered event type: {} in message.", eventType);
+            LOGGER.debug("Discovered baseURL: {} in message.", baseURL);
+            LOGGER.debug("Discovered properties: {} in message.", message.getStringProperty(PROPERTIES_HEADER_NAME));
 
-            index( getRepositoryURL() + pid, eventType );
+            index( baseURL + id, eventType );
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
         }
@@ -231,6 +242,13 @@ public class IndexerGroup implements MessageListener {
                 LOGGER.debug(
                         "Resource: {} retrieved without indexable type.",
                         uri);
+            }
+
+            // if this is a datastream, also index the parent object
+            if (rdf.contains(createResource(uri), type, DATASTREAM_TYPE) && uri.indexOf("/fedora:system/") == -1 ) {
+                final String parent = uri.substring(0, uri.lastIndexOf("/"));
+                LOGGER.info("Datastream found, also indexing parent {}", parent);
+                index( parent, "NODE_UPDATED");
             }
         }
 

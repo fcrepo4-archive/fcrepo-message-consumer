@@ -118,7 +118,7 @@ public class IndexerGroupTest {
 
     @Test
     public void testNonIndexableObjectUpdateMessage() throws Exception {
-        final String id = "/test";
+        final String id = "/test1";
         indexerGroup.onMessage(createUnindexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
         verify(indexer, never()).update(anyString(), any());
@@ -127,7 +127,7 @@ public class IndexerGroupTest {
     @Test
     public void testNamedFieldsIndexableObjectUpdateMessage() throws Exception {
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.NAMEDFIELDS);
-        final String id = "/test";
+        final String id = "/test2";
         indexerGroup.onMessage(createIndexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
         verify(indexer, atLeastOnce()).update(anyString(), any());
@@ -136,7 +136,7 @@ public class IndexerGroupTest {
     @Test
     public void testRDFIndexablePropertyUpdateMessage() throws Exception {
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
-        final String id = "/test/dc:title";
+        final String id = "/test3";
         indexerGroup.onMessage(createIndexablePropertyMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(PROPERTY_CHANGED).toString(), id));
         verify(indexer, atLeastOnce()).update(anyString(), any());
@@ -188,8 +188,9 @@ public class IndexerGroupTest {
         }
         if (identifier != null) {
             when(m.getStringProperty(IndexerGroup.IDENTIFIER_HEADER_NAME)).thenReturn(identifier);
-            mockContent(property ? parentId(identifier) : identifier, indexable, indexerName);
+            mockContent(identifier, indexable, indexerName);
         }
+        when(m.getStringProperty(IndexerGroup.BASE_URL_HEADER_NAME)).thenReturn("http://example.org:80");
         return m;
     }
 
@@ -205,10 +206,6 @@ public class IndexerGroupTest {
                 new ByteArrayInputStream(getIndexableTriples(identifier, indexable, indexerName).getBytes("UTF-8")));
         when(r.getEntity()).thenReturn(e);
         when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(r);
-    }
-
-    private String parentId(final String identifier) {
-        return identifier.substring(0, identifier.lastIndexOf('/'));
     }
 
     private String getIndexableTriples(final String id, final boolean indexable, final String indexerName) {
