@@ -32,7 +32,6 @@ import org.fcrepo.indexer.TestIndexer;
 import org.fcrepo.indexer.system.IndexingIT;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
