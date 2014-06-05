@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0.0-alpha-6-SNAPSHOT</version>
+    <version>4.0.0-beta-01</version>
   </parent>
 
   <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
@@ -44,7 +44,7 @@
     <developerConnection>scm:git:git@github.com:futures/${project_name}.git
     </developerConnection>
     <url>https://github.com/futures/${project_name}</url>
-    <tag>HEAD</tag>
+    <tag>fcrepo-jms-indexer-pluggable-4.0.0-beta-01</tag>
   </scm>
 
   <dependencyManagement>
