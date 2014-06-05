@@ -16,7 +16,7 @@
   <properties>
     <!-- Use ${project_name} instead of ${project.artifactId} to avoid incorrect
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
-    <project_name>${project.artifactId}</project_name>
+    <project_name>fcrepo-jms-indexer-pluggable</project_name>
 
     <spring.version>3.2.0.RELEASE</spring.version>
     <activemq.version>5.9.1</activemq.version>
@@ -39,11 +39,11 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/futures/${project_name}.git
+    <connection>scm:git:git://github.com/fcrepo4/${project_name}.git
     </connection>
-    <developerConnection>scm:git:git@github.com:futures/${project_name}.git
+    <developerConnection>scm:git:git@github.com:fcrepo4/${project_name}.git
     </developerConnection>
-    <url>https://github.com/futures/${project_name}</url>
+    <url>https://github.com/fcrepo4/${project_name}</url>
     <tag>HEAD</tag>
   </scm>
 
