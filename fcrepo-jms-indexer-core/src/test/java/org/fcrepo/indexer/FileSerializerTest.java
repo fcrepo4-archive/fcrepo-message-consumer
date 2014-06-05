@@ -67,7 +67,7 @@ public class FileSerializerTest {
 
     @Test
     public void updateTest() throws IOException, InterruptedException, ExecutionException {
-        final String testId = "updateTest:" + randomUUID();
+        final String testId = "updateTest" + randomUUID();
         final Collection<String> values = asList("value1", "value2");
         final NamedFields testContent =
             new NamedFields(of("testProperty", values));
@@ -86,7 +86,7 @@ public class FileSerializerTest {
 
     @Test
     public void removeTest() throws IOException, InterruptedException, ExecutionException {
-        final String testId = "removeTest:" + randomUUID();
+        final String testId = "removeTest" + randomUUID();
 
         // should write empty file to disk
         final File f = serializer.remove(testId).get();

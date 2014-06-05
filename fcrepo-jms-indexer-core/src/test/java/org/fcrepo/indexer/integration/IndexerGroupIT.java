@@ -40,6 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author ajs6f
  * @author Esmé Cowles
  * @date Aug 19, 2013
+ *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"/spring-test/test-container.xml"})
@@ -55,11 +56,12 @@ public class IndexerGroupIT extends IndexingIT {
 
     private static final Logger LOGGER = getLogger(IndexerGroupIT.class);
 
+    //Note the tests in these suites sometimes fail on windows builds
+
     @Test
     public void testIndexerGroupUpdate() throws Exception {
         doIndexerGroupUpdateTest(serverAddress + "updateTestPid");
     }
-
     private void doIndexerGroupUpdateTest(final String uri) throws Exception {
         final HttpPut createRequest = new HttpPut(uri);
         final String objectRdf =
