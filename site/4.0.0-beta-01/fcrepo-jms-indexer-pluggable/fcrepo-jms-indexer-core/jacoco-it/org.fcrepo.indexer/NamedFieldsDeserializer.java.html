@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NamedFieldsDeserializer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-jms-indexer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer</a> &gt; <span class="el_source">NamedFieldsDeserializer.java</span></div><h1>NamedFieldsDeserializer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2014 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.builder;
+import static com.google.common.collect.Maps.transformValues;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+/**
+ * Deserializes JSON maps
+ *
+ * @author ajs6f
+ * @date Dec 6, 2013
+ */
+<span class="fc" id="L46">public class NamedFieldsDeserializer extends TypeAdapter&lt;NamedFields&gt; {</span>
+
+<span class="fc" id="L48">    private static final Type type = new TypeToken&lt;Map&lt;String, JsonElement&gt;&gt;() {}</span>
+            .getType();
+
+    private Gson gson;
+
+    //TODO make index-time boost somehow adjustable, or something
+<span class="fc" id="L54">    public static final Long INDEX_TIME_BOOST = 1L;</span>
+
+<span class="fc" id="L56">    private static final Logger LOGGER = getLogger(NamedFieldsDeserializer.class);</span>
+
+<span class="fc" id="L58">    private static Function&lt;JsonElement, Collection&lt;String&gt;&gt; jsonElement2list =</span>
+<span class="fc" id="L59">        new Function&lt;JsonElement, Collection&lt;String&gt;&gt;() {</span>
+
+            @Override
+            public List&lt;String&gt; apply(final JsonElement input) {
+<span class="fc" id="L63">                final JsonElement json =</span>
+                    checkNotNull(input, &quot;Cannot transform null!&quot;);
+<span class="fc" id="L65">                final ImmutableList.Builder&lt;String&gt; b = builder();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                for (final JsonElement value : json.getAsJsonArray()) {</span>
+<span class="fc" id="L67">                    b.add(value.getAsString());</span>
+<span class="fc" id="L68">                }</span>
+<span class="fc" id="L69">                return b.build();</span>
+            }
+        };
+
+    @Override
+    public void write(final JsonWriter out, final NamedFields value)
+        throws IOException {
+<span class="nc" id="L76">        throw new UnsupportedOperationException();</span>
+    }
+
+    @Override
+    public NamedFields read(final JsonReader in)
+        throws IOException {
+        try {
+<span class="fc" id="L83">            final Map&lt;String, JsonElement&gt; fields = gson.fromJson(in, type);</span>
+<span class="fc" id="L84">            return new NamedFields(transformValues(fields, jsonElement2list));</span>
+<span class="nc" id="L85">        } catch (final Exception e) {</span>
+<span class="nc" id="L86">            LOGGER.error(&quot;Failed to parse JSON to Map&lt;String, Collection&lt;String&gt;&gt;!&quot;, e);</span>
+<span class="nc" id="L87">            throw e;</span>
+        }
+
+    }
+
+
+    /**
+     * @param gson the Gson engine to set
+     * @return this object for continued use
+     */
+    public NamedFieldsDeserializer setGson(final Gson gson) {
+<span class="fc" id="L98">        this.gson = gson;</span>
+<span class="fc" id="L99">        return this;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.4.201312101107</span></div></body></html>

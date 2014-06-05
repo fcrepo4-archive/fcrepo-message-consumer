@@ -1,0 +1,26 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+fcrepo-jms-indexer-core,org.fcrepo.indexer.sparql,SparqlIndexer,0,261,3,19,0,56,3,21,0,13
+fcrepo-jms-indexer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Callable() {...},2,6,0,0,1,1,1,1,1,1
+fcrepo-jms-indexer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Callable() {...},15,28,1,1,5,6,1,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Runnable() {...},65,16,9,1,9,4,5,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,RdfRetriever,41,62,7,3,3,14,5,3,0,3
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFieldsRetriever,52,127,8,4,5,24,6,3,0,3
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFields,0,7,0,0,0,4,0,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,IndexerGroup,101,383,15,34,23,93,15,20,1,9
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFieldsDeserializer.new Function() {...},0,30,0,2,0,7,0,3,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFieldsDeserializer,11,38,0,0,4,9,1,4,1,4
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFieldsRetriever.new TypeToken() {...},0,3,0,0,0,1,0,1,0,1
+fcrepo-jms-indexer-core,org.fcrepo.indexer,NamedFieldsDeserializer.new TypeToken() {...},0,3,0,0,0,1,0,1,0,1
+fcrepo-jms-indexer-core,org.fcrepo.indexer,AsynchIndexer.new Runnable() {...},5,16,0,0,0,5,0,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,Indexer.IndexerType,5,43,0,0,0,2,1,3,1,3
+fcrepo-jms-indexer-core,org.fcrepo.indexer,AbsentTransformPropertyException,4,0,0,0,2,0,1,0,1,0
+fcrepo-jms-indexer-core,org.fcrepo.indexer,FileSerializer.new Callable() {...},39,48,6,4,2,9,4,3,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,AsynchIndexer,0,60,0,0,0,13,0,4,0,4
+fcrepo-jms-indexer-core,org.fcrepo.indexer,AsynchIndexer.new Runnable() {...},5,16,0,0,0,5,0,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,IndexerGroup.new Object() {...},2,17,0,0,0,1,0,1,0,1
+fcrepo-jms-indexer-core,org.fcrepo.indexer,SynchIndexer,0,9,0,0,0,3,0,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer,FileSerializer,9,87,3,3,2,17,4,6,1,6
+fcrepo-jms-indexer-core,org.fcrepo.indexer.solr,SolrIndexer.new Callable() {...},16,62,1,1,4,10,1,2,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer.solr,SolrIndexer.new Maps.EntryTransformer() {...},0,32,0,2,0,7,0,3,0,2
+fcrepo-jms-indexer-core,org.fcrepo.indexer.solr,SolrIndexer,0,62,0,0,0,16,0,7,0,7
+fcrepo-jms-indexer-core,org.fcrepo.indexer.solr,SolrIndexer.new Callable() {...},16,32,1,1,4,6,1,2,0,2

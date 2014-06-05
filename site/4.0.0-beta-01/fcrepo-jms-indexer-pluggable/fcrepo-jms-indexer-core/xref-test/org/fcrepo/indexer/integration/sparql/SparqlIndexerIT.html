@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>SparqlIndexerIT xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../testapidocs/org/fcrepo/indexer/integration/sparql/SparqlIndexerIT.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_javadoccomment"> * Copyright 2014 DuraSpace, Inc.</em>
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="4" href="#4">4</a>   <em class="jxr_javadoccomment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="5" href="#5">5</a>   <em class="jxr_javadoccomment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <em class="jxr_javadoccomment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <em class="jxr_javadoccomment"> *     <a href="http://www.apache.org/licenses/LICENSE-2.0" target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.0</a></em>
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <em class="jxr_javadoccomment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="11" href="#11">11</a>  <em class="jxr_javadoccomment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <em class="jxr_javadoccomment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="13" href="#13">13</a>  <em class="jxr_javadoccomment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <em class="jxr_javadoccomment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="15" href="#15">15</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="16" href="#16">16</a>  <strong class="jxr_keyword">package</strong> org.fcrepo.indexer.integration.sparql;
+<a class="jxr_linenumber" name="17" href="#17">17</a>  
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <strong class="jxr_keyword">import</strong> java.io.StringReader;
+<a class="jxr_linenumber" name="19" href="#19">19</a>  
+<a class="jxr_linenumber" name="20" href="#20">20</a>  <strong class="jxr_keyword">import</strong> javax.inject.Inject;
+<a class="jxr_linenumber" name="21" href="#21">21</a>  
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> org.fcrepo.indexer.sparql.SparqlIndexer;
+<a class="jxr_linenumber" name="23" href="#23">23</a>  <strong class="jxr_keyword">import</strong> org.junit.runner.RunWith;
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <strong class="jxr_keyword">import</strong> org.slf4j.Logger;
+<a class="jxr_linenumber" name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> org.springframework.test.context.ContextConfiguration;
+<a class="jxr_linenumber" name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+<a class="jxr_linenumber" name="27" href="#27">27</a>  
+<a class="jxr_linenumber" name="28" href="#28">28</a>  <strong class="jxr_keyword">import</strong> org.junit.Test;
+<a class="jxr_linenumber" name="29" href="#29">29</a>  
+<a class="jxr_linenumber" name="30" href="#30">30</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+<a class="jxr_linenumber" name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> java.lang.Thread.sleep;
+<a class="jxr_linenumber" name="32" href="#32">32</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countQueryTriples;
+<a class="jxr_linenumber" name="33" href="#33">33</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countDescribeTriples;
+<a class="jxr_linenumber" name="34" href="#34">34</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertTrue;
+<a class="jxr_linenumber" name="35" href="#35">35</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertEquals;
+<a class="jxr_linenumber" name="36" href="#36">36</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.slf4j.LoggerFactory.getLogger;
+<a class="jxr_linenumber" name="37" href="#37">37</a>  
+<a class="jxr_linenumber" name="38" href="#38">38</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="39" href="#39">39</a>  <em class="jxr_javadoccomment"> * @author Esmé Cowles</em>
+<a class="jxr_linenumber" name="40" href="#40">40</a>  <em class="jxr_javadoccomment"> *         Date: Aug 19, 2013</em>
+<a class="jxr_linenumber" name="41" href="#41">41</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="42" href="#42">42</a>  @RunWith(SpringJUnit4ClassRunner.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="43" href="#43">43</a>  @ContextConfiguration({<span class="jxr_string">"/spring-test/test-container.xml"</span>})
+<a class="jxr_linenumber" name="44" href="#44">44</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../org/fcrepo/indexer/integration/sparql/SparqlIndexerIT.html">SparqlIndexerIT</a> {
+<a class="jxr_linenumber" name="45" href="#45">45</a>  
+<a class="jxr_linenumber" name="46" href="#46">46</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String uri = <span class="jxr_string">"http://example.com/sparqlIndexerTestURI"</span>;
+<a class="jxr_linenumber" name="47" href="#47">47</a>  
+<a class="jxr_linenumber" name="48" href="#48">48</a>  
+<a class="jxr_linenumber" name="49" href="#49">49</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger LOGGER = getLogger(SparqlIndexerIT.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="50" href="#50">50</a>  
+<a class="jxr_linenumber" name="51" href="#51">51</a>      @Inject
+<a class="jxr_linenumber" name="52" href="#52">52</a>      <strong class="jxr_keyword">private</strong> SparqlIndexer sparqlIndexer;
+<a class="jxr_linenumber" name="53" href="#53">53</a>  
+<a class="jxr_linenumber" name="54" href="#54">54</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String fooRDF =
+<a class="jxr_linenumber" name="55" href="#55">55</a>          <span class="jxr_string">"@prefix fcrepo: &lt;http://fedora.info/definitions/v4/repository#&gt; .\n"</span> +
+<a class="jxr_linenumber" name="56" href="#56">56</a>          <span class="jxr_string">"@prefix fedora: &lt;http://fedora.info/definitions/v4/repository/rest-api#&gt; .\n"</span> +
+<a class="jxr_linenumber" name="57" href="#57">57</a>          <span class="jxr_string">"&lt;"</span> + uri + <span class="jxr_string">"&gt;\n"</span> +
+<a class="jxr_linenumber" name="58" href="#58">58</a>          <span class="jxr_string">" fcrepo:hasChild &lt;"</span> + uri + <span class="jxr_string">"/barDS&gt; ;\n"</span> +
+<a class="jxr_linenumber" name="59" href="#59">59</a>          <span class="jxr_string">" fcrepo:hasParent &lt;"</span> + uri + <span class="jxr_string">"&gt; ;\n"</span> +
+<a class="jxr_linenumber" name="60" href="#60">60</a>          <span class="jxr_string">" fcrepo:uuid \&quot;feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\&quot; ."</span>;
+<a class="jxr_linenumber" name="61" href="#61">61</a>  
+<a class="jxr_linenumber" name="62" href="#62">62</a>      @Test
+<a class="jxr_linenumber" name="63" href="#63">63</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> indexerTest() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="64" href="#64">64</a>          <em class="jxr_comment">// add triples</em>
+<a class="jxr_linenumber" name="65" href="#65">65</a>          sparqlIndexer.update(uri, createDefaultModel().read(
+<a class="jxr_linenumber" name="66" href="#66">66</a>                  <strong class="jxr_keyword">new</strong> StringReader(fooRDF), <span class="jxr_string">""</span>, <span class="jxr_string">"N3"</span>));
+<a class="jxr_linenumber" name="67" href="#67">67</a>  
+<a class="jxr_linenumber" name="68" href="#68">68</a>          waitForTriples(3);
+<a class="jxr_linenumber" name="69" href="#69">69</a>  
+<a class="jxr_linenumber" name="70" href="#70">70</a>          <em class="jxr_comment">// triples should be present in the triplestore</em>
+<a class="jxr_linenumber" name="71" href="#71">71</a>          assertEquals(<span class="jxr_string">"Triples should be present!"</span>, 3, countDescribeTriples(uri));
+<a class="jxr_linenumber" name="72" href="#72">72</a>  
+<a class="jxr_linenumber" name="73" href="#73">73</a>          <em class="jxr_comment">// SPARQL search should work</em>
+<a class="jxr_linenumber" name="74" href="#74">74</a>          <strong class="jxr_keyword">final</strong> String sparqlQuery =
+<a class="jxr_linenumber" name="75" href="#75">75</a>                  <span class="jxr_string">"PREFIX  fcrepo: &lt;http://fedora.info/definitions/v4/repository#&gt; \n"</span> +
+<a class="jxr_linenumber" name="76" href="#76">76</a>                          <span class="jxr_string">"SELECT  ?p \n"</span> +
+<a class="jxr_linenumber" name="77" href="#77">77</a>                          <span class="jxr_string">"WHERE \n"</span> +
+<a class="jxr_linenumber" name="78" href="#78">78</a>                          <span class="jxr_string">"{ ?p fcrepo:hasParent ?c }"</span>;
+<a class="jxr_linenumber" name="79" href="#79">79</a>          assertTrue(<span class="jxr_string">"Triple should return from search!"</span>, countQueryTriples(sparqlQuery) &gt; 0 );
+<a class="jxr_linenumber" name="80" href="#80">80</a>  
+<a class="jxr_linenumber" name="81" href="#81">81</a>          <em class="jxr_comment">// remove object</em>
+<a class="jxr_linenumber" name="82" href="#82">82</a>          sparqlIndexer.remove(uri);
+<a class="jxr_linenumber" name="83" href="#83">83</a>  
+<a class="jxr_linenumber" name="84" href="#84">84</a>          waitForTriples(0);
+<a class="jxr_linenumber" name="85" href="#85">85</a>  
+<a class="jxr_linenumber" name="86" href="#86">86</a>          <em class="jxr_comment">// triples should not be present in the triplestore</em>
+<a class="jxr_linenumber" name="87" href="#87">87</a>          assertTrue(<span class="jxr_string">"Triples should not be present!"</span>, countDescribeTriples(uri) == 0);
+<a class="jxr_linenumber" name="88" href="#88">88</a>      }
+<a class="jxr_linenumber" name="89" href="#89">89</a>  
+<a class="jxr_linenumber" name="90" href="#90">90</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> waitForTriples(<strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> expectTriples) <strong class="jxr_keyword">throws</strong> InterruptedException {
+<a class="jxr_linenumber" name="91" href="#91">91</a>          <strong class="jxr_keyword">long</strong> elapsed = 0;
+<a class="jxr_linenumber" name="92" href="#92">92</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> restingWait = 500;
+<a class="jxr_linenumber" name="93" href="#93">93</a>          <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> maxWait = 15000; <em class="jxr_comment">// 15 seconds</em>
+<a class="jxr_linenumber" name="94" href="#94">94</a>  
+<a class="jxr_linenumber" name="95" href="#95">95</a>          <strong class="jxr_keyword">int</strong> count = countDescribeTriples(uri);
+<a class="jxr_linenumber" name="96" href="#96">96</a>          <strong class="jxr_keyword">while</strong> ((count &lt; expectTriples) &amp;&amp; (elapsed &lt; maxWait)) {
+<a class="jxr_linenumber" name="97" href="#97">97</a>              LOGGER.debug(<span class="jxr_string">"Discovered {} triples, waiting for {}..."</span>, count, expectTriples);
+<a class="jxr_linenumber" name="98" href="#98">98</a>              sleep(restingWait);
+<a class="jxr_linenumber" name="99" href="#99">99</a>              count = countDescribeTriples(uri);
+<a class="jxr_linenumber" name="100" href="#100">100</a> 
+<a class="jxr_linenumber" name="101" href="#101">101</a>             elapsed += restingWait;
+<a class="jxr_linenumber" name="102" href="#102">102</a>         }
+<a class="jxr_linenumber" name="103" href="#103">103</a>     }
+<a class="jxr_linenumber" name="104" href="#104">104</a> 
+<a class="jxr_linenumber" name="105" href="#105">105</a> }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+
