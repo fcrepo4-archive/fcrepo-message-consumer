@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ElasticIndexer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-jms-indexer-elasticsearch</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer.elastic</a> &gt; <span class="el_source">ElasticIndexer.java</span></div><h1>ElasticIndexer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2014 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer.elastic;
+
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.util.concurrent.Callable;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.client.Client;
+import org.fcrepo.indexer.AsynchIndexer;
+import org.fcrepo.indexer.NamedFields;
+import org.slf4j.Logger;
+
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+/**
+ * {@link Indexer} for Elasticsearch.
+ *
+ * @author ajs6f
+ * @date Dec 14, 2013
+ */
+<span class="fc" id="L42">public class ElasticIndexer extends AsynchIndexer&lt;NamedFields, ActionResponse&gt; {</span>
+
+    @Inject
+    private Client client;
+
+    /**
+     * The Elasticsearch index type to use
+     */
+    private String searchIndexType;
+
+    /**
+     * The Elasticsearch index name to use
+     */
+    private String indexName;
+
+<span class="fc" id="L57">    private static final Logger LOGGER = getLogger(ElasticIndexer.class);</span>
+
+
+    /**
+     * Constructs an index with the name supplied.
+     * @throws InterruptedException
+     */
+    @PostConstruct
+    public void initIndex() throws InterruptedException {
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (!client.admin().indices().prepareExists(getIndexName()).execute()</span>
+                .actionGet().isExists()) {
+<span class="nc" id="L68">            LOGGER.debug(&quot;Creating index {}.&quot;, getIndexName());</span>
+<span class="nc" id="L69">            client.admin().indices().prepareCreate(getIndexName()).execute()</span>
+                    .actionGet();
+        }
+<span class="fc" id="L72">        client.admin().cluster().prepareHealth().setWaitForGreenStatus()</span>
+                .execute().actionGet();
+<span class="fc" id="L74">    }</span>
+
+    @Override
+    public Callable&lt;ActionResponse&gt; removeSynch(final String id) {
+<span class="nc" id="L78">        return new Callable&lt;ActionResponse&gt;() {</span>
+
+            @Override
+            public ActionResponse call() {
+<span class="nc" id="L82">                return client.prepareDelete(getIndexName(),</span>
+                        getSearchIndexType(), id).execute().actionGet();
+            }
+        };
+    }
+
+    @Override
+    public Callable&lt;ActionResponse&gt; updateSynch(final String id,
+            final NamedFields content) {
+<span class="fc" id="L91">        return new Callable&lt;ActionResponse&gt;() {</span>
+
+            @Override
+            public ActionResponse call() {
+<span class="nc" id="L95">                return client.prepareIndex(indexName, searchIndexType, id)</span>
+                        .execute().actionGet();
+
+            }
+        };
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+<span class="nc" id="L104">        return NAMEDFIELDS;</span>
+    }
+
+    /**
+     * Number of threads to use for operating against the index.
+     */
+<span class="fc" id="L110">    private static final Integer THREAD_POOL_SIZE = 5;</span>
+
+<span class="fc" id="L112">    private ListeningExecutorService executorService =</span>
+        listeningDecorator(newFixedThreadPool(THREAD_POOL_SIZE));
+
+    @Override
+    public ListeningExecutorService executorService() {
+<span class="fc" id="L117">        return executorService;</span>
+    }
+
+    /**
+     * @param searchIndexType the searchIndexType to set
+     */
+    public void setSearchIndexType(final String searchIndexType) {
+<span class="fc" id="L124">        this.searchIndexType = searchIndexType;</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * @param indexName the indexName to set
+     */
+    public void setIndexName(final String indexName) {
+<span class="fc" id="L131">        this.indexName = indexName;</span>
+<span class="fc" id="L132">    }</span>
+
+
+    /**
+     * @return the searchIndexType
+     */
+    public String getSearchIndexType() {
+<span class="fc" id="L139">        return searchIndexType;</span>
+    }
+
+
+    /**
+     * @return the indexName
+     */
+    public String getIndexName() {
+<span class="fc" id="L147">        return indexName;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.4.201312101107</span></div></body></html>
