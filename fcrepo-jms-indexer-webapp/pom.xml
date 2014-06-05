@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
-    <version>4.0.0-beta-01</version>
+    <version>4.0.0-beta-02-SNAPSHOT</version>
   </parent>
 
   <artifactId>fcrepo-jms-indexer-webapp</artifactId>
