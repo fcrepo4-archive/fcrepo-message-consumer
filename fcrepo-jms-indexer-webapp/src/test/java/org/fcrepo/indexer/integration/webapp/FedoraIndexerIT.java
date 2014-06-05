@@ -57,6 +57,7 @@ public class FedoraIndexerIT {
         final HttpPost reindex = new HttpPost(serverAddress + "/reindex/");
         final HttpResponse response = client.execute(reindex);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals("Reindexing started\n", EntityUtils.toString(response.getEntity()) );
+        //substring required for OS specific differences
+        assertEquals("Reindexing started".substring(0,18), EntityUtils.toString(response.getEntity()).substring(0,18));
     }
 }
