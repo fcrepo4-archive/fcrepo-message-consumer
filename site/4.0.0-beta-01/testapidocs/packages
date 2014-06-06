@@ -1,0 +1,11 @@
+org.fcrepo.indexer.integration.sparql
+org.fcrepo.indexer.integration.solr
+org.fcrepo.indexer.integration
+org.fcrepo.indexer
+org.fcrepo.indexer.sparql
+org.fcrepo.indexer.solr
+org.fcrepo.indexer.system
+org.apache.lucene.search
+org.fcrepo.indexer.integration.webapp
+org.fcrepo.indexer.elastic.integration
+org.fcrepo.indexer.elastic

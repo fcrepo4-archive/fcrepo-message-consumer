@@ -1,0 +1,5 @@
+org.fcrepo.indexer
+org.fcrepo.indexer.elastic
+org.fcrepo.indexer.solr
+org.fcrepo.indexer.sparql
+org.fcrepo.indexer.webapp
