@@ -1,0 +1,3 @@
+org.fcrepo.indexer
+org.fcrepo.indexer.solr
+org.fcrepo.indexer.sparql
