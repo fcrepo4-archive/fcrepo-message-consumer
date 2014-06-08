@@ -106,8 +106,17 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
                                 "Update request returned error code: {} for identifier: {}",
                                 resp.getStatus(), id);
                     }
-                    LOGGER.debug("Received result from Solr request.");
-                    return resp;
+                    final UpdateResponse respcom = server.commit();
+                    if (respcom.getStatus() == 0) {
+                        LOGGER.debug("Commit was successful for: {}",
+                                id);
+                    } else {
+                        LOGGER.error(
+                                "Commit returned error code: {} for identifier: {}",
+                                respcom.getStatus(), id);
+                    }
+                    LOGGER.debug("Done with solr request.");
+                    return respcom;
                 } catch (final SolrServerException | IOException e) {
                     LOGGER.error("Update exception: {}!", e);
                     throw propagate(e);
