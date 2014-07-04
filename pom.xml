@@ -332,7 +332,7 @@
             <dependency>
               <groupId>org.fcrepo</groupId>
               <artifactId>fcrepo-build-tools</artifactId>
-              <version>${fcrepo-build-tools.version}</version>
+              <version>${project.version}</version>
             </dependency>
           </dependencies>
           <configuration>
