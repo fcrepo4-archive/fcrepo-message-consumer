@@ -20,6 +20,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
+
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -34,6 +35,8 @@ import org.slf4j.Logger;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
+import java.io.InputStream;
 import java.io.Reader;
 import java.net.URI;
 import java.util.HashSet;
@@ -230,6 +233,8 @@ public class IndexerGroup implements MessageListener {
             memoize(new RdfRetriever(uri, httpClient));
         final Supplier<NamedFields> nfr =
             memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
+        final Supplier<InputStream> jcrfr =
+             memoize(new JcrXmlRetriever(uri, httpClient));
         Boolean indexable = false;
 
         if (!removal) {
@@ -276,6 +281,13 @@ public class IndexerGroup implements MessageListener {
                                 "Retrieving RDF for: {}, (may be cached) to index to {}...",
                                 uri, indexer);
                         content = rdfr.get();
+                        hasContent = true;
+                        break;
+                    case JCRXML_PERSISTENCE:
+                        LOGGER.debug(
+                                "Retrieving jcr/xml for: {} and persist it to {}...",
+                                uri, indexer);
+                        content = jcrfr.get();
                         hasContent = true;
                         break;
                     default:

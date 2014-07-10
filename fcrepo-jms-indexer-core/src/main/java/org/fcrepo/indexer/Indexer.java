@@ -64,7 +64,7 @@ public interface Indexer<Content> {
      * @date Dec 14, 2013
      */
     public static enum IndexerType {
-        NAMEDFIELDS, RDF, NO_CONTENT
+        NAMEDFIELDS, RDF, NO_CONTENT, JCRXML_PERSISTENCE
     }
 
     /**
