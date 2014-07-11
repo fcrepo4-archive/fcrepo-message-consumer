@@ -40,7 +40,7 @@
 
   <!-- jcr/xml persistence Indexer -->
   <bean id="jcrXmlPersist" class="org.fcrepo.indexer.persistence.JcrXmlPersistenceIndexer">
-    <property name="path" value="${jcr.persist.dir:./target/test-classes/jcrXml/}"/>
+    <property name="path" value="${fcrepo.io.dir:./target/test-classes}/jcrxml"/>
   </bean>
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->

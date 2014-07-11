@@ -15,15 +15,18 @@
  */
 package org.fcrepo.indexer.persistence;
 
-import static com.google.common.base.Throwables.propagate;
 import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
 import org.fcrepo.indexer.SynchIndexer;
@@ -76,36 +79,18 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
                     "Identifiers for use with this indexer may not end in '/'!");
         }
 
-        // file name with object identifier
-        final String fileName = id.substring(id.lastIndexOf("/") + 1) + "-jcr.xml";
-
-        final File file = new File(path, fileName);
-        LOGGER.debug("Updating {} to file: {}", id, file);
         return new Callable<File>() {
 
             @Override
-            public File call() {
+            public File call() throws IOException {
+                // file name with object identifier
+                final String fileName = URLEncoder.encode(id, "UTF-8") + "-jcr.xml";
+
+                LOGGER.debug("Updating {} to file: {}", id, getPath() + File.pathSeparatorChar + fileName);
                 // write content to disk
-                FileOutputStream out = null;
-                final byte[] buf = new byte[4096];
-                int len = 0;
-                try {
-                    out = new FileOutputStream(file);
-                    while ((len = content.read(buf)) > 0 ) {
-                        out.write(buf, 0, len);
-                    }
-                } catch (final IOException e) {
-                    LOGGER.error("Failed to write to file: {}", file);
-                    propagate(e);
-                } finally {
-                    if (out != null) {
-                        try {
-                            out.close();
-                        } catch (final IOException e) {
-                        }
-                    }
-                }
-                return file;
+                final Path p = Paths.get(getPath(), fileName);
+                Files.copy(content, p, new CopyOption[]{});
+                return p.toFile();
             }
         };
     }

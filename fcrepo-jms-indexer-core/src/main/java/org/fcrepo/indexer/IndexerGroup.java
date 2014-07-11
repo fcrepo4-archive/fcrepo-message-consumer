@@ -316,7 +316,7 @@ public class IndexerGroup implements MessageListener {
                     }
                 }
             } catch (final Exception e) {
-                LOGGER.error("Error indexing {}: {}!", uri, e);
+                LOGGER.error("Error {} indexing {}: {}!", indexer.getClass().getName(), uri, e);
             }
         }
     }
