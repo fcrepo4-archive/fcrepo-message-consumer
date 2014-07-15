@@ -39,7 +39,7 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @date Aug 19, 2013
  */
-public class JcrXmlPesistenceIndexerTest {
+public class JcrXmlPersistenceIndexerTest {
 
     private JcrXmlPersistenceIndexer indexer;
 
@@ -115,6 +115,6 @@ public class JcrXmlPesistenceIndexerTest {
         indexer.update(testId, null);
     }
 
-    private static final Logger LOGGER = getLogger(JcrXmlPesistenceIndexerTest.class);
+    private static final Logger LOGGER = getLogger(JcrXmlPersistenceIndexerTest.class);
 
 }
