@@ -18,11 +18,16 @@ package org.fcrepo.indexer.integration.webapp;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
@@ -50,11 +55,17 @@ public class FedoraIndexerIT {
     private static final String serverAddress = "http://" + HOSTNAME + ":" +
             SERVER_PORT + CONTEXT_PATH;
 
+    private static final String repoAddress = "http://" + HOSTNAME + ":" +
+            SERVER_PORT + "/f4/rest/";
+
     private static HttpClient client = new DefaultHttpClient();
 
     @Test
     public void testReindex() throws IOException {
         final HttpPost reindex = new HttpPost(serverAddress + "/reindex/");
+        final List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("baseURI", repoAddress));
+        reindex.setEntity(new UrlEncodedFormEntity(params));
         final HttpResponse response = client.execute(reindex);
         assertEquals(200, response.getStatusLine().getStatusCode());
         //substring required for OS specific differences

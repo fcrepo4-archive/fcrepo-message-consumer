@@ -66,7 +66,7 @@ public class IndexerGroupTest {
 
     private IndexerGroup indexerGroup;
 
-    private String repoUrl;
+    private String repoUrl = "http://example.org:80";
 
     private DefaultHttpClient httpClient;
 
@@ -80,23 +80,22 @@ public class IndexerGroupTest {
         initMocks(this);
         httpClient = PowerMockito.mock(DefaultHttpClient.class);
 
-        repoUrl = "http://example.org:80";
-
         indexers = new HashSet<>();
         indexers.add(indexer);
 
-        indexerGroup = new IndexerGroup(repoUrl, indexers, httpClient);
+        indexerGroup = new IndexerGroup(indexers, httpClient);
     }
 
     @Test
     public void testSanityConstructor() {
-        indexerGroup = new IndexerGroup(repoUrl, indexers, "user", "pass");
-        assertEquals(repoUrl, indexerGroup.getRepositoryURL());
+        indexerGroup = new IndexerGroup(indexers, "user", "pass");
+        assertEquals(indexers, indexerGroup.indexers);
     }
 
     @Test
-    public void testCreateHttpClient() {
-        final DefaultHttpClient client = IndexerGroup.createHttpClient(repoUrl, "user", "pass");
+    public void testHttpClient() {
+        final IndexerGroup indexer = new IndexerGroup(null, "user", "pass");
+        final DefaultHttpClient client = indexer.httpClient("http://example.org:80");
         assertNotNull(client);
 
         final CredentialsProvider provider = client.getCredentialsProvider();
@@ -146,7 +145,7 @@ public class IndexerGroupTest {
     public void testReindex() throws Exception {
         mockContent("", true, null);
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
-        indexerGroup.reindex();
+        indexerGroup.reindex(repoUrl);
         verify(indexer,atLeastOnce()).update(eq(repoUrl), any());
     }
 

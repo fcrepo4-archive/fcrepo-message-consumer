@@ -50,7 +50,6 @@
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <constructor-arg name="repositoryURL" value="http://localhost:${test.port:8080}"/>
     <constructor-arg name="indexers">
       <set value-type="org.fcrepo.indexer.Indexer">
         <ref bean="testIndexer"/>
