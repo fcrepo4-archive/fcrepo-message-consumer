@@ -58,8 +58,8 @@ public class FedoraIndexer extends HttpServlet {
         throws ServletException {
         final String recurParam = request.getParameter("recursive");
         final boolean recursive = (recurParam == null || recurParam.equals("true"));
-        final String path = request.getPathInfo();
-        indexer.reindex( indexer.getRepositoryURL() + path, recursive );
+        final String baseURI = request.getParameter("baseURI");
+        indexer.reindex( baseURI, recursive );
 
         try {
             response.setContentType("text/plain");

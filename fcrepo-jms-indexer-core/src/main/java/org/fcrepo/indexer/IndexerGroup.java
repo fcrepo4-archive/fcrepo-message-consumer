@@ -16,6 +16,7 @@
 package org.fcrepo.indexer;
 
 import com.google.common.base.Strings;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
@@ -25,6 +26,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
@@ -40,7 +42,10 @@ import javax.jms.MessageListener;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Suppliers.memoize;
@@ -69,11 +74,8 @@ public class IndexerGroup implements MessageListener {
 
     private static final Logger LOGGER = getLogger(IndexerGroup.class);
 
-    private final String repositoryURL;
-
-    private final Set<Indexer<Object>> indexers;
-
-    private final DefaultHttpClient httpClient;
+    @VisibleForTesting
+    protected final Set<Indexer<Object>> indexers;
 
     private Set<String> reindexed;
 
@@ -127,6 +129,9 @@ public class IndexerGroup implements MessageListener {
     public static final Resource INDEXABLE_MIXIN =
         createResource(INDEXER_NAMESPACE + "indexable");
 
+    private static final String REST_PREFIX = "/rest/";
+    private static final String FCREPO_PREFIX = "/fcrepo/";
+
     /**
      * Indicates that a resource is a datastream.
     **/
@@ -134,19 +139,64 @@ public class IndexerGroup implements MessageListener {
 
     private static final Reader EMPTY_CONTENT = null;
 
+    private final String fedoraUsername;
+    private final String fedoraPassword;
+    private final Map<String,DefaultHttpClient> clients;
+    private final DefaultHttpClient defaultClient;
+
     /**
      * Default constructor.
      **/
-    public IndexerGroup(final String repositoryURL,
-                        final Set<Indexer<Object>> indexers,
+    public IndexerGroup(final Set<Indexer<Object>> indexers,
                         final String fedoraUsername,
                         final String fedoraPassword) {
-        this(repositoryURL, indexers, createHttpClient(repositoryURL, fedoraUsername, fedoraPassword));
+        this.fedoraUsername = fedoraUsername;
+        this.fedoraPassword = fedoraPassword;
+
+        LOGGER.debug("Creating IndexerGroup: {}", this);
+        this.indexers = indexers;
+        this.clients = new HashMap<>();
+        this.defaultClient = null;
     }
 
-    protected static DefaultHttpClient createHttpClient(final String repositoryURL,
-                                                      final String fedoraUsername,
-                                                      final String fedoraPassword) {
+    /**
+     * Constructor with provided default HttpClient instance added for testing.
+    **/
+    public IndexerGroup(final Set<Indexer<Object>> indexers, final DefaultHttpClient httpClient) {
+        LOGGER.debug("Creating IndexerGroup: {}", this);
+        this.indexers = indexers;
+        this.clients = new HashMap<>();
+        this.fedoraUsername = null;
+        this.fedoraPassword = null;
+        this.defaultClient = httpClient;
+    }
+
+    @VisibleForTesting
+    protected DefaultHttpClient httpClient(final String repositoryURL) {
+        // try to find existing client
+        if ( clients.size() > 0 ) {
+            for ( final Iterator<String> it = clients.keySet().iterator(); it.hasNext(); ) {
+                final String base = it.next();
+                if ( repositoryURL.startsWith(base) ) {
+                    return clients.get(base);
+                }
+            }
+        }
+
+        if ( defaultClient != null ) {
+            return defaultClient;
+        }
+
+        // if no existing client matched, create a new one
+        final String baseURL;
+        if ( repositoryURL.indexOf(REST_PREFIX) > 0 ) {
+            baseURL = repositoryURL.substring(0, repositoryURL.indexOf(REST_PREFIX) + REST_PREFIX.length());
+        } else if ( repositoryURL.indexOf("/",FCREPO_PREFIX.length()) > 0 ) {
+            baseURL = repositoryURL.substring(0, repositoryURL.indexOf("/",FCREPO_PREFIX.length()) + 1);
+        } else {
+            baseURL = repositoryURL;
+        }
+
         final PoolingClientConnectionManager connMann = new PoolingClientConnectionManager();
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
@@ -159,41 +209,17 @@ public class IndexerGroup implements MessageListener {
         if (!isBlank(fedoraUsername) && !isBlank(fedoraPassword)) {
             LOGGER.debug("Adding BASIC credentials to client for repo requests.");
 
-            final URI fedoraUri = URI.create(repositoryURL);
+            final URI fedoraUri = URI.create(baseURL);
             final CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),
                                          new UsernamePasswordCredentials(fedoraUsername, fedoraPassword));
 
             httpClient.setCredentialsProvider(credsProvider);
         }
-
+        clients.put(baseURL, httpClient);
         return httpClient;
     }
 
-    /**
-     * Constructor
-     */
-    public IndexerGroup(final String repositoryURL,
-                        final Set<Indexer<Object>> indexers,
-                        final DefaultHttpClient httpClient) {
-        LOGGER.debug("Creating IndexerGroup: {}", this);
-
-        assert (null != repositoryURL);
-        this.repositoryURL = repositoryURL;
-
-        assert (indexers.size() > 0);
-        this.indexers = indexers;
-
-        assert (null != httpClient);
-        this.httpClient = httpClient;
-    }
-
-    /**
-     * Get repository URL.
-     **/
-    public String getRepositoryURL() {
-        return repositoryURL;
-    }
 
     /**
      * Handle a JMS message representing an object update or deletion event.
@@ -234,6 +260,7 @@ public class IndexerGroup implements MessageListener {
     **/
     private void index( final String uri, final String eventType ) {
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
+        final HttpClient httpClient = httpClient(uri);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =
             memoize(new RdfRetriever(uri, httpClient));
@@ -330,10 +357,10 @@ public class IndexerGroup implements MessageListener {
     /**
      * Reindex all content in the repository by retrieving the root resource
      * and recursively reindexing all indexable child resources.
+     * @param baseURI Repository base URI (e.g., http://localhost:8080/rest/).
     **/
-    public void reindex() {
-        reindexed = new HashSet<>();
-        reindexURI( getRepositoryURL(), true );
+    public void reindex( final String baseURI ) {
+        reindex( baseURI, true );
     }
 
     /**
@@ -359,7 +386,7 @@ public class IndexerGroup implements MessageListener {
         // check for children (rdf should be cached...)
         if ( recursive ) {
             final Supplier<Model> rdfr
-                = memoize(new RdfRetriever(uri, httpClient));
+                = memoize(new RdfRetriever(uri, httpClient(uri)));
             final Model model = rdfr.get();
             final NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
             while ( children.hasNext() ) {
