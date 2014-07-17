@@ -38,11 +38,17 @@
   </bean>
 <!-- Solr Indexer END-->
 
+  <!-- jcr/xml persistence Indexer -->
+  <bean id="jcrXmlPersist" class="org.fcrepo.indexer.persistence.JcrXmlPersistenceIndexer">
+    <property name="path" value="${jcrXml-storage:./tmp/jcrXml}"/>
+  </bean>
+
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <constructor-arg name="repositoryURL" value="http://${fcrepo.host:localhost}:${fcrepo.port:8080}${fcrepo.context:/}rest" />
     <constructor-arg name="indexers">
       <set>
+        <ref bean="jcrXmlPersist"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
         <!--To enable solr Indexer, please uncomment line below  -->
