@@ -16,6 +16,7 @@
 package org.fcrepo.indexer;
 
 import com.google.common.base.Strings;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
@@ -73,6 +74,7 @@ public class IndexerGroup implements MessageListener {
 
     private static final Logger LOGGER = getLogger(IndexerGroup.class);
 
+    @VisibleForTesting
     protected final Set<Indexer<Object>> indexers;
 
     private Set<String> reindexed;
@@ -127,6 +129,9 @@ public class IndexerGroup implements MessageListener {
     public static final Resource INDEXABLE_MIXIN =
         createResource(INDEXER_NAMESPACE + "indexable");
 
+    private static final String REST_PREFIX = "/rest/";
+    private static final String FCREPO_PREFIX = "/fcrepo/";
+
     /**
      * Indicates that a resource is a datastream.
     **/
@@ -155,7 +160,7 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
-     * Constructor with provided default HttpClient instance.
+     * Constructor with provided default HttpClient instance added for testing.
     **/
     public IndexerGroup(final Set<Indexer<Object>> indexers, final DefaultHttpClient httpClient) {
         LOGGER.debug("Creating IndexerGroup: {}", this);
@@ -166,6 +171,7 @@ public class IndexerGroup implements MessageListener {
         this.defaultClient = httpClient;
     }
 
+    @VisibleForTesting
     protected DefaultHttpClient httpClient(final String repositoryURL) {
         // try to find existing client
         if ( clients.size() > 0 ) {
@@ -183,10 +189,10 @@ public class IndexerGroup implements MessageListener {
 
         // if no existing client matched, create a new one
         final String baseURL;
-        if ( repositoryURL.indexOf("/rest/") > 0 ) {
-            baseURL = repositoryURL.substring(0, repositoryURL.indexOf("/rest/") + 6);
-        } else if ( repositoryURL.indexOf("/",8) > 0 ) {
-            baseURL = repositoryURL.substring(0, repositoryURL.indexOf("/",8) + 1);
+        if ( repositoryURL.indexOf(REST_PREFIX) > 0 ) {
+            baseURL = repositoryURL.substring(0, repositoryURL.indexOf(REST_PREFIX) + REST_PREFIX.length());
+        } else if ( repositoryURL.indexOf("/",FCREPO_PREFIX.length()) > 0 ) {
+            baseURL = repositoryURL.substring(0, repositoryURL.indexOf("/",FCREPO_PREFIX.length()) + 1);
         } else {
             baseURL = repositoryURL;
         }
