@@ -15,6 +15,7 @@
  */
 package org.fcrepo.indexer;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
@@ -210,12 +211,17 @@ public class IndexerGroup implements MessageListener {
             final String eventType =
                 message.getStringProperty(EVENT_TYPE_HEADER_NAME);
             final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);
-            final String baseURL = message.getStringProperty(BASE_URL_HEADER_NAME);
+            String baseURL = message.getStringProperty(BASE_URL_HEADER_NAME);
 
             LOGGER.debug("Discovered id: {} in message.", id);
             LOGGER.debug("Discovered event type: {} in message.", eventType);
             LOGGER.debug("Discovered baseURL: {} in message.", baseURL);
             LOGGER.debug("Discovered properties: {} in message.", message.getStringProperty(PROPERTIES_HEADER_NAME));
+
+            // Trim trailing '/'
+            while (!Strings.isNullOrEmpty(baseURL) && baseURL.endsWith("/")) {
+                baseURL = baseURL.substring(0, baseURL.length() - 1);
+            }
 
             index( baseURL + id, eventType );
         } catch (final JMSException e) {

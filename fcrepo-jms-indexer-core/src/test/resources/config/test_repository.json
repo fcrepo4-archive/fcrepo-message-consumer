@@ -15,8 +15,5 @@
             { "classname" : "org.fcrepo.auth.common.BypassSecurityServletAuthenticationProvider" }
         ]
     },
-    "query" : {
-        "enabled": false
-    },
     "node-types" : ["fedora-node-types.cnd"]
 }
