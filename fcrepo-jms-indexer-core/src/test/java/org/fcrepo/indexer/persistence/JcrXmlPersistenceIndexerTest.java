@@ -80,6 +80,27 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
+    public void updateWithHierarchyPathTest()
+            throws IOException, InterruptedException, ExecutionException {
+        final String path1 = "updateHier" +  randomUUID();
+        final String path2 = "" + randomUUID();
+        final String testId = path1 + "/" + path2;
+        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
+
+        final File f = indexer.update(testId, input).get();
+
+        // file should exist
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(path2));
+        assertTrue("File Path2 doesn't match", f.getParentFile().getName().equals(path2));
+        assertTrue("File Path1 doesn't match",
+                f.getParentFile().getParentFile().getName().equals(path1));
+
+        // content should be 'test content'
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+    }
+    @Test
     public void removeTest() throws IOException, InterruptedException, ExecutionException {
         final String testId = "removeTest" + randomUUID();
 

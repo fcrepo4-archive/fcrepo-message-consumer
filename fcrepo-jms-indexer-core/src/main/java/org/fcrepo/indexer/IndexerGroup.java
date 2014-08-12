@@ -32,6 +32,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.fcrepo.indexer.Indexer.IndexerType;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
@@ -249,7 +250,8 @@ public class IndexerGroup implements MessageListener {
                 baseURL = baseURL.substring(0, baseURL.length() - 1);
             }
 
-            index( baseURL + id, eventType );
+            // jcr/xml persist need the base url to storage file in hierarchy structure
+            index( baseURL, id, eventType );
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
         }
@@ -258,7 +260,8 @@ public class IndexerGroup implements MessageListener {
     /**
      * Index a resource.
     **/
-    private void index( final String uri, final String eventType ) {
+    private void index( final String baseURL, final String id, final String eventType ) {
+        final String uri = baseURL + id;
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
         final HttpClient httpClient = httpClient(uri);
         LOGGER.debug("It is {} that this is a removal operation.", removal);
@@ -284,9 +287,9 @@ public class IndexerGroup implements MessageListener {
 
             // if this is a datastream, also index the parent object
             if (rdf.contains(createResource(uri), type, DATASTREAM_TYPE) && uri.indexOf("/fedora:system/") == -1 ) {
-                final String parent = uri.substring(0, uri.lastIndexOf("/"));
-                LOGGER.info("Datastream found, also indexing parent {}", parent);
-                index( parent, "NODE_UPDATED");
+                final String parentID = uri.substring(0, uri.lastIndexOf("/"));
+                LOGGER.info("Datastream found, also indexing parent {}", parentID);
+                index( baseURL, parentID, "NODE_UPDATED");
             }
         }
 
@@ -319,7 +322,7 @@ public class IndexerGroup implements MessageListener {
                     case JCRXML_PERSISTENCE:
                         LOGGER.debug(
                                 "Retrieving jcr/xml for: {} and persist it to {}...",
-                                uri, indexer);
+                                id, indexer);
                         content = jcrfr.get();
                         hasContent = true;
                         break;
@@ -334,13 +337,21 @@ public class IndexerGroup implements MessageListener {
                     LOGGER.debug(
                             "Executing removal of: {} to indexer: {}...",
                             uri, indexer);
-                    indexer.remove(uri);
+                    if (indexer.getIndexerType().equals(IndexerType.JCRXML_PERSISTENCE)) {
+                            indexer.remove(id);
+                    } else {
+                            indexer.remove(uri);
+                    }
                 } else {
                     if (hasContent) {
                         LOGGER.debug(
                                 "Executing update of: {} to indexer: {}...",
                                 uri, indexer);
-                        indexer.update(uri, content);
+                        if (indexer.getIndexerType().equals(IndexerType.JCRXML_PERSISTENCE)) {
+                            indexer.update(id, content);
+                        } else {
+                            indexer.update(uri, content);
+                        }
                     } else if (indexable) {
                         LOGGER.error(
                                 "Received update for: {} but was unable to retrieve "
@@ -365,19 +376,21 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Reindex a resource (and optionally all of its children).
-     * @param uri The resource URI to reindex.
+     * @param baseURI the repository's base uri
      * @param recursive If true, also recursively reindex all children.
     **/
-    public void reindex( final String uri, final boolean recursive ) {
+    public void reindex( final String baseURI, final boolean recursive ) {
         reindexed = new HashSet<>();
-        reindexURI( uri, recursive );
+        final String id = "";
+        reindexURI( baseURI, id, recursive );
     }
 
-    private void reindexURI( final String uri, final boolean recursive ) {
+    private void reindexURI( final String baseURI, final String id, final boolean recursive ) {
+        final String uri = baseURI + id;
         LOGGER.debug("Reindexing {}, recursive: {}", uri, recursive);
         if ( !reindexed.contains(uri) ) {
             // index() will check for indexable mixin
-            index( uri, REINDEX_EVENT_TYPE );
+            index( baseURI, id, REINDEX_EVENT_TYPE );
         }
 
         // prevent infinite recursion
@@ -392,7 +405,7 @@ public class IndexerGroup implements MessageListener {
             while ( children.hasNext() ) {
                 final String child = children.nextNode().asResource().getURI();
                 if ( !reindexed.contains(child) ) {
-                    reindexURI( child, true );
+                    reindexURI( child, "", true );
                 }
             }
         }
