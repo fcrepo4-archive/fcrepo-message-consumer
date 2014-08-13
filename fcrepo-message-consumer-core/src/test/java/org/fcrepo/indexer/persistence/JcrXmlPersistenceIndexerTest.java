@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
@@ -68,7 +69,7 @@ public class JcrXmlPersistenceIndexerTest {
         final String testId = "updateTest" + randomUUID();
         final InputStream input = new ByteArrayInputStream (testContent.getBytes());
 
-        final File f = indexer.update(testId, input).get();
+        final File f = indexer.update("http://localhost:8080/" + testId, input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -80,15 +81,62 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
-    public void removeTest() throws IOException, InterruptedException, ExecutionException {
-        final String testId = "removeTest" + randomUUID();
+    public void updateWithHierarchyPathTest()
+            throws IOException, InterruptedException, ExecutionException {
+        final String path1 = "updateHier" +  randomUUID();
+        final String path2 = "" + randomUUID();
+        final String testId = "http://localhost:8080/" + path1 + "/" + path2;
+        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
 
-        // should write empty file to disk
-        final File f = indexer.remove(testId).get();
+        final File f = indexer.update(testId, input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
-        assertTrue("Filename doesn't match", f.getName().startsWith(testId));
+        assertTrue("Filename doesn't match", f.getName().startsWith(path2));
+        assertTrue("Path Path1 doesn't match", f.getParentFile().getName().equals(path1));
+        assertTrue("Path port number doesn't match",
+                f.getParentFile().getParentFile().getName().equals("8080"));
+        assertTrue("Path hostname doesn't match",
+                f.getParentFile().getParentFile().getParentFile().getName().equals("localhost"));
+
+        // content should be 'test content'
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+    }
+
+    @Test
+    public void updateWithSpecialCharacterPathTest()
+            throws IOException, InterruptedException, ExecutionException {
+        final String path = "updateHier : \\'\" < >" +  randomUUID();
+        final String testId = "http://localhost:8080/" + path;
+        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
+
+        final File f = indexer.update(testId, input).get();
+
+        // file should exist
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(URLEncoder.encode(path, "UTF-8")));
+        assertTrue("Path port number doesn't match",
+                f.getParentFile().getName().equals("8080"));
+        assertTrue("Path hostname doesn't match",
+                f.getParentFile().getParentFile().getName().equals("localhost"));
+
+        // content should be 'test content'
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+    }
+
+    @Test
+    public void removeTest() throws IOException, InterruptedException, ExecutionException {
+        final String path1 = "removeTest" +  randomUUID();
+        final String path2 = "" + randomUUID();
+        final String testId = path1 + "/" + path2;
+        // should write empty file to disk
+        final File f = indexer.remove("http://localhost:8080/" + testId).get();
+
+        // file should exist
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(path2));
 
         // content should be empty
         final String content = new String(readAllBytes(f.toPath()));
