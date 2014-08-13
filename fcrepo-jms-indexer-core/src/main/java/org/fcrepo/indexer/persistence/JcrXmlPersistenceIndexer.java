@@ -15,6 +15,7 @@
  */
 package org.fcrepo.indexer.persistence;
 
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -22,13 +23,14 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.fcrepo.indexer.SynchIndexer;
 import org.slf4j.Logger;
 
@@ -74,12 +76,24 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
 
             @Override
             public File call() throws IOException {
-                // file name with object identifier
-                final String fileName = URLEncoder.encode(id, "UTF-8") + "-jcr.xml";
+                // strip http protocol and replace column(:)
+                String fullPath = id.substring(id.indexOf("//") + 2).replace(":", "/");
+                final String idPath = substringAfterLast(fullPath, "/");
+                fullPath = StringUtils.substringBeforeLast(fullPath, "/");
 
-                LOGGER.debug("Updating {} to file: {}", id, getPath() + File.pathSeparatorChar + fileName);
+                final Path dir = Paths.get(getPath(), fullPath);
+                if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS)) {
+                    Files.createDirectories(Paths.get(getPath(), fullPath));
+                }
+
+                // file name with object identifier
+                final String fileName = idPath + ".jcr.xml";
+
                 // write content to disk
-                final Path p = Paths.get(getPath(), fileName);
+                final Path p = Paths.get(dir.toString(), fileName);
+
+                LOGGER.debug("Updating {} to file: {}", fullPath, p.toAbsolutePath().toString());
+
                 Files.copy(content, p, new CopyOption[]{});
                 return p.toFile();
             }
