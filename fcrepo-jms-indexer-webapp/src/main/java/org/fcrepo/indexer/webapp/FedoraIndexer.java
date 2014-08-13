@@ -19,6 +19,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 import org.slf4j.Logger;
 
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -27,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-
 
 import org.fcrepo.indexer.IndexerGroup;
 
@@ -59,12 +60,21 @@ public class FedoraIndexer extends HttpServlet {
         final String recurParam = request.getParameter("recursive");
         final boolean recursive = (recurParam == null || recurParam.equals("true"));
         final String baseURI = request.getParameter("baseURI");
-        indexer.reindex( baseURI, recursive );
+
+        String message;
+        try {
+            final URL url = new URL( baseURI );
+            indexer.reindex( url.toString(), recursive );
+            message = "Reindexing started";
+        } catch ( MalformedURLException ex ) {
+            message = "Error: the baseURI parameter must be specified";
+            response.setStatus(response.SC_BAD_REQUEST);
+        }
 
         try {
             response.setContentType("text/plain");
             final PrintWriter out = response.getWriter();
-            out.println("Reindexing started");
+            out.println(message);
         } catch ( Exception ex ) {
             LOGGER.warn("Error sending output");
         }
