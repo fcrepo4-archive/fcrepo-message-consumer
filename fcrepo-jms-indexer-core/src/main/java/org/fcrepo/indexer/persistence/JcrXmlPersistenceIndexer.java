@@ -22,9 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
@@ -63,9 +63,9 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
      * @return
     **/
     @Override
-    public Callable<File> updateSynch(final String id, final InputStream content) {
+    public Callable<File> updateSynch(final String idPath, final InputStream content) {
 
-        if (id.endsWith("/")) {
+        if (idPath.endsWith("/")) {
             throw new IllegalArgumentException(
                     "Identifiers for use with this indexer may not end in '/'!");
         }
@@ -74,12 +74,19 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
 
             @Override
             public File call() throws IOException {
-                // file name with object identifier
-                final String fileName = URLEncoder.encode(id, "UTF-8") + "-jcr.xml";
+                final Path dir = Paths.get(getPath(), idPath);
+                if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS)) {
+                    Files.createDirectories(Paths.get(getPath(), idPath));
+                }
 
-                LOGGER.debug("Updating {} to file: {}", id, getPath() + File.pathSeparatorChar + fileName);
+                // file name with object identifier
+                final String fileName = dir.getFileName() + "-jcr.xml";
+
                 // write content to disk
-                final Path p = Paths.get(getPath(), fileName);
+                final Path p = Paths.get(dir.toString(), fileName);
+
+                LOGGER.debug("Updating {} to file: {}", idPath, p.toAbsolutePath().toString());
+
                 Files.copy(content, p, new CopyOption[]{});
                 return p.toFile();
             }
@@ -94,10 +101,10 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
      * Remove the object from the file system.
     **/
     @Override
-    public Callable<File> removeSynch(final String id) {
+    public Callable<File> removeSynch(final String idPath) {
         // empty update
-        LOGGER.debug("Received remove for identifier: {}", id);
-        return updateSynch(id, new ByteArrayInputStream("".getBytes()));
+        LOGGER.debug("Received remove for identifier: {}", idPath);
+        return updateSynch(idPath, new ByteArrayInputStream("".getBytes()));
     }
 
     @Override
