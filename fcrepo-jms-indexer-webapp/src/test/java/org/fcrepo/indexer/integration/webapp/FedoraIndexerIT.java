@@ -26,14 +26,15 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 /**
  * @author Esmé Cowles
- *         Date: April 08, 2014
+ * @since 2014-04-08
  */
 public class FedoraIndexerIT {
 
@@ -58,7 +59,8 @@ public class FedoraIndexerIT {
     private static final String repoAddress = "http://" + HOSTNAME + ":" +
             SERVER_PORT + "/f4/rest/";
 
-    private static HttpClient client = new DefaultHttpClient();
+    private static HttpClient client = HttpClients.custom()
+            .setConnectionManager(new PoolingHttpClientConnectionManager()).build();
 
     @Test
     public void testReindex() throws IOException {
@@ -70,5 +72,12 @@ public class FedoraIndexerIT {
         assertEquals(200, response.getStatusLine().getStatusCode());
         //substring required for OS specific differences
         assertEquals("Reindexing started".substring(0,18), EntityUtils.toString(response.getEntity()).substring(0,18));
+    }
+
+    @Test
+    public void testReindexWithoutBaseURI() throws IOException {
+        final HttpPost reindex = new HttpPost(serverAddress + "/reindex/");
+        final HttpResponse response = client.execute(reindex);
+        assertEquals(400, response.getStatusLine().getStatusCode());
     }
 }
