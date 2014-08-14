@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -76,10 +77,23 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
 
             @Override
             public File call() throws IOException {
-                // strip http protocol and replace column(:)
-                String fullPath = id.substring(id.indexOf("//") + 2).replace(":", "/");
-                final String idPath = substringAfterLast(fullPath, "/");
-                fullPath = StringUtils.substringBeforeLast(fullPath, "/");
+                // strip the http protocol and replace column(:) in front of the port number
+                String fullPath = id.substring(id.indexOf("//") + 2);
+                fullPath = StringUtils.substringBefore(fullPath, "/").replace(":", "/") +
+                        "/" + StringUtils.substringAfter(fullPath, "/");
+                // URL encode the id
+                final String idPath = URLEncoder.encode(substringAfterLast(fullPath, "/"), "UTF-8");
+
+                // URL encode and build the file path
+                final String[] pathTokens = StringUtils.substringBeforeLast(fullPath, "/").split("/");
+                final StringBuilder pathBuilder = new StringBuilder();
+                for (final String token : pathTokens) {
+                    if (StringUtils.isNotBlank(token)) {
+                        pathBuilder.append(URLEncoder.encode(token, "UTF-8") + "/");
+                    }
+                }
+
+                fullPath = pathBuilder.substring(0, pathBuilder.length() - 1).toString();
 
                 final Path dir = Paths.get(getPath(), fullPath);
                 if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS)) {

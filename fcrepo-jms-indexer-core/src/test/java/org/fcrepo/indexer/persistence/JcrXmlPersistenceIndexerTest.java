@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
@@ -97,6 +98,28 @@ public class JcrXmlPersistenceIndexerTest {
                 f.getParentFile().getParentFile().getName().equals("8080"));
         assertTrue("Path hostname doesn't match",
                 f.getParentFile().getParentFile().getParentFile().getName().equals("localhost"));
+
+        // content should be 'test content'
+        final String content = new String(readAllBytes(f.toPath()));
+        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+    }
+
+    @Test
+    public void updateWithSpecialCharacterPathTest()
+            throws IOException, InterruptedException, ExecutionException {
+        final String path = "updateHier : \\'\" < >" +  randomUUID();
+        final String testId = "http://localhost:8080/" + path;
+        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
+
+        final File f = indexer.update(testId, input).get();
+
+        // file should exist
+        LOGGER.debug("Got filename: {}", f.getName());
+        assertTrue("Filename doesn't match", f.getName().startsWith(URLEncoder.encode(path, "UTF-8")));
+        assertTrue("Path port number doesn't match",
+                f.getParentFile().getName().equals("8080"));
+        assertTrue("Path hostname doesn't match",
+                f.getParentFile().getParentFile().getName().equals("localhost"));
 
         // content should be 'test content'
         final String content = new String(readAllBytes(f.toPath()));
