@@ -15,6 +15,7 @@
  */
 package org.fcrepo.indexer.persistence;
 
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -25,10 +26,12 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.fcrepo.indexer.SynchIndexer;
 import org.slf4j.Logger;
 
@@ -74,12 +77,37 @@ public class JcrXmlPersistenceIndexer extends SynchIndexer<InputStream, File> {
 
             @Override
             public File call() throws IOException {
-                // file name with object identifier
-                final String fileName = URLEncoder.encode(id, "UTF-8") + "-jcr.xml";
+                // strip the http protocol and replace column(:) in front of the port number
+                String fullPath = id.substring(id.indexOf("//") + 2);
+                fullPath = StringUtils.substringBefore(fullPath, "/").replace(":", "/") +
+                        "/" + StringUtils.substringAfter(fullPath, "/");
+                // URL encode the id
+                final String idPath = URLEncoder.encode(substringAfterLast(fullPath, "/"), "UTF-8");
 
-                LOGGER.debug("Updating {} to file: {}", id, getPath() + File.pathSeparatorChar + fileName);
+                // URL encode and build the file path
+                final String[] pathTokens = StringUtils.substringBeforeLast(fullPath, "/").split("/");
+                final StringBuilder pathBuilder = new StringBuilder();
+                for (final String token : pathTokens) {
+                    if (StringUtils.isNotBlank(token)) {
+                        pathBuilder.append(URLEncoder.encode(token, "UTF-8") + "/");
+                    }
+                }
+
+                fullPath = pathBuilder.substring(0, pathBuilder.length() - 1).toString();
+
+                final Path dir = Paths.get(getPath(), fullPath);
+                if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS)) {
+                    Files.createDirectories(Paths.get(getPath(), fullPath));
+                }
+
+                // file name with object identifier
+                final String fileName = idPath + ".jcr.xml";
+
                 // write content to disk
-                final Path p = Paths.get(getPath(), fileName);
+                final Path p = Paths.get(dir.toString(), fileName);
+
+                LOGGER.debug("Updating {} to file: {}", fullPath, p.toAbsolutePath().toString());
+
                 Files.copy(content, p, new CopyOption[]{});
                 return p.toFile();
             }
