@@ -8,15 +8,15 @@
     <version>4.0.0-beta-02-SNAPSHOT</version>
   </parent>
 
-  <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
+  <artifactId>fcrepo-message-consumer</artifactId>
   <name>${project.artifactId}</name>
-  <description>Fedora JMS Indexer</description>
+  <description>Fedora Message Consumer</description>
   <packaging>pom</packaging>
 
   <properties>
     <!-- Use ${project_name} instead of ${project.artifactId} to avoid incorrect
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
-    <project_name>fcrepo-jms-indexer-pluggable</project_name>
+    <project_name>fcrepo-message-consumer</project_name>
 
     <spring.version>3.2.0.RELEASE</spring.version>
     <activemq.version>5.9.1</activemq.version>
@@ -33,9 +33,9 @@
   </properties>
 
   <modules>
-    <module>fcrepo-jms-indexer-core</module>
-    <module>fcrepo-jms-indexer-webapp</module>
-    <module>fcrepo-jms-indexer-elasticsearch</module>
+    <module>fcrepo-message-consumer-core</module>
+    <module>fcrepo-message-consumer-webapp</module>
+    <module>fcrepo-message-consumer-elasticsearch</module>
   </modules>
 
   <scm>
@@ -43,7 +43,7 @@
     </connection>
     <developerConnection>scm:git:git@github.com:fcrepo4/${project_name}.git
     </developerConnection>
-    <url>https://github.com/fcrepo4/fcrepo-jms-indexer-pluggable</url>
+    <url>https://github.com/fcrepo4/fcrepo-message-consumer</url>
     <tag>HEAD</tag>
   </scm>
 

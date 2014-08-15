@@ -4,13 +4,13 @@
 
   <parent>
     <groupId>org.fcrepo</groupId>
-    <artifactId>fcrepo-jms-indexer-pluggable</artifactId>
+    <artifactId>fcrepo-message-consumer</artifactId>
     <version>4.0.0-beta-02-SNAPSHOT</version>
   </parent>
 
-  <artifactId>fcrepo-jms-indexer-core</artifactId>
+  <artifactId>fcrepo-message-consumer-core</artifactId>
   <name>${project.artifactId}</name>
-  <description>Fedora JMS Indexer Core</description>
+  <description>Fedora Message Consumer Core</description>
   <packaging>jar</packaging>
 
   <dependencies>

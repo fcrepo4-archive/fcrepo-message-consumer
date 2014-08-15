@@ -15,4 +15,5 @@ ObjectStore/
 transaction.log
 velocity.log
 fcrepo4-data/
+fcrepo4-jcrxml/
 activemq-data/
