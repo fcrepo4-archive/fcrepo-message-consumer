@@ -131,7 +131,7 @@ public class IndexerGroupIT extends IndexingIT {
         testIndexer.clear();
 
         // reindex everything
-        indexerGroup.reindex(serverAddress);
+        indexerGroup.reindex(serverAddress, true);
 
         // records should be reindexed
         synchronized (testIndexer) {
