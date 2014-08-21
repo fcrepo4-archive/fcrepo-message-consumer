@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JcrXmlPersistenceIndexer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer.persistence</a> &gt; <span class="el_source">JcrXmlPersistenceIndexer.java</span></div><h1>JcrXmlPersistenceIndexer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2014 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer.persistence;
+
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.Callable;
+
+import org.apache.commons.lang3.StringUtils;
+import org.fcrepo.indexer.SynchIndexer;
+import org.slf4j.Logger;
+
+/**
+ * Basic Indexer implementation to write contents from an InputStream files on disk.
+ * @author ajs6f
+ * @author Esmé Cowles
+ * @date Aug 19, 2013
+ * @author lsitu
+**/
+public class JcrXmlPersistenceIndexer extends SynchIndexer&lt;InputStream, File&gt; {
+
+<span class="nc" id="L47">    private static final Logger LOGGER = getLogger(JcrXmlPersistenceIndexer.class);</span>
+
+<span class="nc" id="L49">    private File path = null;</span>
+
+    /**
+     * Constructor
+     * @param pathName of directory in which jcr/xml exports will be stored
+     */
+<span class="nc" id="L55">    public JcrXmlPersistenceIndexer(final String pathName) {</span>
+<span class="nc" id="L56">        this.path = new File(pathName);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (!this.path.exists()) {</span>
+<span class="nc" id="L58">            this.path.mkdirs();</span>
+        }
+<span class="nc" id="L60">    }</span>
+
+    /**
+     * Create/update an index entry for the object.
+     * @param id
+     * @param content
+     * @return
+    **/
+    @Override
+    public Callable&lt;File&gt; updateSynch(final String id, final InputStream content) {
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (id.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L72">            throw new IllegalArgumentException(</span>
+                    &quot;Identifiers for use with this indexer may not end in '/'!&quot;);
+        }
+
+<span class="nc" id="L76">        return new Callable&lt;File&gt;() {</span>
+
+            @Override
+            public File call() throws IOException {
+                // strip the http protocol and replace column(:) in front of the port number
+<span class="nc" id="L81">                String fullPath = id.substring(id.indexOf(&quot;//&quot;) + 2);</span>
+<span class="nc" id="L82">                fullPath = StringUtils.substringBefore(fullPath, &quot;/&quot;).replace(&quot;:&quot;, &quot;/&quot;) +</span>
+                        &quot;/&quot; + StringUtils.substringAfter(fullPath, &quot;/&quot;);
+                // URL encode the id
+<span class="nc" id="L85">                final String idPath = URLEncoder.encode(substringAfterLast(fullPath, &quot;/&quot;), &quot;UTF-8&quot;);</span>
+
+                // URL encode and build the file path
+<span class="nc" id="L88">                final String[] pathTokens = StringUtils.substringBeforeLast(fullPath, &quot;/&quot;).split(&quot;/&quot;);</span>
+<span class="nc" id="L89">                final StringBuilder pathBuilder = new StringBuilder();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                for (final String token : pathTokens) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                    if (StringUtils.isNotBlank(token)) {</span>
+<span class="nc" id="L92">                        pathBuilder.append(URLEncoder.encode(token, &quot;UTF-8&quot;) + &quot;/&quot;);</span>
+                    }
+                }
+
+<span class="nc" id="L96">                fullPath = pathBuilder.substring(0, pathBuilder.length() - 1).toString();</span>
+
+<span class="nc" id="L98">                final Path dir = Paths.get(getPath(), fullPath);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS)) {</span>
+<span class="nc" id="L100">                    Files.createDirectories(Paths.get(getPath(), fullPath));</span>
+                }
+
+                // file name with object identifier
+<span class="nc" id="L104">                final String fileName = idPath + &quot;.jcr.xml&quot;;</span>
+
+                // write content to disk
+<span class="nc" id="L107">                final Path p = Paths.get(dir.toString(), fileName);</span>
+
+<span class="nc" id="L109">                LOGGER.debug(&quot;Updating {} to file: {}&quot;, fullPath, p.toAbsolutePath().toString());</span>
+
+<span class="nc" id="L111">                Files.copy(content, p, new CopyOption[]{});</span>
+<span class="nc" id="L112">                return p.toFile();</span>
+            }
+        };
+    }
+
+    private String getPath() {
+<span class="nc" id="L118">        return path.getAbsolutePath();</span>
+    }
+
+    /**
+     * Remove the object from the file system.
+    **/
+    @Override
+    public Callable&lt;File&gt; removeSynch(final String id) {
+        // empty update
+<span class="nc" id="L127">        LOGGER.debug(&quot;Received remove for identifier: {}&quot;, id);</span>
+<span class="nc" id="L128">        return updateSynch(id, new ByteArrayInputStream(&quot;&quot;.getBytes()));</span>
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+<span class="nc" id="L133">        return JCRXML_PERSISTENCE;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.4.201312101107</span></div></body></html>

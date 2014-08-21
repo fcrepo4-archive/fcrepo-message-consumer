@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SparqlIndexer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer.sparql</a> &gt; <span class="el_source">SparqlIndexer.java</span></div><h1>SparqlIndexer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2014 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer.sparql;
+
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.hp.hpl.jena.sparql.util.Context.emptyContext;
+import static com.hp.hpl.jena.update.UpdateExecutionFactory.createRemoteForm;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static org.fcrepo.indexer.Indexer.IndexerType.RDF;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.graph.Node_URI;
+import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import com.hp.hpl.jena.sparql.modify.UpdateProcessRemote;
+import com.hp.hpl.jena.sparql.modify.request.QuadDataAcc;
+import com.hp.hpl.jena.sparql.modify.request.UpdateDataInsert;
+import com.hp.hpl.jena.update.UpdateProcessor;
+import com.hp.hpl.jena.update.UpdateRequest;
+
+import org.apache.jena.atlas.io.IndentedWriter;
+import org.fcrepo.indexer.AsynchIndexer;
+import org.slf4j.Logger;
+
+
+/**
+ * Indexes triples from Fedora into a triplestore using SPARQL Update.
+ *
+ * @author Esmé Cowles
+ * @author ajs6f
+ * @date Aug 19, 2013
+**/
+<span class="fc" id="L58">public class SparqlIndexer extends AsynchIndexer&lt;Model, Void&gt; {</span>
+
+    private String queryBase;
+    private String updateBase;
+<span class="fc" id="L62">    private boolean formUpdates = false;</span>
+
+<span class="fc" id="L64">    private static final Logger LOGGER = getLogger(SparqlIndexer.class);</span>
+
+    /**
+     * Number of threads to use for operating against the triplestore.
+     */
+<span class="fc" id="L69">    private static final Integer THREAD_POOL_SIZE = 5;</span>
+
+<span class="fc" id="L71">    private ListeningExecutorService executorService =</span>
+        listeningDecorator(newFixedThreadPool(THREAD_POOL_SIZE));
+
+    /**
+     * Remove any current triples about the Fedora object and replace them with
+     * the provided content.
+     * @content RDF in N3 format.
+    **/
+    @Override
+    public Callable&lt;Void&gt; updateSynch(final String pid,
+        final Model model) {
+<span class="fc" id="L82">        LOGGER.debug(&quot;Received update for: {}&quot;, pid);</span>
+<span class="fc" id="L83">        removeSynch(pid);</span>
+        // build a list of triples
+<span class="fc" id="L85">        final StmtIterator triples = model.listStatements();</span>
+<span class="fc" id="L86">        final QuadDataAcc add = new QuadDataAcc();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        while ( triples.hasNext() ) {</span>
+<span class="fc" id="L88">            add.addTriple( triples.nextStatement().asTriple() );</span>
+        }
+
+        // send update to server
+<span class="fc" id="L92">        LOGGER.debug(&quot;Sending update request for pid: {}&quot;, pid);</span>
+<span class="fc" id="L93">        return exec(new UpdateRequest(new UpdateDataInsert(add)));</span>
+    }
+
+    /**
+     * Perform a DESCRIBE query for triples about the Fedora object and remove
+     * all triples with subjects starting with the same subject.
+    **/
+    @Override
+    public Callable&lt;Void&gt; removeSynch(final String subject) {
+
+<span class="fc" id="L103">        LOGGER.debug(&quot;Received remove for: {}&quot;, subject);</span>
+        // find triples/quads to delete
+<span class="fc" id="L105">        final String describeQuery = &quot;DESCRIBE &lt;&quot; + subject + &quot;&gt;&quot;;</span>
+<span class="fc" id="L106">        final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);</span>
+<span class="fc" id="L107">        final Iterator&lt;Triple&gt; results = qexec.execDescribeTriples();</span>
+
+        // build list of triples to delete
+<span class="fc" id="L110">        final Set&lt;String&gt; uris = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        while ( results.hasNext() ) {</span>
+<span class="fc" id="L112">            final Triple triple = results.next();</span>
+
+            // add subject uri, if it is part of this object
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            if ( triple.getSubject().isURI() ) {</span>
+<span class="fc" id="L116">                final String uri = ((Node_URI)triple.getSubject()).getURI();</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                if ( matches(subject, uri) ) {</span>
+<span class="fc" id="L118">                    uris.add(uri);</span>
+                }
+            }
+
+            // add object uri, if it is part of this object
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if ( triple.getObject().isURI() ) {</span>
+<span class="fc" id="L124">                final String uri = ((Node_URI)triple.getObject()).getURI();</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                if ( matches(subject, uri) ) {</span>
+<span class="fc" id="L126">                    uris.add(uri);</span>
+                }
+            }
+<span class="fc" id="L129">        }</span>
+<span class="fc" id="L130">        qexec.close();</span>
+
+        // build update commands
+<span class="fc" id="L133">        final UpdateRequest del = buildUpdateRequest();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for (final String uri : uris) {</span>
+<span class="fc" id="L135">            final String cmd = &quot;DELETE WHERE { &lt;&quot; + uri + &quot;&gt; ?p ?o }&quot;;</span>
+<span class="fc" id="L136">            LOGGER.debug(&quot;Executing: {}&quot;, cmd);</span>
+<span class="fc" id="L137">            del.add(cmd);</span>
+<span class="fc" id="L138">        }</span>
+
+        // send updates
+<span class="fc" id="L141">        return exec(del);</span>
+    }
+
+    /**
+     * Determine whether arg candidate is a sub-URI of arg resource, defined as candidate-URI starting
+     * with resource-URI, plus an option suffix starting with a hash (#) or slash (/)
+     * suffix.
+    **/
+    private boolean matches( final String resource, final String candidate) {
+        // All triples that will match this logic are ones that:
+        // - have a candidate subject or object that equals the target resource of removal, or
+        // - have a candidate subject or object that is prefixed with the resource of removal
+        //    (therefore catching all children).
+<span class="pc bpc" id="L154" title="1 of 6 branches missed.">        return resource.equals(candidate) || candidate.startsWith(resource + &quot;/&quot;)</span>
+            || candidate.startsWith(resource + &quot;#&quot;);
+    }
+
+    private Callable&lt;Void&gt; exec(final UpdateRequest update) {
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (update.getOperations().isEmpty()) {</span>
+<span class="fc" id="L160">            LOGGER.debug(&quot;Received empty update/remove operation.&quot;);</span>
+<span class="fc" id="L161">            return new Callable&lt;Void&gt;() {</span>
+
+                @Override
+                public Void call() {
+<span class="nc" id="L165">                    return null;</span>
+                }
+            };
+        }
+
+<span class="fc" id="L170">        final Callable&lt;Void&gt; callable = new Callable&lt;Void&gt;() {</span>
+
+            @Override
+            public Void call() {
+
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                if (formUpdates) {</span>
+                    // form updates
+<span class="nc" id="L177">                    final UpdateProcessor proc =</span>
+                        createRemoteForm(update, updateBase);
+<span class="nc" id="L179">                    proc.execute();</span>
+<span class="nc" id="L180">                } else {</span>
+                    // normal SPARQL updates
+<span class="fc" id="L182">                    final UpdateProcessRemote proc =</span>
+                        new UpdateProcessRemote(update, updateBase,
+                                emptyContext);
+                    try {
+<span class="fc" id="L186">                        proc.execute();</span>
+<span class="nc" id="L187">                    } catch (final Exception e) {</span>
+<span class="nc" id="L188">                        LOGGER.error(</span>
+                                &quot;Error executing Sparql update/remove!&quot;, e);
+<span class="fc" id="L190">                    }</span>
+                }
+<span class="fc" id="L192">                return null;</span>
+            }
+        };
+
+<span class="fc" id="L196">        final ListenableFutureTask&lt;Void&gt; task =</span>
+            ListenableFutureTask.create(callable);
+<span class="fc" id="L198">        task.addListener(new Runnable() {</span>
+
+            @Override
+            public void run() {
+<span class="fc" id="L202">                LOGGER.debug(&quot;Completed Sparql update/removal.&quot;);</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (LOGGER.isTraceEnabled()) {</span>
+<span class="nc" id="L204">                    try (</span>
+<span class="nc" id="L205">                        final OutputStream buffer = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L206">                        final IndentedWriter out = new IndentedWriter(buffer);</span>
+<span class="nc" id="L207">                        update.output(out);</span>
+<span class="nc" id="L208">                        LOGGER.trace(&quot;Executed update/remove operation:\n{}&quot;,</span>
+                                buffer.toString());
+<span class="nc" id="L210">                        out.close();</span>
+<span class="nc bnc" id="L211" title="All 8 branches missed.">                    } catch (final IOException e) {</span>
+<span class="nc" id="L212">                        LOGGER.error(</span>
+                                &quot;Couldn't retrieve execution of update/remove operation!&quot;,
+                                e);
+<span class="nc" id="L215">                    }</span>
+                }
+<span class="fc" id="L217">            }</span>
+        }, executorService);
+<span class="fc" id="L219">        executorService.submit(task);</span>
+<span class="fc" id="L220">        return callable;</span>
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+<span class="fc" id="L225">        return RDF;</span>
+    }
+
+    /**
+     * Set whether to use SPARQL Update or form updates.
+    **/
+    public void setFormUpdates( final boolean b ) {
+<span class="fc" id="L232">        this.formUpdates = b;</span>
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * Set base URL for SPARQL Query requests.
+    **/
+    public void setQueryBase( final String url ) {
+<span class="fc" id="L239">        this.queryBase = url;</span>
+<span class="fc" id="L240">    }</span>
+
+    /**
+     * Set base URL for SPARQL Update requests.
+    **/
+    public void setUpdateBase( final String url ) {
+<span class="fc" id="L246">        this.updateBase = url;</span>
+<span class="fc" id="L247">    }</span>
+
+    @Override
+    public ListeningExecutorService executorService() {
+<span class="fc" id="L251">        return executorService;</span>
+    }
+
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected QueryEngineHTTP buildQueryEngineHTTP(final String describeQuery) {
+<span class="fc" id="L258">        return new QueryEngineHTTP( queryBase, describeQuery );</span>
+    }
+
+    /**
+     * Note: Protected for Unit Tests to overwrite.
+     */
+    protected UpdateRequest buildUpdateRequest() {
+<span class="fc" id="L265">        return new UpdateRequest();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.4.201312101107</span></div></body></html>
