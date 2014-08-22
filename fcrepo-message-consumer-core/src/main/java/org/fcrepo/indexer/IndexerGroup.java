@@ -355,15 +355,6 @@ public class IndexerGroup implements MessageListener {
     }
 
     /**
-     * Reindex all content in the repository by retrieving the root resource
-     * and recursively reindexing all indexable child resources.
-     * @param baseURI Repository base URI (e.g., http://localhost:8080/rest/).
-    **/
-    public void reindex( final String baseURI ) {
-        reindex( baseURI, true );
-    }
-
-    /**
      * Reindex a resource (and optionally all of its children).
      * @param uri The resource URI to reindex.
      * @param recursive If true, also recursively reindex all children.

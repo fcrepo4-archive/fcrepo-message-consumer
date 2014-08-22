@@ -145,7 +145,7 @@ public class IndexerGroupTest {
     public void testReindex() throws Exception {
         mockContent("", true, null);
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
-        indexerGroup.reindex(repoUrl);
+        indexerGroup.reindex(repoUrl,true);
         verify(indexer,atLeastOnce()).update(eq(repoUrl), any());
     }
 
