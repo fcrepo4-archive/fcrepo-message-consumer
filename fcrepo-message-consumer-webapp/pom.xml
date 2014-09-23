@@ -52,27 +52,47 @@
     </dependency>
 
     <dependency>
+      <groupId>org.glassfish.grizzly</groupId>
+      <artifactId>grizzly-http-server</artifactId>
+      <scope>test</scope>
+      <version>${grizzly.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.grizzly</groupId>
+      <artifactId>grizzly-http-servlet</artifactId>
+      <scope>test</scope>
+      <version>${grizzly.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+      <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-beans</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-spring</artifactId>
+      <groupId>org.glassfish.jersey.ext</groupId>
+      <artifactId>jersey-spring3</artifactId>
       <scope>test</scope>
+      <version>${jersey.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-common</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-multipart</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
