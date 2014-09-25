@@ -37,7 +37,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.jena.riot.WebContent;
@@ -159,7 +158,7 @@ public class SolrMappingsIT extends IndexingIT {
 
         LOGGER.debug("Creating index mapping at URL: {}...", mappingUrl);
 
-        final HttpPost indexCreateRequest = new HttpPost(mappingUrl);
+        final HttpPut indexCreateRequest = new HttpPut(mappingUrl);
         final HttpEntity indexMapping =
             new StringEntity(Files.toString(new File(
                     "target/test-classes/ldpath/dublin_core.ldpath"),
