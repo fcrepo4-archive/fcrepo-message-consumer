@@ -154,7 +154,7 @@ public class SolrMappingsIT extends IndexingIT {
         SolrServerException, InterruptedException {
 
         final String mappingUrl =
-            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book/fcr:content";
+            serverAddress + CONFIGURATION_FOLDER + "dc/indexingtest:book";
 
         LOGGER.debug("Creating index mapping at URL: {}...", mappingUrl);
 
