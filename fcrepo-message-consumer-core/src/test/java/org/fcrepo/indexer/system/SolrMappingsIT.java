@@ -28,7 +28,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -87,7 +86,7 @@ public class SolrMappingsIT extends IndexingIT {
                     + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
-                    + "dc:subject      <http://id.loc.gov/authorities/subjects/sh2012004374> ;"
+                    + "dc:subject      \"goats\" ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
                     + "indexing:hasIndexingTransformation \"default\".";
 
@@ -178,7 +177,7 @@ public class SolrMappingsIT extends IndexingIT {
                     + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
-                    + "dc:subject      <http://id.loc.gov/authorities/subjects/sh2012004374> ;"
+                    + "dc:subject      \"goats\" ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexingtest#book> ;"
                     + "indexing:hasIndexingTransformation \"dc\".";
@@ -191,11 +190,7 @@ public class SolrMappingsIT extends IndexingIT {
                 .getStatusLine().getStatusCode());
 
         LOGGER.debug("Waiting for our resource to be indexed...");
-        final String q =
-            "subject:"
-                    + URLEncoder
-                            .encode("http://id.loc.gov/authorities/subjects/sh2012004374",
-                                    "UTF-8");
+        final String q = "subject:goats";
         LOGGER.debug("Checking for our record with query: {}", q);
         final SolrQuery query = new SolrQuery(q);
         List<SolrDocument> results = indexServer.query(query).getResults();
