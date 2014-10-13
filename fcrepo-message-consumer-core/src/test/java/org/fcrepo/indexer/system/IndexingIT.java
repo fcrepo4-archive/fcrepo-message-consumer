@@ -18,28 +18,17 @@ package org.fcrepo.indexer.system;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
-import static java.nio.charset.Charset.defaultCharset;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
 import java.io.IOException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.junit.Before;
 
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.fcrepo.indexer.IndexerGroup.INDEXER_NAMESPACE;
-import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
-
-import com.google.common.io.Files;
 
 /**
  * @author ajs6f
@@ -56,10 +45,6 @@ public abstract class IndexingIT {
 
     protected static HttpClient client;
 
-    public static final String INDEXER_TEST_NAMESPACE =
-            "http://fedora.info/definitions/v4/indexingtest#";
-
-
     @Before
     public void setUp() throws ClientProtocolException, IOException {
         final PoolingClientConnectionManager connMann =
@@ -67,51 +52,5 @@ public abstract class IndexingIT {
         connMann.setMaxTotal(MAX_VALUE);
         connMann.setDefaultMaxPerRoute(MAX_VALUE);
         client = new DefaultHttpClient(connMann);
-        LOGGER.debug("Installing indexing namespace...");
-        final String nsSparqlUpdate =
-                "INSERT { <" + INDEXER_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> " +
-                        "\"indexing\"." +
-                        "<" + INDEXER_TEST_NAMESPACE + "> <http://purl.org/vocab/vann/preferredNamespacePrefix> " +
-                        "\"indexingtest\"} WHERE { }";
-        HttpPost update = new HttpPost(serverAddress + "fcr:namespaces");
-        update.setEntity(new StringEntity(nsSparqlUpdate));
-        update.setHeader("Content-Type", "application/sparql-update");
-        HttpResponse response = client.execute(update);
-        assertEquals("Failed to install indexing namespace!",
-                SC_NO_CONTENT, response.getStatusLine().getStatusCode());
-
-        LOGGER.debug("Installing indexing type information...");
-        update = new HttpPost(serverAddress + "fcr:nodetypes");
-        update.setHeader("Content-Type", "text/cnd");
-        HttpEntity cnd =
-            new StringEntity(Files.toString(new File(
-                    "target/classes/indexing.cnd"), defaultCharset()));
-        update.setEntity(cnd);
-        response = client.execute(update);
-        assertEquals("Failed to install indexing type information!",
-                SC_NO_CONTENT, response.getStatusLine().getStatusCode());
-
-        LOGGER.debug("Installing indexing test type information...");
-        update = new HttpPost(serverAddress + "fcr:nodetypes");
-        update.setHeader("Content-Type", "text/cnd");
-        cnd =
-            new StringEntity(Files.toString(new File(
-                    "target/test-classes/indexingtest.cnd"), defaultCharset()));
-        update.setEntity(cnd);
-        response = client.execute(update);
-        assertEquals("Failed to install indexing test type information!",
-                SC_NO_CONTENT, response.getStatusLine().getStatusCode());
-        /*HttpGet nsRequest = new HttpGet(serverAddress + "fcr:namespaces");
-        nsRequest.setHeader("Content-Type", WebContent.contentTypeN3Alt1);
-        LOGGER.debug("Now registered namespaces include:\n{}", IOUtils
-                .toString(client.execute(nsRequest).getEntity().getContent()));
-        nsRequest = new HttpGet(serverAddress + "fcr:nodetypes");
-        nsRequest.setHeader("Content-Type", WebContent.contentTypeN3Alt1);
-        LOGGER.debug("and registered node types:\n{}", IOUtils.toString(client
-                .execute(nsRequest).getEntity().getContent()));*/
-
     }
-
-
-
 }
