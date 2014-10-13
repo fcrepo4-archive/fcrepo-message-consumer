@@ -56,7 +56,7 @@ import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.fcrepo.kernel.RdfLexicon.HAS_CHILD;
+import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -379,7 +379,7 @@ public class IndexerGroup implements MessageListener {
             final Supplier<Model> rdfr
                 = memoize(new RdfRetriever(uri, httpClient(uri)));
             final Model model = rdfr.get();
-            final NodeIterator children = model.listObjectsOfProperty( HAS_CHILD );
+            final NodeIterator children = model.listObjectsOfProperty( CONTAINS );
             while ( children.hasNext() ) {
                 final String child = children.nextNode().asResource().getURI();
                 if ( !reindexed.contains(child) ) {
