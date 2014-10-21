@@ -15,47 +15,61 @@
  */
 package org.fcrepo.indexer.persistence;
 
-import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
+import static org.fcrepo.indexer.Indexer.IndexerType.RDF;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
+import com.hp.hpl.jena.rdf.model.Model;
+
+import org.fcrepo.indexer.Indexer.IndexerType;
 import org.slf4j.Logger;
 
 /**
- * Basic Indexer implementation to write contents from an InputStream files on disk.
+ * RDF serializer
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
  * @author lsitu
+ * @date 2014-10-20
 **/
-public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer<InputStream, File> {
+public class RdfPersistenceIndexer extends BasePersistenceIndexer<Model, File> {
 
-    private static final Logger LOGGER = getLogger(JcrXmlPersistenceIndexer.class);
+    private static final Logger LOGGER = getLogger(RdfPersistenceIndexer.class);
+
+    private String rdfLang = null;
 
     /**
      * Constructor
      * @param pathName of directory in which jcr/xml exports will be stored
+     * @param rdfLang RDF language name ("Turtle", "RDF/XML", "N-Triples", etc.)
+     * @param extension Filename extension (".ttl", ".rdf.xml", ".nt", etc.)
      */
-    public JcrXmlPersistenceIndexer(final String pathName) {
-        super(pathName, ".jcr.xml");
+    public RdfPersistenceIndexer(final String pathName, final String rdfLang, final String extension) {
+        super(pathName, extension);
+        this.rdfLang = rdfLang;
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+        return RDF;
     }
 
     /**
-     * Create/update an index entry for the object.
-     * @param id The object's URI
-     * @param content InputStream containing JCR/XML content
-     * @return The file where the content was written.
+     * Update a record with the content provided.
+     * @param id The record's URI
+     * @param model Updated RDF model
+     * @return The file where the RDF was written.
     **/
     @Override
-    public Callable<File> updateSynch(final String id, final InputStream content) {
+    public Callable<File> updateSynch(final String id, final Model model) {
         if (id.endsWith("/")) {
             throw new IllegalArgumentException("Identifiers for use with this indexer may not end in '/'!");
         }
@@ -64,26 +78,23 @@ public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer<InputStream
             @Override
             public File call() throws IOException {
                 final Path p = pathFor(id);
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                model.write(out, rdfLang);
                 LOGGER.debug("Updating {} to file: {}", id, p.toAbsolutePath().toString());
-                Files.copy(content, p, new CopyOption[]{});
+                Files.copy(new ByteArrayInputStream(out.toByteArray()), p, new CopyOption[]{});
                 return p.toFile();
             }
         };
     }
 
     /**
-     * Remove the object from the file system.
-     * @param id The object's URI
+     * Remove the record.
+     * @param id the record's URI
     **/
     @Override
     public Callable<File> removeSynch(final String id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
-        return updateSynch(id, new ByteArrayInputStream("".getBytes()));
-    }
-
-    @Override
-    public IndexerType getIndexerType() {
-        return JCRXML_PERSISTENCE;
+        return updateSynch(id, createDefaultModel());
     }
 }
