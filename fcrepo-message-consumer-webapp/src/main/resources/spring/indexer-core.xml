@@ -42,12 +42,18 @@
   <bean id="jcrXmlPersist" class="org.fcrepo.indexer.persistence.JcrXmlPersistenceIndexer">
     <constructor-arg value="${fcrepo.jcrxml.storage:fcrepo4-jcrxml}" />
   </bean>
+  <bean id="rdfPersist" class="org.fcrepo.indexer.persistence.RdfPersistenceIndexer">
+    <constructor-arg value="${fcrepo.rdf.storage:fcrepo4-rdf}" />
+    <constructor-arg value="${fcrepo.rdf.lang:TURTLE}" />
+    <constructor-arg value="${fcrepo.rdf.ext:.ttl}" />
+  </bean>
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
     <constructor-arg name="indexers">
       <set>
         <ref bean="jcrXmlPersist"/>
+        <ref bean="rdfPersist"/>
         <ref bean="fileSerializer"/>
         <ref bean="sparqlUpdate"/>
         <!--To enable solr Indexer, please uncomment line below  -->
