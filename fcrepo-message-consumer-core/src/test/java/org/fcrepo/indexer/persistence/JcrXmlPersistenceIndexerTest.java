@@ -26,8 +26,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URLEncoder;
-import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -65,11 +65,11 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
-    public void updateTest() throws IOException, InterruptedException, ExecutionException {
+    public void updateTest() throws Exception {
         final String testId = "updateTest" + randomUUID();
         final InputStream input = new ByteArrayInputStream (testContent.getBytes());
 
-        final File f = indexer.update("http://localhost:8080/" + testId, input).get();
+        final File f = indexer.update(new URI("http://localhost:8080/" + testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -81,14 +81,13 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
-    public void updateWithHierarchyPathTest()
-            throws IOException, InterruptedException, ExecutionException {
+    public void updateWithHierarchyPathTest() throws Exception {
         final String path1 = "updateHier" +  randomUUID();
         final String path2 = "" + randomUUID();
         final String testId = "http://localhost:8080/" + path1 + "/" + path2;
         final InputStream input = new ByteArrayInputStream (testContent.getBytes());
 
-        final File f = indexer.update(testId, input).get();
+        final File f = indexer.update(new URI(testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -105,13 +104,12 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
-    public void updateWithSpecialCharacterPathTest()
-            throws IOException, InterruptedException, ExecutionException {
-        final String path = "updateHier : \\'\" < >" +  randomUUID();
+    public void updateWithSpecialCharacterPathTest() throws Exception {
+        final String path = URLEncoder.encode("updateHier : \\'\" < >") +  randomUUID();
         final String testId = "http://localhost:8080/" + path;
         final InputStream input = new ByteArrayInputStream (testContent.getBytes());
 
-        final File f = indexer.update(testId, input).get();
+        final File f = indexer.update(new URI(testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -127,12 +125,12 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test
-    public void removeTest() throws IOException, InterruptedException, ExecutionException {
+    public void removeTest() throws Exception {
         final String path1 = "removeTest" +  randomUUID();
         final String path2 = "" + randomUUID();
         final String testId = path1 + "/" + path2;
         // should write empty file to disk
-        final File f = indexer.remove("http://localhost:8080/" + testId).get();
+        final File f = indexer.remove(new URI("http://localhost:8080/" + testId)).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -149,9 +147,9 @@ public class JcrXmlPersistenceIndexerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadId() throws IOException {
+    public void testBadId() throws Exception {
         final String testId = "testBadId/";
-        indexer.update(testId, null);
+        indexer.update(new URI(testId), null);
     }
 
 }

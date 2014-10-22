@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,8 +56,8 @@ public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer<InputStream
      * @return The file where the content was written.
     **/
     @Override
-    public Callable<File> updateSynch(final String id, final InputStream content) {
-        if (id.endsWith("/")) {
+    public Callable<File> updateSynch(final URI id, final InputStream content) {
+        if (id.toString().endsWith("/")) {
             throw new IllegalArgumentException("Identifiers for use with this indexer may not end in '/'!");
         }
 
@@ -76,7 +77,7 @@ public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer<InputStream
      * @param id The object's URI
     **/
     @Override
-    public Callable<File> removeSynch(final String id) {
+    public Callable<File> removeSynch(final URI id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
         return updateSynch(id, new ByteArrayInputStream("".getBytes()));

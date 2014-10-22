@@ -32,6 +32,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -92,8 +93,7 @@ public class SolrIndexerTest {
     }
 
     @Test
-    public void testMutatesWithBadResults() throws SolrServerException, IOException,
-        InterruptedException, ExecutionException {
+    public void testMutatesWithBadResults() throws Exception {
         final String id = "testBadUpdate:" + randomUUID();
         final SolrIndexer hold = testIndexer;
         when(mockServer.add(any(SolrInputDocument.class))).thenReturn(
@@ -106,9 +106,9 @@ public class SolrIndexerTest {
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 
-        UpdateResponse result = testIndexer.update(id, testContent).get();
+        UpdateResponse result = testIndexer.update(new URI(id), testContent).get();
         assertEquals("Got wrong update response code!", 1, result.getStatus());
-        result = testIndexer.remove(id).get();
+        result = testIndexer.remove(new URI(id)).get();
         assertEquals("Got wrong update response code!", 1, result.getStatus());
 
 
@@ -116,8 +116,7 @@ public class SolrIndexerTest {
     }
 
     @Test(expected = ExecutionException.class)
-    public void testUpdateThatExplodes() throws SolrServerException,
-        IOException, InterruptedException, ExecutionException {
+    public void testUpdateThatExplodes() throws Exception {
         final String id = "testExplodingUpdate:" + randomUUID();
         final SolrIndexer hold = testIndexer;
         // update failure
@@ -128,13 +127,12 @@ public class SolrIndexerTest {
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 
-        testIndexer.update(id, testContent).get();
+        testIndexer.update(new URI(id), testContent).get();
         testIndexer = hold;
     }
 
     @Test(expected = ExecutionException.class)
-    public void testUpdateWithAlternateExplosion() throws SolrServerException,
-        IOException, InterruptedException, ExecutionException {
+    public void testUpdateWithAlternateExplosion() throws Exception {
         final String id = "testExplodingUpdate2:" + randomUUID();
         final SolrIndexer hold = testIndexer;
         // update failure
@@ -145,23 +143,23 @@ public class SolrIndexerTest {
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
 
-        testIndexer.update(id, testContent).get();
+        testIndexer.update(new URI(id), testContent).get();
         testIndexer = hold;
     }
 
     @Test
-    public void testUpdate() throws SolrServerException, IOException, InterruptedException {
+    public void testUpdate() throws Exception {
         doUpdate("456");
 
     }
 
-    private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
+    private void doUpdate(final String pid) throws Exception {
         final Collection<String> values = asList(pid);
         final NamedFields testContent = new NamedFields(of("id", values));
         LOGGER.debug(
                 "Trying update operation with identifier: {} and content: \"{}\".",
                 pid, testContent);
-        testIndexer.update(pid, testContent);
+        testIndexer.update(new URI(pid), testContent);
 
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
@@ -178,10 +176,10 @@ public class SolrIndexerTest {
     }
 
     @Test
-    public void testRemove() throws IOException, SolrServerException, InterruptedException {
+    public void testRemove() throws Exception {
         final String pid = "123";
         doUpdate(pid);
-        testIndexer.remove(pid);
+        testIndexer.remove(new URI(pid));
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
         Boolean success = results.size() == 0;

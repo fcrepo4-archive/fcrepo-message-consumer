@@ -22,12 +22,11 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.fcrepo.indexer.NamedFields;
@@ -61,14 +60,14 @@ public class SolrIndexerIT {
     private static final long TIME_TO_WAIT_STEP = 1000;
 
     @Test
-    public void testUpdate() throws SolrServerException, IOException, InterruptedException {
+    public void testUpdate() throws Exception {
         doUpdate("123");
     }
 
-    private void doUpdate(final String pid) throws SolrServerException, IOException, InterruptedException {
+    private void doUpdate(final String pid) throws Exception {
         final Collection<String> values = asList(pid);
         final NamedFields testContent = new NamedFields(of("id", values));
-        solrIndexer.update(pid, testContent);
+        solrIndexer.update(new URI(pid), testContent);
         final SolrParams query = new SolrQuery("id:" + pid);
         List<SolrDocument> results = server.query(query).getResults();
         Boolean success = results.size() == 1;
@@ -85,9 +84,9 @@ public class SolrIndexerIT {
     }
 
     @Test
-    public void testRemove() throws IOException, SolrServerException, InterruptedException {
+    public void testRemove() throws Exception {
         doUpdate("345");
-        solrIndexer.remove("345");
+        solrIndexer.remove(new URI("345"));
         final SolrParams query = new SolrQuery("id:345");
         List<SolrDocument> results = server.query(query).getResults();
         Boolean success = results.size() == 0;

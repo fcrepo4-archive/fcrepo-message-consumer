@@ -20,6 +20,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.net.URI;
 import java.util.concurrent.Callable;
 
 import javax.annotation.PostConstruct;
@@ -74,25 +75,24 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
     }
 
     @Override
-    public Callable<ActionResponse> removeSynch(final String id) {
+    public Callable<ActionResponse> removeSynch(final URI id) {
         return new Callable<ActionResponse>() {
 
             @Override
             public ActionResponse call() {
                 return client.prepareDelete(getIndexName(),
-                        getSearchIndexType(), id).execute().actionGet();
+                        getSearchIndexType(), id.toString()).execute().actionGet();
             }
         };
     }
 
     @Override
-    public Callable<ActionResponse> updateSynch(final String id,
-            final NamedFields content) {
+    public Callable<ActionResponse> updateSynch(final URI id, final NamedFields content) {
         return new Callable<ActionResponse>() {
 
             @Override
             public ActionResponse call() {
-                return client.prepareIndex(indexName, searchIndexType, id)
+                return client.prepareIndex(indexName, searchIndexType, id.toString())
                         .execute().actionGet();
 
             }

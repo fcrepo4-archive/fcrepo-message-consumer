@@ -16,6 +16,7 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
+import java.net.URI;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -41,7 +42,7 @@ public interface Indexer<Content> {
      * @return the results of addition
      * @throws IOException
      */
-    public ListenableFuture<?> update(final String id, final Content content) throws IOException;
+    public ListenableFuture<?> update(final URI id, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
@@ -50,7 +51,7 @@ public interface Indexer<Content> {
      * @return the results of removal
      * @throws IOException
      */
-    public ListenableFuture<?> remove(final String id) throws IOException;
+    public ListenableFuture<?> remove(final URI id) throws IOException;
 
     /**
      * @return What kind of indexer this is.

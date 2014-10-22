@@ -22,6 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
@@ -84,8 +85,8 @@ public class RdfPersistenceIndexer extends BasePersistenceIndexer<Model, File> {
      * @return The file where the RDF was written.
     **/
     @Override
-    public Callable<File> updateSynch(final String id, final Model model) {
-        if (id.endsWith("/")) {
+    public Callable<File> updateSynch(final URI id, final Model model) {
+        if (id.toString().endsWith("/")) {
             throw new IllegalArgumentException("Identifiers for use with this indexer may not end in '/'!");
         }
 
@@ -106,7 +107,7 @@ public class RdfPersistenceIndexer extends BasePersistenceIndexer<Model, File> {
      * @param id the record's URI
     **/
     @Override
-    public Callable<File> removeSynch(final String id) {
+    public Callable<File> removeSynch(final URI id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
         return updateSynch(id, createDefaultModel());

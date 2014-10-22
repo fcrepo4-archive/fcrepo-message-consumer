@@ -17,9 +17,9 @@ package org.fcrepo.indexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
 import java.text.SimpleDateFormat;
 
 import org.junit.Before;
@@ -66,13 +66,13 @@ public class FileSerializerTest {
     }
 
     @Test
-    public void updateTest() throws IOException, InterruptedException, ExecutionException {
+    public void updateTest() throws Exception {
         final String testId = "updateTest" + randomUUID();
         final Collection<String> values = asList("value1", "value2");
         final NamedFields testContent =
             new NamedFields(of("testProperty", values));
 
-        final File f = serializer.update(testId, testContent).get();
+        final File f = serializer.update(new URI(testId), testContent).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -85,11 +85,11 @@ public class FileSerializerTest {
     }
 
     @Test
-    public void removeTest() throws IOException, InterruptedException, ExecutionException {
+    public void removeTest() throws Exception {
         final String testId = "removeTest" + randomUUID();
 
         // should write empty file to disk
-        final File f = serializer.remove(testId).get();
+        final File f = serializer.remove(new URI(testId)).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -113,9 +113,9 @@ public class FileSerializerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadId() throws IOException {
+    public void testBadId() throws Exception {
         final String testId = "testBadId/";
-        serializer.update(testId, null);
+        serializer.update(new URI(testId), null);
     }
 
     private static final Logger LOGGER = getLogger(FileSerializerTest.class);

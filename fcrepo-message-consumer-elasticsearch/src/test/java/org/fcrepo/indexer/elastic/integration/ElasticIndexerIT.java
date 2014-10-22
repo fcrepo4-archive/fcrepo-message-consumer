@@ -20,7 +20,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 
 import javax.inject.Inject;
@@ -55,14 +55,14 @@ public class ElasticIndexerIT {
     }
 
     @Test
-    public void testAddition() throws IOException {
+    public void testAddition() throws Exception {
         doAddition("testAddition");
     }
 
-    public void doAddition(final String id) throws IOException {
+    public void doAddition(final String id) throws Exception {
         final Collection<String> values = asList(id);
         final NamedFields testContent = new NamedFields(of("id", values));
-        testIndexer.update(id, testContent);
+        testIndexer.update(new URI(id), testContent);
         final GetResponse response =
             client.prepareGet(testIndexer.getIndexName(),
                     testIndexer.getSearchIndexType(), id).execute().actionGet();
@@ -70,7 +70,7 @@ public class ElasticIndexerIT {
     }
 
     @Test
-    public void testRemoval() throws IOException {
+    public void testRemoval() throws Exception {
         final String id = "testRemoval";
         doAddition(id);
         client.prepareDelete(testIndexer.getIndexName(),

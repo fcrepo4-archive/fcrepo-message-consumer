@@ -24,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -47,7 +48,7 @@ public class RdfRetriever implements Supplier<Model> {
 
     private static final String RDF_SERIALIZATION = contentTypeN3;
 
-    private final String identifier;
+    private final URI identifier;
 
     private final HttpClient httpClient;
 
@@ -57,7 +58,7 @@ public class RdfRetriever implements Supplier<Model> {
      * @param identifier
      * @param client
      */
-    public RdfRetriever(final String identifier, final HttpClient client) {
+    public RdfRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
     }

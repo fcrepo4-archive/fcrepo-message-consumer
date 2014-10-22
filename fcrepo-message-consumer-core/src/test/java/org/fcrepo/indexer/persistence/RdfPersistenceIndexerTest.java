@@ -26,7 +26,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+import java.net.URI;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -64,11 +64,11 @@ public class RdfPersistenceIndexerTest {
     }
 
     @Test
-    public void updateTest() throws IOException, InterruptedException, ExecutionException {
+    public void updateTest() throws Exception {
         final String testId = "updateTest" + randomUUID();
         final Model input = testModel(testId);
 
-        final File f = indexer.update(serverAddress + testId, input).get();
+        final File f = indexer.update(new URI(serverAddress + testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -80,14 +80,13 @@ public class RdfPersistenceIndexerTest {
     }
 
     @Test
-    public void updateWithHierarchyPathTest()
-            throws IOException, InterruptedException, ExecutionException {
+    public void updateWithHierarchyPathTest() throws Exception {
         final String path1 = "updateHier" +  randomUUID();
         final String path2 = "" + randomUUID();
         final String testId = serverAddress + path1 + "/" + path2;
         final Model input = testModel(testId);
 
-        final File f = indexer.update(testId, input).get();
+        final File f = indexer.update(new URI(testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -104,12 +103,12 @@ public class RdfPersistenceIndexerTest {
     }
 
     @Test
-    public void removeTest() throws IOException, InterruptedException, ExecutionException {
+    public void removeTest() throws Exception {
         final String path1 = "removeTest" +  randomUUID();
         final String path2 = "" + randomUUID();
         final String testId = path1 + "/" + path2;
         // should write empty file to disk
-        final File f = indexer.remove(serverAddress + testId).get();
+        final File f = indexer.remove(new URI(serverAddress + testId)).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -126,9 +125,9 @@ public class RdfPersistenceIndexerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadId() throws IOException {
+    public void testBadId() throws Exception {
         final String testId = "testBadId/";
-        indexer.update(testId, null);
+        indexer.update(new URI(testId), null);
     }
 
     private static String testContent(final String id) {

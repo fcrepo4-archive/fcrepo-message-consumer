@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -95,18 +97,18 @@ public class NamedFieldsRetrieverTest {
     }
 
     @Test(expected = AbsentTransformPropertyException.class)
-    public void testShouldntRetrieve() {
+    public void testShouldntRetrieve() throws URISyntaxException {
         final String testUri = "http://example.com/testShouldntRetrieve";
         final Model mockRdf =
             createDefaultModel().add(
                     createDefaultModel().asStatement(testTriple));
         when(mockRetriever.get()).thenReturn(mockRdf);
-        new NamedFieldsRetriever(testUri, mockClient, mockRetriever).get();
+        new NamedFieldsRetriever(new URI(testUri), mockClient, mockRetriever).get();
 
     }
 
     @Test(expected = RuntimeException.class)
-    public void testBadTransform() throws IOException {
+    public void testBadTransform() throws Exception {
         final String testUri = "indexing:testBadTransform";
         final String testRdf = dc_rdf.replace("<>", "<" + testUri + ">");
         LOGGER.debug("Using test RDF: {}", testRdf);
@@ -118,12 +120,12 @@ public class NamedFieldsRetrieverTest {
         when(mockClient.execute(any(HttpUriRequest.class))).thenReturn(
                 mockResponse);
         when(mockStatusLine.getStatusCode()).thenReturn(SC_NOT_FOUND);
-        new NamedFieldsRetriever(testUri, mockClient, mockRetriever).get();
+        new NamedFieldsRetriever(new URI(testUri), mockClient, mockRetriever).get();
 
     }
 
     @Test
-    public void testGoodTransform() throws IOException {
+    public void testGoodTransform() throws Exception {
         final String testUri = "indexing:testBadTransform";
         final String testRdf = dc_rdf.replace("<>", "<" + testUri + ">");
         LOGGER.debug("Using test RDF: {}", testRdf);
@@ -143,7 +145,7 @@ public class NamedFieldsRetrieverTest {
             when(mockEntity.getContent()).thenReturn(mockJson);
         }
         final NamedFields results =
-            new NamedFieldsRetriever(testUri, mockClient, mockRetriever).get();
+            new NamedFieldsRetriever(new URI(testUri), mockClient, mockRetriever).get();
         LOGGER.debug("Received results: {}", results);
         assertEquals(testUri, results.get("id").iterator().next());
     }

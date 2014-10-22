@@ -21,6 +21,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -58,10 +59,10 @@ public abstract class BasePersistenceIndexer<Content, File> extends SynchIndexer
      * Return the path where a given record should be persisted.
      * @param id The record's URI
     **/
-    protected Path pathFor(final String id) throws IOException {
+    protected Path pathFor(final URI id) throws IOException {
 
         // strip the http protocol and replace column(:) in front of the port number
-        String fullPath = id.substring(id.indexOf("//") + 2);
+        String fullPath = id.toString().substring(id.toString().indexOf("//") + 2);
         fullPath = StringUtils.substringBefore(fullPath, "/").replace(":", "/") +
                 "/" + StringUtils.substringAfter(fullPath, "/");
         // URL encode the id
