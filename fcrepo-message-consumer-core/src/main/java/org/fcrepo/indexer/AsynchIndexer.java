@@ -18,6 +18,7 @@ package org.fcrepo.indexer;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * An {@link Indexer} that executes its operation asynchronously.
  *
  * @author ajs6f
- * @date Dec 8, 2013
+ * @since Dec 8, 2013
  *
  * @param <Content> the type of content to index
  * @param <Result> the type of response to expect from an operation
@@ -46,8 +47,7 @@ public abstract class AsynchIndexer<Content, Result> implements
     public abstract ListeningExecutorService executorService();
 
     @Override
-    public ListenableFuture<Result> update(final String identifier,
-        final Content content) throws IOException {
+    public ListenableFuture<Result> update(final URI identifier, final Content content) throws IOException {
         LOGGER.debug("Received update for identifier: {}", identifier);
 
         final ListenableFutureTask<Result> task =
@@ -67,8 +67,7 @@ public abstract class AsynchIndexer<Content, Result> implements
     }
 
     @Override
-    public ListenableFuture<Result> remove(final String identifier)
-        throws IOException {
+    public ListenableFuture<Result> remove(final URI identifier) throws IOException {
         LOGGER.debug("Received remove for identifier: {}", identifier);
         final ListenableFutureTask<Result> task =
             ListenableFutureTask.create(removeSynch(identifier));
@@ -88,14 +87,13 @@ public abstract class AsynchIndexer<Content, Result> implements
      * @param identifier
      * @return
      */
-    public abstract Callable<Result> removeSynch(final String identifier);
+    public abstract Callable<Result> removeSynch(final URI identifier);
 
     /**
      * @param identifier
      * @param content
      * @return
      */
-    public abstract Callable<Result> updateSynch(final String identifier,
-            final Content content);
+    public abstract Callable<Result> updateSynch(final URI identifier, final Content content);
 
 }

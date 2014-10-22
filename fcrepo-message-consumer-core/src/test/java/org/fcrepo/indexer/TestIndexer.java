@@ -19,6 +19,7 @@ import static org.fcrepo.indexer.Indexer.IndexerType.NO_CONTENT;
 import static org.fcrepo.indexer.Indexer.NoContent;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -32,14 +33,14 @@ import org.slf4j.Logger;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Nov 25, 2013
+ * @since Nov 25, 2013
  **/
 public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
 
     private static final Logger LOGGER = getLogger(TestIndexer.class);
 
-    private final Set<String> updates = new HashSet<>();
-    private final Set<String> removes = new HashSet<>();
+    private final Set<URI> updates = new HashSet<>();
+    private final Set<URI> removes = new HashSet<>();
 
     public void clear() {
         LOGGER.debug("Clearing updates and removes");
@@ -48,8 +49,7 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     }
 
     @Override
-    public Callable<Boolean> updateSynch(final String identifier,
-        final NoContent content) {
+    public Callable<Boolean> updateSynch(final URI identifier, final NoContent content) {
         LOGGER.debug("Received update for identifier: {}", identifier);
         return new Callable<Boolean>() {
 
@@ -63,7 +63,7 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     }
 
     @Override
-    public Callable<Boolean> removeSynch(final String identifier) {
+    public Callable<Boolean> removeSynch(final URI identifier) {
         LOGGER.debug("Received remove for identifier: {}", identifier);
         return new Callable<Boolean>() {
 
@@ -81,7 +81,7 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     /**
      * Test whether an update message has been received for a PID.
     **/
-    public boolean receivedUpdate(final String id) {
+    public boolean receivedUpdate(final URI id) {
         LOGGER.debug("Checked whether we received an update for: {}, {}", id,
                 updates.contains(id));
         return updates.contains(id);
@@ -90,7 +90,7 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
     /**
      * Test whether a remove message has been received for a PID.
     **/
-    public boolean receivedRemove(final String id) {
+    public boolean receivedRemove(final URI id) {
         LOGGER.debug("Checked whether we received a remove for: {}, {}", id,
                 removes.contains(id));
         return removes.contains(id);

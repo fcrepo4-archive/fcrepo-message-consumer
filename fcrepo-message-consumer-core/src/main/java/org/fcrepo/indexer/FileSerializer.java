@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
@@ -38,7 +39,7 @@ import org.slf4j.Logger;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
 **/
 public class FileSerializer extends SynchIndexer<NamedFields, File> {
 
@@ -74,15 +75,15 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
      * @return
     **/
     @Override
-    public Callable<File> updateSynch(final String id, final NamedFields content) {
+    public Callable<File> updateSynch(final URI id, final NamedFields content) {
 
-        if (id.endsWith("/")) {
+        if (id.toString().endsWith("/")) {
             throw new IllegalArgumentException(
                     "Identifiers for use with this indexer may not end in '/'!");
         }
 
         // timestamped filename
-        String fn = id + "@" + fmt.format(new Date());
+        String fn = id.toString() + "@" + fmt.format(new Date());
         if (fn.indexOf('/') != -1) {
             fn = substringAfterLast(fn, "/");
         }
@@ -117,7 +118,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
      * Remove the object from the index.
     **/
     @Override
-    public Callable<File> removeSynch(final String id) {
+    public Callable<File> removeSynch(final URI id) {
         // empty update
         LOGGER.debug("Received remove for identifier: {}", id);
         return updateSynch(id, new NamedFields());

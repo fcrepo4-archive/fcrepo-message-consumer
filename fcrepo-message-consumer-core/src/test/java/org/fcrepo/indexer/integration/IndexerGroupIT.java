@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.net.URI;
 import javax.inject.Inject;
 
 import org.apache.http.HttpResponse;
@@ -39,7 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -79,14 +80,13 @@ public class IndexerGroupIT extends IndexingIT {
 
         final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedUpdate(uri)
-                    && (currentTimeMillis() - start < TIMEOUT)) {
+            while (!testIndexer.receivedUpdate(new URI(uri)) && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
         assertTrue("Test indexer should have received an update message for " + uri + "!", testIndexer
-                .receivedUpdate(uri));
+                .receivedUpdate(new URI(uri)));
         LOGGER.debug("Received update at test indexer for identifier: {}", uri);
 
     }
@@ -105,14 +105,14 @@ public class IndexerGroupIT extends IndexingIT {
 
         final Long start = currentTimeMillis();
         synchronized (testIndexer) {
-            while (!testIndexer.receivedRemove(uri)
+            while (!testIndexer.receivedRemove(new URI(uri))
                     && (currentTimeMillis() - start < TIMEOUT)) {
                 LOGGER.debug("Waiting for next notification from TestIndexer...");
                 testIndexer.wait(1000);
             }
         }
         assertTrue("Test indexer should have received remove message for " + uri + "!", testIndexer
-                .receivedRemove(uri));
+                .receivedRemove(new URI(uri)));
         LOGGER.debug("Received remove at test indexer for identifier: {}", uri);
 
 
@@ -131,20 +131,20 @@ public class IndexerGroupIT extends IndexingIT {
         testIndexer.clear();
 
         // reindex everything
-        indexerGroup.reindex(serverAddress, true);
+        indexerGroup.reindex(new URI(serverAddress), true);
 
         // records should be reindexed
         synchronized (testIndexer) {
             for ( String pid : pids ) {
                 final String uri = serverAddress + pid;
                 final Long start = currentTimeMillis();
-                while (!testIndexer.receivedUpdate(uri) && (currentTimeMillis() - start < TIMEOUT)) {
+                while (!testIndexer.receivedUpdate(new URI(uri)) && (currentTimeMillis() - start < TIMEOUT)) {
                     LOGGER.debug("Waiting for " + uri);
                     testIndexer.wait(1000);
                 }
 
                 assertTrue("Record should have been reindexed: " + uri,
-                        testIndexer.receivedUpdate(uri));
+                        testIndexer.receivedUpdate(new URI(uri)));
             }
         }
     }

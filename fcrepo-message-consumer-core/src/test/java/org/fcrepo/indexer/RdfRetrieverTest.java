@@ -31,6 +31,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -75,7 +77,7 @@ public class RdfRetrieverTest {
     }
 
     @Test
-    public void testSimpleRetrieval() throws IOException {
+    public void testSimpleRetrieval() throws Exception {
         final String testId = "testSimpleRetrieval";
         final Model input = createDefaultModel();
         input.add(input.asStatement(testTriple));
@@ -89,40 +91,40 @@ public class RdfRetrieverTest {
             }
         }
 
-        testRetriever = new RdfRetriever(testId, mockClient);
+        testRetriever = new RdfRetriever(new URI(testId), mockClient);
         final Model result = testRetriever.get();
         assertTrue("Didn't find our test triple!", result.contains(result
                 .asStatement(testTriple)));
     }
 
     @Test(expected = RuntimeException.class)
-    public void testFailedRetrieval() {
+    public void testFailedRetrieval() throws URISyntaxException {
         final String testId = "testFailedRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_NOT_FOUND);
-        new RdfRetriever(testId, mockClient).get();
+        new RdfRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testOtherFailedRetrieval() throws IOException {
+    public void testOtherFailedRetrieval() throws Exception {
         final String testId = "testFailedRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenThrow(new IOException());
-        new RdfRetriever(testId, mockClient).get();
+        new RdfRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testYetOtherFailedRetrieval() throws IOException {
+    public void testYetOtherFailedRetrieval() throws Exception {
         final String testId = "testFailedRetrieval";
         reset(mockClient);
         when(mockClient.execute(any(HttpUriRequest.class))).thenThrow(
                 new IOException());
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenThrow(new IOException());
-        new RdfRetriever(testId, mockClient).get();
+        new RdfRetriever(new URI(testId), mockClient).get();
     }
 
     @Test
-    public void testAuthRetrieval() throws IOException {
+    public void testAuthRetrieval() throws Exception {
         final String testId = "testAuthRetrieval";
         final Model input = createDefaultModel();
         input.add(input.asStatement(testTriple));
@@ -135,13 +137,13 @@ public class RdfRetrieverTest {
                 when(mockEntity.getContent()).thenReturn(rdf);
             }
         }
-        new RdfRetriever(testId, mockClient).get();
+        new RdfRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testAuthForbiddenRetrieval() {
+    public void testAuthForbiddenRetrieval() throws URISyntaxException {
         final String testId = "testAuthForbiddenRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_FORBIDDEN);
-        new RdfRetriever(testId, mockClient).get();
+        new RdfRetriever(new URI(testId), mockClient).get();
     }
 }

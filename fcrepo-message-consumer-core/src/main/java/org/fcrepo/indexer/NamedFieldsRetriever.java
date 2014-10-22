@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.net.URI;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -43,11 +44,11 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * For use with indexers like Solr.
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
-    private final String uri;
+    private final URI uri;
 
     private final HttpClient httpClient;
 
@@ -66,7 +67,7 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
      * @param rdfr Used to determine the transform to use with this indexing
      *        step
      */
-    public NamedFieldsRetriever(final String uri, final HttpClient client,
+    public NamedFieldsRetriever(final URI uri, final HttpClient client,
         final Supplier<Model> rdfr) {
         this.uri = uri;
         this.httpClient = client;
@@ -84,21 +85,21 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
         LOGGER.debug("Retrieving RDF representation for: {}", uri);
         try {
             final Model rdf = rdfr.get();
-            if (!rdf.contains(createResource(uri), INDEXING_TRANSFORM_PREDICATE)) {
+            if (!rdf.contains(createResource(uri.toString()), INDEXING_TRANSFORM_PREDICATE)) {
                 LOGGER.info(
                         "Found no property locating LDPath transform for: {}, will not retrieve transformed content.",
                         uri);
-                throw new AbsentTransformPropertyException(uri);
+                throw new AbsentTransformPropertyException(uri.toString());
             }
             final RDFNode indexingTransform =
-                rdf.listObjectsOfProperty(createResource(uri),
+                rdf.listObjectsOfProperty(createResource(uri.toString()),
                         INDEXING_TRANSFORM_PREDICATE).next();
             final String transformKey =
                 indexingTransform.asLiteral().getString();
 
             LOGGER.debug("Discovered transform key: {}", transformKey);
             final HttpGet transformedResourceRequest =
-                new HttpGet(uri + "/fcr:transform/" + transformKey);
+                new HttpGet(uri.toString() + "/fcr:transform/" + transformKey);
             LOGGER.debug("Retrieving transformed resource from: {}",
                     transformedResourceRequest.getURI());
 

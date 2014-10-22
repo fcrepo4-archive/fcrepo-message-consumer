@@ -20,7 +20,7 @@ package org.apache.lucene.search;
  * from bombing in the absence of particular Lucene versions.
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public class DefaultSimilarity {
 

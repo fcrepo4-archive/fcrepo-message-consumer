@@ -25,6 +25,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -53,7 +54,7 @@ import org.slf4j.Logger;
  *
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
 **/
 public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
@@ -77,8 +78,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * @content RDF in N3 format.
     **/
     @Override
-    public Callable<Void> updateSynch(final String pid,
-        final Model model) {
+    public Callable<Void> updateSynch(final URI pid, final Model model) {
         LOGGER.debug("Received update for: {}", pid);
         removeSynch(pid);
         // build a list of triples
@@ -98,11 +98,11 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * all triples with subjects starting with the same subject.
     **/
     @Override
-    public Callable<Void> removeSynch(final String subject) {
+    public Callable<Void> removeSynch(final URI subject) {
 
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
-        final String describeQuery = "DESCRIBE <" + subject + ">";
+        final String describeQuery = "DESCRIBE <" + subject.toString() + ">";
         final QueryEngineHTTP qexec = buildQueryEngineHTTP(describeQuery);
         final Iterator<Triple> results = qexec.execDescribeTriples();
 
@@ -146,13 +146,13 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
      * with resource-URI, plus an option suffix starting with a hash (#) or slash (/)
      * suffix.
     **/
-    private boolean matches( final String resource, final String candidate) {
+    private boolean matches( final URI resource, final String candidate) {
         // All triples that will match this logic are ones that:
         // - have a candidate subject or object that equals the target resource of removal, or
         // - have a candidate subject or object that is prefixed with the resource of removal
         //    (therefore catching all children).
-        return resource.equals(candidate) || candidate.startsWith(resource + "/")
-            || candidate.startsWith(resource + "#");
+        return resource.toString().equals(candidate) || candidate.startsWith(resource.toString() + "/")
+            || candidate.startsWith(resource.toString() + "#");
     }
 
     private Callable<Void> exec(final UpdateRequest update) {

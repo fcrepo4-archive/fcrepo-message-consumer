@@ -41,7 +41,7 @@ import com.google.gson.stream.JsonWriter;
  * Deserializes JSON maps
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 

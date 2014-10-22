@@ -16,4 +16,5 @@ transaction.log
 velocity.log
 fcrepo4-data/
 fcrepo4-jcrxml/
+fcrepo4-rdf/
 activemq-data/

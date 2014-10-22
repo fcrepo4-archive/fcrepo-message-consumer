@@ -42,6 +42,7 @@ import javax.jms.MessageListener;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,7 +69,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19 2013
+ * @since Aug 19 2013
  **/
 public class IndexerGroup implements MessageListener {
 
@@ -77,7 +78,7 @@ public class IndexerGroup implements MessageListener {
     @VisibleForTesting
     protected final Set<Indexer<Object>> indexers;
 
-    private Set<String> reindexed;
+    private Set<URI> reindexed;
 
     /**
      * Identifier message header
@@ -249,7 +250,9 @@ public class IndexerGroup implements MessageListener {
                 baseURL = baseURL.substring(0, baseURL.length() - 1);
             }
 
-            index( baseURL + id, eventType );
+            index( new URI(baseURL + id), eventType );
+        } catch (final URISyntaxException e) {
+            LOGGER.error("Error creating URI", e);
         } catch (final JMSException e) {
             LOGGER.error("Error processing JMS event!", e);
         }
@@ -258,9 +261,9 @@ public class IndexerGroup implements MessageListener {
     /**
      * Index a resource.
     **/
-    private void index( final String uri, final String eventType ) {
+    private void index( final URI uri, final String eventType ) throws URISyntaxException {
         final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);
-        final HttpClient httpClient = httpClient(uri);
+        final HttpClient httpClient = httpClient(uri.toString());
         LOGGER.debug("It is {} that this is a removal operation.", removal);
         final Supplier<Model> rdfr =
             memoize(new RdfRetriever(uri, httpClient));
@@ -272,7 +275,7 @@ public class IndexerGroup implements MessageListener {
 
         if (!removal) {
             final Model rdf = rdfr.get();
-            if (rdf.contains(createResource(uri), type, INDEXABLE_MIXIN)) {
+            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)) {
                 LOGGER.debug("Resource: {} retrieved with indexable type.",
                         uri);
                 indexable = true;
@@ -283,8 +286,9 @@ public class IndexerGroup implements MessageListener {
             }
 
             // if this is a datastream, also index the parent object
-            if (rdf.contains(createResource(uri), type, DATASTREAM_TYPE) && uri.indexOf("/fedora:system/") == -1 ) {
-                final String parent = uri.substring(0, uri.lastIndexOf("/"));
+            if (rdf.contains(createResource(uri.toString()), type, DATASTREAM_TYPE)
+                    && uri.toString().indexOf("/fedora:system/") == -1 ) {
+                final URI parent = new URI(uri.toString().substring(0, uri.toString().lastIndexOf("/")));
                 LOGGER.info("Datastream found, also indexing parent {}", parent);
                 index( parent, "NODE_UPDATED");
             }
@@ -359,12 +363,12 @@ public class IndexerGroup implements MessageListener {
      * @param uri The resource URI to reindex.
      * @param recursive If true, also recursively reindex all children.
     **/
-    public void reindex( final String uri, final boolean recursive ) {
+    public void reindex( final URI uri, final boolean recursive ) throws URISyntaxException {
         reindexed = new HashSet<>();
         reindexURI( uri, recursive );
     }
 
-    private void reindexURI( final String uri, final boolean recursive ) {
+    private void reindexURI( final URI uri, final boolean recursive ) throws URISyntaxException {
         LOGGER.debug("Reindexing {}, recursive: {}", uri, recursive);
         if ( !reindexed.contains(uri) ) {
             // index() will check for indexable mixin
@@ -377,11 +381,11 @@ public class IndexerGroup implements MessageListener {
         // check for children (rdf should be cached...)
         if ( recursive ) {
             final Supplier<Model> rdfr
-                = memoize(new RdfRetriever(uri, httpClient(uri)));
+                = memoize(new RdfRetriever(uri, httpClient(uri.toString())));
             final Model model = rdfr.get();
             final NodeIterator children = model.listObjectsOfProperty( CONTAINS );
             while ( children.hasNext() ) {
-                final String child = children.nextNode().asResource().getURI();
+                final URI child = new URI(children.nextNode().asResource().getURI());
                 if ( !reindexed.contains(child) ) {
                     reindexURI( child, true );
                 }

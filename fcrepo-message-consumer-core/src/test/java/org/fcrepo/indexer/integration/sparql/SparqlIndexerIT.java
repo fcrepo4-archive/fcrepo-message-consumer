@@ -16,6 +16,7 @@
 package org.fcrepo.indexer.integration.sparql;
 
 import java.io.StringReader;
+import java.net.URI;
 
 import javax.inject.Inject;
 
@@ -62,7 +63,7 @@ public class SparqlIndexerIT {
     @Test
     public void indexerTest() throws Exception {
         // add triples
-        sparqlIndexer.update(uri, createDefaultModel().read(
+        sparqlIndexer.update(new URI(uri), createDefaultModel().read(
                 new StringReader(fooRDF), "", "N3"));
 
         waitForTriples(3);
@@ -79,7 +80,7 @@ public class SparqlIndexerIT {
         assertTrue("Triple should return from search!", countQueryTriples(sparqlQuery) > 0 );
 
         // remove object
-        sparqlIndexer.remove(uri);
+        sparqlIndexer.remove(new URI(uri));
 
         waitForTriples(0);
 

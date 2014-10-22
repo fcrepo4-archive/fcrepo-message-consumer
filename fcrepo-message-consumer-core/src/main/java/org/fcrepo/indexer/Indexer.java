@@ -16,6 +16,7 @@
 package org.fcrepo.indexer;
 
 import java.io.IOException;
+import java.net.URI;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -26,7 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  *
  * @param <Content> the type of content to index
  *
@@ -41,7 +42,7 @@ public interface Indexer<Content> {
      * @return the results of addition
      * @throws IOException
      */
-    public ListenableFuture<?> update(final String id, final Content content) throws IOException;
+    public ListenableFuture<?> update(final URI id, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
@@ -50,7 +51,7 @@ public interface Indexer<Content> {
      * @return the results of removal
      * @throws IOException
      */
-    public ListenableFuture<?> remove(final String id) throws IOException;
+    public ListenableFuture<?> remove(final URI id) throws IOException;
 
     /**
      * @return What kind of indexer this is.
@@ -61,7 +62,7 @@ public interface Indexer<Content> {
      * Types of content processed by {@link Indexer}s.
      *
      * @author ajs6f
-     * @date Dec 14, 2013
+     * @since Dec 14, 2013
      */
     public static enum IndexerType {
         NAMEDFIELDS, RDF, NO_CONTENT, JCRXML_PERSISTENCE
@@ -71,7 +72,7 @@ public interface Indexer<Content> {
      * Class for indexers that do not actually accept content.
      *
      * @author ajs6f
-     * @date Dec 14, 2013
+     * @since Dec 14, 2013
      */
     public static interface NoContent {
 

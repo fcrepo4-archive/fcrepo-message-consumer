@@ -33,13 +33,15 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
 
 /**
  * @author Andrew Woods
- * @date Feb 04 2014
+ * @since Feb 04 2014
  */
 public class SparqlIndexerTest {
 
@@ -59,8 +61,8 @@ public class SparqlIndexerTest {
     }
 
     @Test
-    public void testRemoveSynch() {
-        testIndexer.removeSynch("info://obj-0");
+    public void testRemoveSynch() throws URISyntaxException {
+        testIndexer.removeSynch(new URI("info://obj-0"));
 
         final String cmd0 = "DELETE WHERE { <" + createURI("info://obj-0") + "> ?p ?o }";
         final String cmd1 = "DELETE WHERE { <" + createURI("info://obj-0/fcr:content") + "> ?p ?o }";
@@ -71,10 +73,10 @@ public class SparqlIndexerTest {
     }
 
     @Test
-    public void testUpdateSynch() {
+    public void testUpdateSynch() throws URISyntaxException {
         // TODO: This is a mere placeholder test to be further implemented later.
         final Model model = ModelFactory.createDefaultModel();
-        testIndexer.updateSynch("", model);
+        testIndexer.updateSynch( new URI(""), model);
     }
 
     @Mock

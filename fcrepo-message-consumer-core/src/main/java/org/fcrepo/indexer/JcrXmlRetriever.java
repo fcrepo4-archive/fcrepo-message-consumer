@@ -21,6 +21,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -37,7 +38,7 @@ import com.google.common.base.Supplier;
  */
 public class JcrXmlRetriever implements Supplier<InputStream> {
 
-    private final String identifier;
+    private final URI identifier;
 
     private final HttpClient httpClient;
 
@@ -48,7 +49,7 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
      * @param identifier
      * @param client
      */
-    public JcrXmlRetriever(final String identifier, final HttpClient client) {
+    public JcrXmlRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;
     }
@@ -58,7 +59,7 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
      * Retrieve jcr/xml with no binary contents from the repository
      */
     public InputStream get() {
-        final HttpUriRequest request = new HttpGet(identifier + "/fcr:export?skipBinary=true");
+        final HttpUriRequest request = new HttpGet(identifier.toString() + "/fcr:export?skipBinary=true");
         LOGGER.debug("Retrieving jcr/xml content from: {}...", request.getURI());
         try {
             final HttpResponse response = httpClient.execute(request);

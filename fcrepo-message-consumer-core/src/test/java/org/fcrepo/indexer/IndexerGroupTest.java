@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,7 +43,6 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -112,7 +112,7 @@ public class IndexerGroupTest {
         final String id = "/test1";
         indexerGroup.onMessage(createUnindexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
-        verify(indexer, never()).update(anyString(), any());
+        verify(indexer, never()).update(any(URI.class), any());
     }
 
     @Test
@@ -121,7 +121,7 @@ public class IndexerGroupTest {
         final String id = "/test2";
         indexerGroup.onMessage(createIndexableMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(NODE_ADDED).toString(), id));
-        verify(indexer, atLeastOnce()).update(anyString(), any());
+        verify(indexer, atLeastOnce()).update(any(URI.class), any());
     }
 
     @Test
@@ -130,15 +130,15 @@ public class IndexerGroupTest {
         final String id = "/test3";
         indexerGroup.onMessage(createIndexablePropertyMessage(REPOSITORY_NAMESPACE
                 + EventType.valueOf(PROPERTY_CHANGED).toString(), id));
-        verify(indexer, atLeastOnce()).update(anyString(), any());
+        verify(indexer, atLeastOnce()).update(any(URI.class), any());
     }
 
     @Test
     public void testReindex() throws Exception {
         mockContent("", true, null);
         when(indexer.getIndexerType()).thenReturn(Indexer.IndexerType.RDF);
-        indexerGroup.reindex(repoUrl,true);
-        verify(indexer,atLeastOnce()).update(eq(repoUrl), any());
+        indexerGroup.reindex(new URI(repoUrl),true);
+        verify(indexer,atLeastOnce()).update(eq(new URI(repoUrl)), any());
     }
 
     private Message createUnindexableMessage(final String eventType, final String identifier) throws Exception {

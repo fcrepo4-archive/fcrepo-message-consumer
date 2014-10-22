@@ -24,6 +24,7 @@ import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -47,7 +48,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  *
  * @author ajs6f
  * @author yecao
- * @date Nov 2013
+ * @since Nov 2013
  */
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 
@@ -80,8 +81,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     }
 
     @Override
-    public Callable<UpdateResponse> updateSynch(final String id,
-        final NamedFields fields) {
+    public Callable<UpdateResponse> updateSynch(final URI id, final NamedFields fields) {
         LOGGER.debug("Received request for update to: {}", id);
         return new Callable<UpdateResponse>() {
 
@@ -92,7 +92,7 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
                             "Executing request to Solr index for identifier: {} with fields: {}",
                             id, fields);
                     // add the identifier of the resource as a unique index-key
-                    fields.put("id", asList(id));
+                    fields.put("id", asList(id.toString()));
                     // pack the fields into a Solr input doc
                     final SolrInputDocument inputDoc = fromMap(fields);
                     LOGGER.debug("Created SolrInputDocument: {}", inputDoc);
@@ -138,23 +138,23 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
         };
 
     @Override
-    public Callable<UpdateResponse> removeSynch(final String pid) {
-        LOGGER.debug("Received request for removal of: {}", pid);
+    public Callable<UpdateResponse> removeSynch(final URI uri) {
+        LOGGER.debug("Received request for removal of: {}", uri);
         return new Callable<UpdateResponse>() {
 
             @Override
             public UpdateResponse call() {
                 try {
-                    final UpdateResponse resp = server.deleteById(pid);
+                    final UpdateResponse resp = server.deleteById(uri.toString());
                     if (resp.getStatus() == 0) {
                         LOGGER.debug("Remove request was successful for: {}",
-                                pid);
+                                uri);
                         server.commit();
 
                     } else {
                         LOGGER.error(
-                                "Remove request has error, code: {} for pid: {}",
-                                resp.getStatus(), pid);
+                                "Remove request has error, code: {} for uri: {}",
+                                resp.getStatus(), uri);
                     }
                     return resp;
                 } catch (final SolrServerException | IOException e) {

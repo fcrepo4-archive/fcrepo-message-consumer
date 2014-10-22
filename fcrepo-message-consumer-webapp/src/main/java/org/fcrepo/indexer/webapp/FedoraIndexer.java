@@ -19,8 +19,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 import org.slf4j.Logger;
 
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -63,11 +63,14 @@ public class FedoraIndexer extends HttpServlet {
 
         String message;
         try {
-            final URL url = new URL( baseURI );
-            indexer.reindex( url.toString(), recursive );
+            final URI uri = new URI( baseURI );
+            indexer.reindex( uri, recursive );
             message = "Reindexing started";
-        } catch ( MalformedURLException ex ) {
+        } catch ( NullPointerException ex ) {
             message = "Error: the baseURI parameter must be specified";
+            response.setStatus(response.SC_BAD_REQUEST);
+        } catch ( URISyntaxException ex ) {
+            message = "Error: the baseURI is invalid";
             response.setStatus(response.SC_BAD_REQUEST);
         }
 

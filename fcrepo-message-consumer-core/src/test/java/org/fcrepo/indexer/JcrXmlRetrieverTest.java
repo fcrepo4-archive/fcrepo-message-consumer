@@ -28,6 +28,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -71,13 +73,13 @@ public class JcrXmlRetrieverTest {
     }
 
     @Test
-    public void testSimpleRetrieval() throws IOException {
+    public void testSimpleRetrieval() throws Exception {
         final String testId = "testSimpleRetrieval";
         final InputStream input = new ByteArrayInputStream (testContent.getBytes());
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenReturn(input);
 
-        testRetriever = new JcrXmlRetriever(testId, mockClient);
+        testRetriever = new JcrXmlRetriever(new URI(testId), mockClient);
         final InputStream result = testRetriever.get();
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         int ch;
@@ -90,34 +92,34 @@ public class JcrXmlRetrieverTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testFailedRetrieval() {
+    public void testFailedRetrieval() throws URISyntaxException {
         final String testId = "testFailedRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_NOT_FOUND);
-        new JcrXmlRetriever(testId, mockClient).get();
+        new JcrXmlRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testOtherFailedRetrieval() throws IOException {
+    public void testOtherFailedRetrieval() throws Exception {
         final String testId = "testFailedRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenThrow(new IOException());
-        new JcrXmlRetriever(testId, mockClient).get();
+        new JcrXmlRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testYetOtherFailedRetrieval() throws IOException {
+    public void testYetOtherFailedRetrieval() throws Exception {
         final String testId = "testFailedRetrieval";
         reset(mockClient);
         when(mockClient.execute(any(HttpUriRequest.class))).thenThrow(new IOException());
         when(mockStatusLine.getStatusCode()).thenReturn(SC_OK);
         when(mockEntity.getContent()).thenThrow(new IOException());
-        new JcrXmlRetriever(testId, mockClient).get();
+        new JcrXmlRetriever(new URI(testId), mockClient).get();
     }
 
     @Test(expected = RuntimeException.class)
-    public void testAuthForbiddenRetrieval() {
+    public void testAuthForbiddenRetrieval() throws URISyntaxException {
         final String testId = "testAuthForbiddenRetrieval";
         when(mockStatusLine.getStatusCode()).thenReturn(SC_FORBIDDEN);
-        new JcrXmlRetriever(testId, mockClient).get();
+        new JcrXmlRetriever(new URI(testId), mockClient).get();
     }
 }

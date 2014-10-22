@@ -15,9 +15,10 @@
  */
 package org.fcrepo.indexer.persistence;
 
+import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.UUID.randomUUID;
-import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
+import static org.fcrepo.indexer.Indexer.IndexerType.RDF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -25,9 +26,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URLEncoder;
+
+import com.hp.hpl.jena.rdf.model.Model;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,21 +41,19 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @since Aug 19, 2013
  */
-public class JcrXmlPersistenceIndexerTest {
+public class RdfPersistenceIndexerTest {
 
-    private static final Logger LOGGER = getLogger(JcrXmlPersistenceIndexerTest.class);
+    private static final Logger LOGGER = getLogger(RdfPersistenceIndexerTest.class);
+    private static final String serverAddress = "http://localhost:8080/";
 
-    private JcrXmlPersistenceIndexer indexer;
+    private RdfPersistenceIndexer indexer;
 
     private File path;
-
-    private final String testContent =
-            "<sv:node xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" sv:name=\"testContent\"></sv:node>";
 
     @Before
     public void setup() {
         path = new File("./target/persistence");
-        indexer = new JcrXmlPersistenceIndexer(path.getAbsolutePath());
+        indexer = new RdfPersistenceIndexer(path.getAbsolutePath(), "N_TRIPLES", ".nt");
     }
 
     @Test
@@ -67,9 +66,9 @@ public class JcrXmlPersistenceIndexerTest {
     @Test
     public void updateTest() throws Exception {
         final String testId = "updateTest" + randomUUID();
-        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
+        final Model input = testModel(testId);
 
-        final File f = indexer.update(new URI("http://localhost:8080/" + testId), input).get();
+        final File f = indexer.update(new URI(serverAddress + testId), input).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -77,15 +76,15 @@ public class JcrXmlPersistenceIndexerTest {
 
         // content should be 'test content'
         final String content = new String(readAllBytes(f.toPath()));
-        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+        assertEquals("Content doesn't contain our property!", content.trim(), testContent(testId));
     }
 
     @Test
     public void updateWithHierarchyPathTest() throws Exception {
         final String path1 = "updateHier" +  randomUUID();
         final String path2 = "" + randomUUID();
-        final String testId = "http://localhost:8080/" + path1 + "/" + path2;
-        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
+        final String testId = serverAddress + path1 + "/" + path2;
+        final Model input = testModel(testId);
 
         final File f = indexer.update(new URI(testId), input).get();
 
@@ -100,28 +99,7 @@ public class JcrXmlPersistenceIndexerTest {
 
         // content should be 'test content'
         final String content = new String(readAllBytes(f.toPath()));
-        assertTrue("Content doesn't contain our property!", content.equals(testContent));
-    }
-
-    @Test
-    public void updateWithSpecialCharacterPathTest() throws Exception {
-        final String path = URLEncoder.encode("updateHier : \\'\" < >") +  randomUUID();
-        final String testId = "http://localhost:8080/" + path;
-        final InputStream input = new ByteArrayInputStream (testContent.getBytes());
-
-        final File f = indexer.update(new URI(testId), input).get();
-
-        // file should exist
-        LOGGER.debug("Got filename: {}", f.getName());
-        assertTrue("Filename doesn't match", f.getName().startsWith(URLEncoder.encode(path, "UTF-8")));
-        assertTrue("Path port number doesn't match",
-                f.getParentFile().getName().equals("8080"));
-        assertTrue("Path hostname doesn't match",
-                f.getParentFile().getParentFile().getName().equals("localhost"));
-
-        // content should be 'test content'
-        final String content = new String(readAllBytes(f.toPath()));
-        assertTrue("Content doesn't contain our property!", content.equals(testContent));
+        assertEquals("Content doesn't contain our property!", content.trim(), testContent(testId));
     }
 
     @Test
@@ -130,7 +108,7 @@ public class JcrXmlPersistenceIndexerTest {
         final String path2 = "" + randomUUID();
         final String testId = path1 + "/" + path2;
         // should write empty file to disk
-        final File f = indexer.remove(new URI("http://localhost:8080/" + testId)).get();
+        final File f = indexer.remove(new URI(serverAddress + testId)).get();
 
         // file should exist
         LOGGER.debug("Got filename: {}", f.getName());
@@ -143,7 +121,7 @@ public class JcrXmlPersistenceIndexerTest {
 
     @Test
     public void testGetIndexerType() {
-        assertEquals("Got wrong indexer type!", JCRXML_PERSISTENCE, indexer.getIndexerType());
+        assertEquals("Got wrong indexer type!", RDF, indexer.getIndexerType());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -152,4 +130,11 @@ public class JcrXmlPersistenceIndexerTest {
         indexer.update(new URI(testId), null);
     }
 
+    private static String testContent(final String id) {
+      return "<" + serverAddress + id + "> <http://purl.org/dc/elements/1.1/title> \"test content\" .";
+    }
+    private static Model testModel(final String id) {
+        final String rdf = testContent(id);
+        return createDefaultModel().read(new ByteArrayInputStream(rdf.getBytes()), null, "N-TRIPLE");
+    }
 }
