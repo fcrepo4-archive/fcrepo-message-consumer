@@ -47,7 +47,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  *
  * @author ajs6f
  * @author yecao
- * @date Nov 2013
+ * @since Nov 2013
  */
 public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
 

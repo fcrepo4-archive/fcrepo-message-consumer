@@ -24,7 +24,7 @@ import java.util.Map;
  * A group of named fields.
  *
  * @author ajs6f
- * @date Dec 13, 2013
+ * @since Dec 13, 2013
  */
 public class NamedFields extends HashMap<String, Collection<String>> {
 

@@ -37,7 +37,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * {@link Indexer} for Elasticsearch.
  *
  * @author ajs6f
- * @date Dec 14, 2013
+ * @since Dec 14, 2013
  */
 public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
 

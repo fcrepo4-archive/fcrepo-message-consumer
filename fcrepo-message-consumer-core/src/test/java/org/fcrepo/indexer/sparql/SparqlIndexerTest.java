@@ -39,7 +39,7 @@ import java.util.Set;
 
 /**
  * @author Andrew Woods
- * @date Feb 04 2014
+ * @since Feb 04 2014
  */
 public class SparqlIndexerTest {
 

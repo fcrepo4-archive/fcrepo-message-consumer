@@ -53,7 +53,7 @@ import org.slf4j.Logger;
  *
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
 **/
 public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 

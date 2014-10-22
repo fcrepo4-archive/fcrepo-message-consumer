@@ -32,7 +32,7 @@ import org.slf4j.Logger;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Nov 25, 2013
+ * @since Nov 25, 2013
  **/
 public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
 

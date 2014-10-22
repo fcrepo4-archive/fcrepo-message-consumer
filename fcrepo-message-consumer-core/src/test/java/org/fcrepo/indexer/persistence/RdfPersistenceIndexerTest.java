@@ -39,7 +39,7 @@ import org.slf4j.Logger;
  * @author lsitu
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  */
 public class RdfPersistenceIndexerTest {
 
@@ -53,7 +53,7 @@ public class RdfPersistenceIndexerTest {
     @Before
     public void setup() {
         path = new File("./target/persistence");
-        indexer = new RdfPersistenceIndexer(path.getAbsolutePath(), "N-TRIPLE", ".nt");
+        indexer = new RdfPersistenceIndexer(path.getAbsolutePath(), "N_TRIPLES", ".nt");
     }
 
     @Test
@@ -136,7 +136,6 @@ public class RdfPersistenceIndexerTest {
     }
     private static Model testModel(final String id) {
         final String rdf = testContent(id);
-        System.out.println("XXX: " + rdf);
         return createDefaultModel().read(new ByteArrayInputStream(rdf.getBytes()), null, "N-TRIPLE");
     }
 }

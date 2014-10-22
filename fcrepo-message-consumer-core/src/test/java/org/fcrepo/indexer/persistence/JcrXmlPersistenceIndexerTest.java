@@ -38,7 +38,7 @@ import org.slf4j.Logger;
  * @author lsitu
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  */
 public class JcrXmlPersistenceIndexerTest {
 

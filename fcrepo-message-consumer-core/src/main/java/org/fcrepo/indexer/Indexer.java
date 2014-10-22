@@ -26,7 +26,7 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  *
  * @param <Content> the type of content to index
  *
@@ -61,7 +61,7 @@ public interface Indexer<Content> {
      * Types of content processed by {@link Indexer}s.
      *
      * @author ajs6f
-     * @date Dec 14, 2013
+     * @since Dec 14, 2013
      */
     public static enum IndexerType {
         NAMEDFIELDS, RDF, NO_CONTENT, JCRXML_PERSISTENCE
@@ -71,7 +71,7 @@ public interface Indexer<Content> {
      * Class for indexers that do not actually accept content.
      *
      * @author ajs6f
-     * @date Dec 14, 2013
+     * @since Dec 14, 2013
      */
     public static interface NoContent {
 

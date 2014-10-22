@@ -41,7 +41,7 @@ import com.hp.hpl.jena.rdf.model.Model;
  * {@link NamedFieldsRetriever}
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public class RdfRetriever implements Supplier<Model> {
 

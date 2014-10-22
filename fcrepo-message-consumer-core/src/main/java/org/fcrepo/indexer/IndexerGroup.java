@@ -68,7 +68,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *
  * @author Esmé Cowles
  * @author ajs6f
- * @date Aug 19 2013
+ * @since Aug 19 2013
  **/
 public class IndexerGroup implements MessageListener {
 

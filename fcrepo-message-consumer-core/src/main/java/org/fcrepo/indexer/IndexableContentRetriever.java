@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
  * Implemented by classes that retrieve indexable content for a resource.
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public interface IndexableContentRetriever extends Callable<InputStream> {
 

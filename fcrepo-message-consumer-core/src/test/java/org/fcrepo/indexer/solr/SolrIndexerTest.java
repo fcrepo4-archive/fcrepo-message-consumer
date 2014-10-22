@@ -55,7 +55,7 @@ import org.slf4j.Logger;
 /**
  * @author yecao
  * @author ajs6f
- * @date Nov 2013
+ * @since Nov 2013
  */
 public class SolrIndexerTest {
 

@@ -39,7 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)

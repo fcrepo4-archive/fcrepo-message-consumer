@@ -38,7 +38,7 @@ import org.slf4j.Logger;
  *
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
 **/
 public class FileSerializer extends SynchIndexer<NamedFields, File> {
 

@@ -30,7 +30,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * An {@link Indexer} that executes its operation asynchronously.
  *
  * @author ajs6f
- * @date Dec 8, 2013
+ * @since Dec 8, 2013
  *
  * @param <Content> the type of content to index
  * @param <Result> the type of response to expect from an operation

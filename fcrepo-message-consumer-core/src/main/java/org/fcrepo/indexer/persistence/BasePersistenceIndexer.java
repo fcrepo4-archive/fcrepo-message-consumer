@@ -35,7 +35,7 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @author Esmé Cowles
  * @author lsitu
- * @date 2014-10-20
+ * @since 2014-10-20
 **/
 public abstract class BasePersistenceIndexer<Content, File> extends SynchIndexer<Content, File> {
 

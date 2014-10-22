@@ -33,7 +33,7 @@ import org.slf4j.Logger;
  * Basic Indexer implementation to write contents from an InputStream files on disk.
  * @author ajs6f
  * @author Esmé Cowles
- * @date Aug 19, 2013
+ * @since Aug 19, 2013
  * @author lsitu
 **/
 public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer<InputStream, File> {

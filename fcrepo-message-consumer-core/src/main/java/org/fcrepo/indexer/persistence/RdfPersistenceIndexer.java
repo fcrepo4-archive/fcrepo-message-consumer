@@ -19,12 +19,9 @@ import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.fcrepo.indexer.Indexer.IndexerType.RDF;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.CopyOption;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
@@ -38,23 +35,41 @@ import org.slf4j.Logger;
  * @author ajs6f
  * @author Esmé Cowles
  * @author lsitu
- * @date 2014-10-20
+ * @since 2014-10-20
 **/
 public class RdfPersistenceIndexer extends BasePersistenceIndexer<Model, File> {
 
     private static final Logger LOGGER = getLogger(RdfPersistenceIndexer.class);
 
-    private String rdfLang = null;
+    private final RDFLang rdfLang;
+    enum RDFLang {
+        N3 ("N3"),
+        N_TRIPLES ("N-TRIPLE"),
+        RDF_XML ("RDF/XML"),
+        RDF_XML_ABBREV ("RDF/XML-ABBREV"),
+        TURTLE ("TURTLE");
+
+        private final String name;
+        RDFLang(final String name) {
+            this.name = name;
+        }
+        public String toString() {
+            return name;
+        }
+    };
 
     /**
      * Constructor
      * @param pathName of directory in which jcr/xml exports will be stored
-     * @param rdfLang RDF language name ("Turtle", "RDF/XML", "N-Triples", etc.)
-     * @param extension Filename extension (".ttl", ".rdf.xml", ".nt", etc.)
+     * @param rdfLang RDF language name (supported values are "N3", "N_TRIPLES", "RDF_XML", "RDF_XML_ABBREV", and
+     *    "TURTLE".
+     * @param extension Filename extension (".n3", ".nt", ".rdf.xml", ".ttl", etc.)
+     * @throws IllegalArgumentException if the rdfLang value is invalid.
      */
-    public RdfPersistenceIndexer(final String pathName, final String rdfLang, final String extension) {
+    public RdfPersistenceIndexer(final String pathName, final String rdfLang, final String extension)
+            throws IllegalArgumentException {
         super(pathName, extension);
-        this.rdfLang = rdfLang;
+        this.rdfLang = RDFLang.valueOf(rdfLang);
     }
 
     @Override
@@ -78,10 +93,9 @@ public class RdfPersistenceIndexer extends BasePersistenceIndexer<Model, File> {
             @Override
             public File call() throws IOException {
                 final Path p = pathFor(id);
-                final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                model.write(out, rdfLang);
+                final FileOutputStream out = new FileOutputStream(p.toFile());
                 LOGGER.debug("Updating {} to file: {}", id, p.toAbsolutePath().toString());
-                Files.copy(new ByteArrayInputStream(out.toByteArray()), p, new CopyOption[]{});
+                model.write(out, rdfLang.toString());
                 return p.toFile();
             }
         };

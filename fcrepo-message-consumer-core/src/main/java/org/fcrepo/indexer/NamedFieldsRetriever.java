@@ -43,7 +43,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * For use with indexers like Solr.
  *
  * @author ajs6f
- * @date Dec 6, 2013
+ * @since Dec 6, 2013
  */
 public class NamedFieldsRetriever implements Supplier<NamedFields> {
 

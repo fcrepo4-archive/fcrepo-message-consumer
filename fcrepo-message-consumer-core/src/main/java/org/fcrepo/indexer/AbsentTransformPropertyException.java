@@ -21,7 +21,7 @@ package org.fcrepo.indexer;
  * transformation.
  *
  * @author ajs6f
- * @date Dec 4, 2013
+ * @since Dec 4, 2013
  */
 public class AbsentTransformPropertyException extends RuntimeException {
 
