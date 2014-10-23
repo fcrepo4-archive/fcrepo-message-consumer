@@ -19,6 +19,7 @@ import static com.google.common.base.Throwables.propagate;
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.jena.riot.WebContent.contentTypeN3;
+import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -67,6 +68,7 @@ public class RdfRetriever implements Supplier<Model> {
     public Model get() {
         final HttpUriRequest request = new HttpGet(identifier);
         request.addHeader("Accept", RDF_SERIALIZATION);
+        request.addHeader("Prefer", "return=representation; include=\"" + REPOSITORY_NAMESPACE + "EmbedResources\"");
         LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
         try {
             final HttpResponse response = httpClient.execute(request);

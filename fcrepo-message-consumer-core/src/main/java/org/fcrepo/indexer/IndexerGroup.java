@@ -58,6 +58,7 @@ import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
+import static org.fcrepo.kernel.RdfLexicon.HAS_MIXIN_TYPE;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -283,14 +284,20 @@ public class IndexerGroup implements MessageListener {
                 LOGGER.debug(
                         "Resource: {} retrieved without indexable type.",
                         uri);
+                rdf.write(System.out);
             }
 
             // if this is a datastream, also index the parent object
-            if (rdf.contains(createResource(uri.toString()), type, DATASTREAM_TYPE)
+            final Resource subj = createResource(uri.toString());
+            final Property HAS_PARENT = createProperty("http://fedora.info/definitions/v4/repository#hasParent");
+            if (rdf.contains(subj, type, DATASTREAM_TYPE)
                     && uri.toString().indexOf("/fedora:system/") == -1 ) {
-                final URI parent = new URI(uri.toString().substring(0, uri.toString().lastIndexOf("/")));
-                LOGGER.info("Datastream found, also indexing parent {}", parent);
-                index( parent, "NODE_UPDATED");
+                final NodeIterator parents = rdf.listObjectsOfProperty(subj, HAS_PARENT);
+                if ( parents.hasNext() ) {
+                    final String parent = parents.nextNode().asResource().getURI();
+                    LOGGER.info("Datastream found, also indexing parent {}", parent);
+                    index( new URI(parent), "NODE_UPDATED");
+                }
             }
         }
 
@@ -380,13 +387,18 @@ public class IndexerGroup implements MessageListener {
 
         // check for children (rdf should be cached...)
         if ( recursive ) {
-            final Supplier<Model> rdfr
-                = memoize(new RdfRetriever(uri, httpClient(uri.toString())));
+            final Supplier<Model> rdfr = memoize(new RdfRetriever(uri, httpClient(uri.toString())));
             final Model model = rdfr.get();
             final NodeIterator children = model.listObjectsOfProperty( CONTAINS );
             while ( children.hasNext() ) {
                 final URI child = new URI(children.nextNode().asResource().getURI());
-                if ( !reindexed.contains(child) ) {
+                if (model.contains(createResource(child.toString()), HAS_MIXIN_TYPE,
+                        model.createLiteral("fedora:binary"))) {
+                    final URI childURI = new URI(child.toString() + "/fcr:metadata");
+                    if ( !reindexed.contains(childURI) ) {
+                        reindexURI( childURI, false );
+                    }
+                } else if ( !reindexed.contains(child) ) {
                     reindexURI( child, true );
                 }
             }
