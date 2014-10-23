@@ -26,10 +26,14 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
 
+import javax.ws.rs.core.Link;
+
+import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.slf4j.Logger;
 
@@ -65,10 +69,29 @@ public class RdfRetriever implements Supplier<Model> {
 
     @Override
     public Model get() {
-        final HttpUriRequest request = new HttpGet(identifier);
-        request.addHeader("Accept", RDF_SERIALIZATION);
-        LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
+
         try {
+            // make an initial HEAD request and check Link headers for descriptions located elsewhere
+            final HttpHead headRequest = new HttpHead(identifier);
+            final HttpResponse headResponse = httpClient.execute(headRequest);
+            URI descriptionURI = null;
+            final Header[] links = headResponse.getHeaders("Link");
+            if ( links != null ) {
+                for ( Header h : headResponse.getHeaders("Link") ) {
+                    final Link link = Link.valueOf(h.getValue());
+                    if ( link.getRel().equals("describedby") ) {
+                        descriptionURI = link.getUri();
+                        LOGGER.debug("Using URI from Link header: {}", descriptionURI);
+                    }
+                }
+            }
+            if ( descriptionURI == null ) {
+                descriptionURI = identifier;
+            }
+
+            final HttpUriRequest request = new HttpGet(descriptionURI);
+            request.addHeader("Accept", RDF_SERIALIZATION);
+            LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
             final HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (

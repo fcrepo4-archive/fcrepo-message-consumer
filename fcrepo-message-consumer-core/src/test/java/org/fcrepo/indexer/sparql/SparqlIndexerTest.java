@@ -65,10 +65,8 @@ public class SparqlIndexerTest {
         testIndexer.removeSynch(new URI("info://obj-0"));
 
         final String cmd0 = "DELETE WHERE { <" + createURI("info://obj-0") + "> ?p ?o }";
-        final String cmd1 = "DELETE WHERE { <" + createURI("info://obj-0/fcr:content") + "> ?p ?o }";
         final String cmd2 = "DELETE WHERE { <" + createURI("info://obj-0/child") + "> ?p ?o }";
         Mockito.verify(updateRequest).add(cmd0);
-        Mockito.verify(updateRequest).add(cmd1);
         Mockito.verify(updateRequest).add(cmd2);
     }
 
@@ -92,9 +90,6 @@ public class SparqlIndexerTest {
 
         protected QueryEngineHTTP buildQueryEngineHTTP(final String describeQuery) {
             final Triple t0 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-0"));
-            final Triple t2 = new Triple(createURI("info://sub"),
-                                         createLiteral("p"),
-                                         createURI("info://obj-0/fcr:content"));
             final Triple t1 = new Triple(createURI("info://sub"), createLiteral("p"), createURI("info://obj-1"));
             final Triple t3 = new Triple(createURI("info://obj-0/child"),
                                          createLiteral("p"),
@@ -103,7 +98,6 @@ public class SparqlIndexerTest {
             final Set<Triple> triples = new HashSet<>();
             triples.add(t0);
             triples.add(t1);
-            triples.add(t2);
             triples.add(t3);
 
             Mockito.when(queryEngineHTTP.execDescribeTriples()).thenReturn(triples.iterator());

@@ -16,6 +16,7 @@
 package org.fcrepo.indexer.integration;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.UUID.randomUUID;
 import static org.apache.jena.riot.WebContent.contentTypeN3Alt1;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -23,9 +24,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
 import javax.inject.Inject;
+import javax.ws.rs.core.Link;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.fcrepo.indexer.IndexerGroup;
@@ -61,23 +64,30 @@ public class IndexerGroupIT extends IndexingIT {
     //        https://www.pivotaltracker.com/story/show/72709646
     @Test
     public void testIndexerGroupUpdate() throws Exception {
-        doIndexerGroupUpdateTest(serverAddress + "updateTestPid");
+        final String uri = serverAddress + randomUUID();
+        createIndexableObject(uri);
+        shouldBeIndexed(uri);
     }
-    private void doIndexerGroupUpdateTest(final String uri) throws Exception {
-        final HttpPut createRequest = new HttpPut(uri);
+    private void createIndexableObject(final String uri) throws Exception {
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
                     + "<" + uri + ">  rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
                     + "indexing:hasIndexingTransformation \"default\".";
 
-        createRequest.setEntity(new StringEntity(objectRdf));
-        createRequest.addHeader("Content-Type", contentTypeN3Alt1);
-
+        createResource(uri, objectRdf, contentTypeN3Alt1);
+        LOGGER.debug("Created object at: {}", uri);
+    }
+    private HttpResponse createResource(final String uri, final String content, final String contentType)
+            throws Exception {
+        final HttpPut createRequest = new HttpPut(uri);
+        createRequest.setEntity(new StringEntity(content));
+        createRequest.addHeader("Content-Type", contentType);
         final HttpResponse response = client.execute(createRequest);
         assertEquals(201, response.getStatusLine().getStatusCode());
-        LOGGER.debug("Created object at: {}", uri);
-
+        return response;
+    }
+    private void shouldBeIndexed(final String uri) throws Exception {
         final Long start = currentTimeMillis();
         synchronized (testIndexer) {
             while (!testIndexer.receivedUpdate(new URI(uri)) && (currentTimeMillis() - start < TIMEOUT)) {
@@ -85,18 +95,17 @@ public class IndexerGroupIT extends IndexingIT {
                 testIndexer.wait(1000);
             }
         }
-        assertTrue("Test indexer should have received an update message for " + uri + "!", testIndexer
-                .receivedUpdate(new URI(uri)));
+        assertTrue("Test indexer should have received an update message for " + uri + "!",
+                testIndexer.receivedUpdate(new URI(uri)));
         LOGGER.debug("Received update at test indexer for identifier: {}", uri);
-
     }
 
     @Test
     public void testIndexerGroupDelete() throws Exception {
 
         final String uri = serverAddress + "removeTestPid";
+        createIndexableObject(uri);
 
-        doIndexerGroupUpdateTest(uri);
         // delete dummy object
         final HttpDelete method = new HttpDelete(uri);
         final HttpResponse response = client.execute(method);
@@ -124,8 +133,9 @@ public class IndexerGroupIT extends IndexingIT {
         // create sample records
         final String[] pids = { "a1", "a1/b1", "a1/b2", "a1/b1/c1" };
         for ( String pid : pids ) {
-            doIndexerGroupUpdateTest(serverAddress + pid);
+            createIndexableObject(serverAddress + pid);
         }
+        shouldBeIndexed(serverAddress + "a1/b1/c1");
 
         // clear test indexer lists of updated records
         testIndexer.clear();
@@ -147,6 +157,26 @@ public class IndexerGroupIT extends IndexingIT {
                         testIndexer.receivedUpdate(new URI(uri)));
             }
         }
+    }
+
+    @Test
+    public void testDatastreamIndexing() throws Exception {
+        // create object with datastream
+        final String uri = serverAddress + randomUUID();
+        createIndexableObject(uri);
+        final HttpResponse response = createResource(uri + "/ds1", "test datastream content", "text/plain");
+
+        // make datastream indexable
+        final URI descURI = Link.valueOf(response.getFirstHeader("Link").getValue()).getUri();
+        final HttpPatch patch = new HttpPatch(descURI);
+        final String sparqlUpdate = "insert { <> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
+                + "<http://fedora.info/definitions/v4/indexing#indexable> } where {}";
+        patch.setEntity(new StringEntity(sparqlUpdate));
+        patch.addHeader("Content-Type", "application/sparql-update");
+        assertEquals(204, client.execute(patch).getStatusLine().getStatusCode());
+
+        // make sure it was indexed
+        shouldBeIndexed(uri + "/ds1");
     }
 
 }

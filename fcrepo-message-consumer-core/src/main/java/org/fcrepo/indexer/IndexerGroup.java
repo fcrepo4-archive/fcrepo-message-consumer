@@ -57,7 +57,9 @@ import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.fcrepo.jcr.FedoraJcrTypes.FCR_METADATA;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
+import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -275,22 +277,24 @@ public class IndexerGroup implements MessageListener {
 
         if (!removal) {
             final Model rdf = rdfr.get();
-            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)) {
-                LOGGER.debug("Resource: {} retrieved with indexable type.",
-                        uri);
+            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)
+                    || rdf.contains(createResource(uri.toString() + "/" + FCR_METADATA), type, INDEXABLE_MIXIN)) {
+                LOGGER.debug("Resource: {} retrieved with indexable type.", uri);
                 indexable = true;
             } else {
-                LOGGER.debug(
-                        "Resource: {} retrieved without indexable type.",
-                        uri);
+                LOGGER.debug("Resource: {} retrieved without indexable type.", uri);
             }
 
             // if this is a datastream, also index the parent object
-            if (rdf.contains(createResource(uri.toString()), type, DATASTREAM_TYPE)
+            final Resource subj = createResource(uri.toString());
+            if (rdf.contains(subj, type, DATASTREAM_TYPE)
                     && uri.toString().indexOf("/fedora:system/") == -1 ) {
-                final URI parent = new URI(uri.toString().substring(0, uri.toString().lastIndexOf("/")));
-                LOGGER.info("Datastream found, also indexing parent {}", parent);
-                index( parent, "NODE_UPDATED");
+                final NodeIterator parents = rdf.listObjectsOfProperty(subj, HAS_PARENT);
+                if ( parents.hasNext() ) {
+                    final String parent = parents.nextNode().asResource().getURI();
+                    LOGGER.info("Datastream found, also indexing parent {}", parent);
+                    index( new URI(parent), "NODE_UPDATED");
+                }
             }
         }
 
@@ -380,8 +384,7 @@ public class IndexerGroup implements MessageListener {
 
         // check for children (rdf should be cached...)
         if ( recursive ) {
-            final Supplier<Model> rdfr
-                = memoize(new RdfRetriever(uri, httpClient(uri.toString())));
+            final Supplier<Model> rdfr = memoize(new RdfRetriever(uri, httpClient(uri.toString())));
             final Model model = rdfr.get();
             final NodeIterator children = model.listObjectsOfProperty( CONTAINS );
             while ( children.hasNext() ) {
