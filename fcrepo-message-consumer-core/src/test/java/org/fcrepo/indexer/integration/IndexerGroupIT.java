@@ -24,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.net.URI;
 import javax.inject.Inject;
+import javax.ws.rs.core.Link;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -77,11 +78,14 @@ public class IndexerGroupIT extends IndexingIT {
         createResource(uri, objectRdf, contentTypeN3Alt1);
         LOGGER.debug("Created object at: {}", uri);
     }
-    private void createResource(final String uri, final String content, final String contentType) throws Exception {
+    private HttpResponse createResource(final String uri, final String content, final String contentType)
+            throws Exception {
         final HttpPut createRequest = new HttpPut(uri);
         createRequest.setEntity(new StringEntity(content));
         createRequest.addHeader("Content-Type", contentType);
-        assertEquals(201, client.execute(createRequest).getStatusLine().getStatusCode());
+        final HttpResponse response = client.execute(createRequest);
+        assertEquals(201, response.getStatusLine().getStatusCode());
+        return response;
     }
     private void shouldBeIndexed(final String uri) throws Exception {
         final Long start = currentTimeMillis();
@@ -160,10 +164,11 @@ public class IndexerGroupIT extends IndexingIT {
         // create object with datastream
         final String uri = serverAddress + randomUUID();
         createIndexableObject(uri);
-        createResource(uri + "/ds1", "test datastream content", "text/plain");
+        final HttpResponse response = createResource(uri + "/ds1", "test datastream content", "text/plain");
 
         // make datastream indexable
-        final HttpPatch patch = new HttpPatch(uri + "/ds1/fcr:metadata");
+        final URI descURI = Link.valueOf(response.getFirstHeader("Link").getValue()).getUri();
+        final HttpPatch patch = new HttpPatch(descURI);
         final String sparqlUpdate = "insert { <> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
                 + "<http://fedora.info/definitions/v4/indexing#indexable> } where {}";
         patch.setEntity(new StringEntity(sparqlUpdate));
@@ -171,7 +176,7 @@ public class IndexerGroupIT extends IndexingIT {
         assertEquals(204, client.execute(patch).getStatusLine().getStatusCode());
 
         // make sure it was indexed
-        shouldBeIndexed(uri + "/ds1/fcr:metadata");
+        shouldBeIndexed(uri + "/ds1");
     }
 
 }

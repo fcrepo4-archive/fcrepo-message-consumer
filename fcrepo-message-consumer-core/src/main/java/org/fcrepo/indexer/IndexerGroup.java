@@ -57,8 +57,8 @@ import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.fcrepo.jcr.FedoraJcrTypes.FCR_METADATA;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
-import static org.fcrepo.kernel.RdfLexicon.HAS_MIXIN_TYPE;
 import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
@@ -277,14 +277,12 @@ public class IndexerGroup implements MessageListener {
 
         if (!removal) {
             final Model rdf = rdfr.get();
-            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)) {
-                LOGGER.debug("Resource: {} retrieved with indexable type.",
-                        uri);
+            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)
+                    || rdf.contains(createResource(uri.toString() + "/" + FCR_METADATA), type, INDEXABLE_MIXIN)) {
+                LOGGER.debug("Resource: {} retrieved with indexable type.", uri);
                 indexable = true;
             } else {
-                LOGGER.debug(
-                        "Resource: {} retrieved without indexable type.",
-                        uri);
+                LOGGER.debug("Resource: {} retrieved without indexable type.", uri);
             }
 
             // if this is a datastream, also index the parent object
@@ -391,13 +389,7 @@ public class IndexerGroup implements MessageListener {
             final NodeIterator children = model.listObjectsOfProperty( CONTAINS );
             while ( children.hasNext() ) {
                 final URI child = new URI(children.nextNode().asResource().getURI());
-                if (model.contains(createResource(child.toString()), HAS_MIXIN_TYPE,
-                        model.createLiteral("fedora:binary"))) {
-                    final URI childURI = new URI(child.toString() + "/fcr:metadata");
-                    if ( !reindexed.contains(childURI) ) {
-                        reindexURI( childURI, false );
-                    }
-                } else if ( !reindexed.contains(child) ) {
+                if ( !reindexed.contains(child) ) {
                     reindexURI( child, true );
                 }
             }
