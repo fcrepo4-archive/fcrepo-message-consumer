@@ -58,6 +58,7 @@ import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.fcrepo.jcr.FedoraJcrTypes.FCR_METADATA;
+import static org.fcrepo.jms.headers.DefaultMessageFactory.JMS_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
 import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
@@ -85,23 +86,23 @@ public class IndexerGroup implements MessageListener {
     /**
      * Identifier message header
      */
-    static final String IDENTIFIER_HEADER_NAME = REPOSITORY_NAMESPACE
+    static final String IDENTIFIER_HEADER_NAME = JMS_NAMESPACE
             + "identifier";
 
     /**
      * Properties message header
      */
-    static final String PROPERTIES_HEADER_NAME = REPOSITORY_NAMESPACE + "properties";
+    static final String PROPERTIES_HEADER_NAME = JMS_NAMESPACE + "properties";
 
     /**
      * BaseURL message header
      */
-    static final String BASE_URL_HEADER_NAME = REPOSITORY_NAMESPACE + "baseURL";
+    static final String BASE_URL_HEADER_NAME = JMS_NAMESPACE + "baseURL";
 
     /**
      * Event type message header
      */
-    static final String EVENT_TYPE_HEADER_NAME = REPOSITORY_NAMESPACE
+    static final String EVENT_TYPE_HEADER_NAME = JMS_NAMESPACE
             + "eventType";
 
     /**

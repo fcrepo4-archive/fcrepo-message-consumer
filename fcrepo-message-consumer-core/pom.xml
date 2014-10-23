@@ -145,7 +145,6 @@
     <dependency>
       <groupId>org.fcrepo</groupId>
       <artifactId>fcrepo-jms</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
