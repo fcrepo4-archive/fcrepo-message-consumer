@@ -59,6 +59,7 @@ import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
 import static org.fcrepo.kernel.RdfLexicon.HAS_MIXIN_TYPE;
+import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -284,12 +285,10 @@ public class IndexerGroup implements MessageListener {
                 LOGGER.debug(
                         "Resource: {} retrieved without indexable type.",
                         uri);
-                rdf.write(System.out);
             }
 
             // if this is a datastream, also index the parent object
             final Resource subj = createResource(uri.toString());
-            final Property HAS_PARENT = createProperty("http://fedora.info/definitions/v4/repository#hasParent");
             if (rdf.contains(subj, type, DATASTREAM_TYPE)
                     && uri.toString().indexOf("/fedora:system/") == -1 ) {
                 final NodeIterator parents = rdf.listObjectsOfProperty(subj, HAS_PARENT);
