@@ -76,6 +76,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  **/
 public class IndexerGroup implements MessageListener {
 
+    static final String JMS_NAMESPACE = "org.fcrepo.jms.";
+
     private static final Logger LOGGER = getLogger(IndexerGroup.class);
 
     @VisibleForTesting
@@ -108,7 +110,7 @@ public class IndexerGroup implements MessageListener {
     /**
      * Type of event that qualifies as a removal.
      */
-    static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE
+    static final String REMOVAL_EVENT_TYPE = JMS_NAMESPACE
             + EventType.valueOf(NODE_REMOVED).toString();
 
     /**
