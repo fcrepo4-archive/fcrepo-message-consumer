@@ -45,7 +45,7 @@ import com.google.gson.stream.JsonWriter;
  */
 public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
 
-    private static final Type type = new TypeToken<Map<String, JsonElement>>() {}
+    private static final Type type = new TypeToken<List<Map<String, JsonElement>>>() {}
             .getType();
 
     private Gson gson;
@@ -80,10 +80,10 @@ public class NamedFieldsDeserializer extends TypeAdapter<NamedFields> {
     public NamedFields read(final JsonReader in)
         throws IOException {
         try {
-            final Map<String, JsonElement> fields = gson.fromJson(in, type);
-            return new NamedFields(transformValues(fields, jsonElement2list));
+            final List<Map<String, JsonElement>> fields = gson.fromJson(in, type);
+            return new NamedFields(transformValues(fields.get(0), jsonElement2list));
         } catch (final Exception e) {
-            LOGGER.error("Failed to parse JSON to Map<String, Collection<String>>!", e);
+            LOGGER.error("Failed to parse JSON to List<Map<String, Collection<String>>>!", e);
             throw e;
         }
 
