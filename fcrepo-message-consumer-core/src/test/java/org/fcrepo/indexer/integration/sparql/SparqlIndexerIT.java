@@ -53,12 +53,11 @@ public class SparqlIndexerIT {
     private SparqlIndexer sparqlIndexer;
 
     private static final String fooRDF =
-        "@prefix fcrepo: <http://fedora.info/definitions/v4/repository#> .\n" +
-        "@prefix fedora: <http://fedora.info/definitions/v4/repository/rest-api#> .\n" +
+        "@prefix fedora: <http://fedora.info/definitions/v4/repository#> .\n" +
         "<" + uri + ">\n" +
-        " fcrepo:hasChild <" + uri + "/barDS> ;\n" +
-        " fcrepo:hasParent <" + uri + "> ;\n" +
-        " fcrepo:uuid \"feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\" .";
+        " fedora:hasChild <" + uri + "/barDS> ;\n" +
+        " fedora:hasParent <" + uri + "> ;\n" +
+        " fedora:uuid \"feb99ff2-455e-4e16-93a0-c0ae8d21b9ae\" .";
 
     @Test
     public void indexerTest() throws Exception {
@@ -73,10 +72,10 @@ public class SparqlIndexerIT {
 
         // SPARQL search should work
         final String sparqlQuery =
-                "PREFIX  fcrepo: <http://fedora.info/definitions/v4/repository#> \n" +
+                "PREFIX  fedora: <http://fedora.info/definitions/v4/repository#> \n" +
                         "SELECT  ?p \n" +
                         "WHERE \n" +
-                        "{ ?p fcrepo:hasParent ?c }";
+                        "{ ?p fedora:hasParent ?c }";
         assertTrue("Triple should return from search!", countQueryTriples(sparqlQuery) > 0 );
 
         // remove object

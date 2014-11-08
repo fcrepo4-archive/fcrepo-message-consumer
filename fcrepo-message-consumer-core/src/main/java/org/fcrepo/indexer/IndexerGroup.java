@@ -62,7 +62,6 @@ import static org.fcrepo.jms.headers.DefaultMessageFactory.JMS_NAMESPACE;
 import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
 import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
 import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
-import static org.fcrepo.kernel.RdfLexicon.RESTAPI_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -139,7 +138,7 @@ public class IndexerGroup implements MessageListener {
     /**
      * Indicates that a resource is a datastream.
     **/
-    static final Resource DATASTREAM_TYPE = createResource(RESTAPI_NAMESPACE + "datastream");
+    static final Resource DATASTREAM_TYPE = createResource(REPOSITORY_NAMESPACE + "NonRdfSourceDescription");
 
     private static final Reader EMPTY_CONTENT = null;
 
