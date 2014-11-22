@@ -23,14 +23,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
+
+import javax.ws.rs.core.Link;
 
 /**
  * Retrieves Modeshape jcr/xml for file system persistence
@@ -59,14 +64,34 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
      * Retrieve jcr/xml with no binary contents from the repository
      */
     public InputStream get() {
-        final HttpUriRequest request = new HttpGet(identifier.toString() + "/fcr:export?skipBinary=true");
-        LOGGER.debug("Retrieving jcr/xml content from: {}...", request.getURI());
+
         try {
+            // make an initial HEAD request and check Link headers for descriptions located elsewhere
+            final HttpHead headRequest = new HttpHead(identifier);
+            final HttpResponse headResponse = httpClient.execute(headRequest);
+            URI descriptionURI = null;
+            final Header[] links = headResponse.getHeaders("Link");
+            if ( links != null ) {
+                for ( Header h : headResponse.getHeaders("Link") ) {
+                    final Link link = Link.valueOf(h.getValue());
+                    if ( link.getRel().equals("describedby") ) {
+                        descriptionURI = link.getUri();
+                        LOGGER.debug("Using URI from Link header: {}", descriptionURI);
+                    }
+                }
+            }
+            if ( descriptionURI == null ) {
+                descriptionURI = identifier;
+            }
+
+            final HttpUriRequest request = new HttpGet(descriptionURI.toString() + "/fcr:export?skipBinary=true");
+            LOGGER.debug("Retrieving jcr/xml content from: {}...", request.getURI());
             final HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                return response.getEntity().getContent();
             } else {
-                throw new HttpException(response.getStatusLine().toString());
+                throw new HttpException(response.getStatusLine().getStatusCode() + " : " +
+                                                EntityUtils.toString(response.getEntity()));
             }
         } catch (IOException | HttpException e) {
             throw propagate(e);
