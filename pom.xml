@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo</artifactId>
-    <version>4.0.0-beta-05-SNAPSHOT</version>
+    <version>4.0.0-RC</version>
   </parent>
 
   <artifactId>fcrepo-message-consumer</artifactId>
@@ -38,7 +38,7 @@
     <developerConnection>scm:git:git@github.com:fcrepo4/${project_name}.git
     </developerConnection>
     <url>https://github.com/fcrepo4/fcrepo-message-consumer</url>
-    <tag>HEAD</tag>
+    <tag>fcrepo-message-consumer-4.0.0-RC</tag>
   </scm>
 
   <dependencyManagement>
