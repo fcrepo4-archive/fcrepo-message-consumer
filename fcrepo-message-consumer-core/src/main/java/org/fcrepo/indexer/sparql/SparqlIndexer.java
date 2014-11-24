@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -80,7 +81,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     @Override
     public Callable<Void> updateSynch(final URI pid, final Model model) {
         LOGGER.debug("Received update for: {}", pid);
-        removeSynch(pid);
+        removeSynch(pid, true);
         // build a list of triples
         final StmtIterator triples = model.listStatements();
         final QuadDataAcc add = new QuadDataAcc();
@@ -99,6 +100,11 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     **/
     @Override
     public Callable<Void> removeSynch(final URI subject) {
+        return removeSynch(subject, false);
+    }
+
+    @VisibleForTesting
+    protected Callable<Void> removeSynch(final URI subject, final boolean blocking) {
 
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
@@ -138,7 +144,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
         }
 
         // send updates
-        return exec(del);
+        return exec(del, blocking);
     }
 
     /**
@@ -156,6 +162,10 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     }
 
     private Callable<Void> exec(final UpdateRequest update) {
+        return exec(update, false);
+    }
+
+    private Callable<Void> exec(final UpdateRequest update, final boolean blocking) {
         if (update.getOperations().isEmpty()) {
             LOGGER.debug("Received empty update/remove operation.");
             return new Callable<Void>() {
@@ -193,30 +203,40 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
             }
         };
 
-        final ListenableFutureTask<Void> task =
-            ListenableFutureTask.create(callable);
-        task.addListener(new Runnable() {
+        if (blocking) {
+            try {
+                callable.call();
+            } catch (Exception e) {
+                LOGGER.error("Error calling Sparql update/remove!, {}", e.getMessage());
+            }
 
-            @Override
-            public void run() {
-                LOGGER.debug("Completed Sparql update/removal.");
-                if (LOGGER.isTraceEnabled()) {
-                    try (
-                        final OutputStream buffer = new ByteArrayOutputStream()) {
-                        final IndentedWriter out = new IndentedWriter(buffer);
-                        update.output(out);
-                        LOGGER.trace("Executed update/remove operation:\n{}",
-                                buffer.toString());
-                        out.close();
-                    } catch (final IOException e) {
-                        LOGGER.error(
-                                "Couldn't retrieve execution of update/remove operation!",
-                                e);
+        } else {
+            final ListenableFutureTask<Void> task =
+                ListenableFutureTask.create(callable);
+            task.addListener(new Runnable() {
+
+                @Override
+                public void run() {
+                    LOGGER.debug("Completed Sparql update/removal.");
+                    if (LOGGER.isTraceEnabled()) {
+                        try (
+                            final OutputStream buffer = new ByteArrayOutputStream()) {
+                            final IndentedWriter out = new IndentedWriter(buffer);
+                            update.output(out);
+                            LOGGER.trace("Executed update/remove operation:\n{}",
+                                    buffer.toString());
+                            out.close();
+                        } catch (final IOException e) {
+                            LOGGER.error(
+                                    "Couldn't retrieve execution of update/remove operation!",
+                                    e);
+                        }
                     }
                 }
-            }
-        }, executorService);
-        executorService.submit(task);
+            }, executorService);
+            executorService.submit(task);
+        }
+
         return callable;
     }
 
