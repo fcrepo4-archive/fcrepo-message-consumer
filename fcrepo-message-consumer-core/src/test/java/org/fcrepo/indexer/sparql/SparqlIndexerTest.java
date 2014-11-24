@@ -63,7 +63,16 @@ public class SparqlIndexerTest {
     @Test
     public void testRemoveSynch() throws URISyntaxException {
         testIndexer.removeSynch(new URI("info://obj-0"));
+        doTestRemoveSynch();
+    }
 
+    @Test
+    public void testRemoveSynchBlocking() throws URISyntaxException {
+        testIndexer.removeSynch(new URI("info://obj-0"), true);
+        doTestRemoveSynch();
+    }
+
+    private void doTestRemoveSynch() {
         final String cmd0 = "DELETE WHERE { <" + createURI("info://obj-0") + "> ?p ?o }";
         final String cmd2 = "DELETE WHERE { <" + createURI("info://obj-0/child") + "> ?p ?o }";
         Mockito.verify(updateRequest).add(cmd0);
