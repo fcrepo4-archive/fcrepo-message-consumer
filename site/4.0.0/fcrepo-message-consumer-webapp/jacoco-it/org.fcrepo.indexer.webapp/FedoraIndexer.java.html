@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FedoraIndexer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-webapp</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer.webapp</a> &gt; <span class="el_source">FedoraIndexer.java</span></div><h1>FedoraIndexer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2014 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer.webapp;
+
+import static org.slf4j.LoggerFactory.getLogger;
+import org.slf4j.Logger;
+
+import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import org.fcrepo.indexer.IndexerGroup;
+
+/**
+ * Servlet to trigger reindexing.
+ *
+ * @author escowles
+**/
+<span class="nc" id="L40">public class FedoraIndexer extends HttpServlet {</span>
+
+<span class="nc" id="L42">    private static final Logger LOGGER = getLogger(IndexerGroup.class);</span>
+    private IndexerGroup indexer;
+
+    /**
+     * Servlet initialization.
+    **/
+    public void init( final ServletConfig sc ) throws ServletException {
+<span class="nc" id="L49">        super.init(sc);</span>
+<span class="nc" id="L50">        final WebApplicationContext ctx</span>
+            = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
+<span class="nc" id="L52">        indexer = (IndexerGroup)ctx.getBean( sc.getInitParameter(&quot;beanName&quot;) );</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Trigger reindexing.
+    **/
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response)
+        throws ServletException {
+<span class="nc" id="L60">        final String recurParam = request.getParameter(&quot;recursive&quot;);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        final boolean recursive = (recurParam == null || recurParam.equals(&quot;true&quot;));</span>
+<span class="nc" id="L62">        final String baseURI = request.getParameter(&quot;baseURI&quot;);</span>
+
+        String message;
+        try {
+<span class="nc" id="L66">            final URI uri = new URI( baseURI );</span>
+<span class="nc" id="L67">            indexer.reindex( uri, recursive );</span>
+<span class="nc" id="L68">            message = &quot;Reindexing started&quot;;</span>
+<span class="nc" id="L69">        } catch ( NullPointerException ex ) {</span>
+<span class="nc" id="L70">            message = &quot;Error: the baseURI parameter must be specified&quot;;</span>
+<span class="nc" id="L71">            response.setStatus(response.SC_BAD_REQUEST);</span>
+<span class="nc" id="L72">        } catch ( URISyntaxException ex ) {</span>
+<span class="nc" id="L73">            message = &quot;Error: the baseURI is invalid&quot;;</span>
+<span class="nc" id="L74">            response.setStatus(response.SC_BAD_REQUEST);</span>
+<span class="nc" id="L75">        }</span>
+
+        try {
+<span class="nc" id="L78">            response.setContentType(&quot;text/plain&quot;);</span>
+<span class="nc" id="L79">            final PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L80">            out.println(message);</span>
+<span class="nc" id="L81">        } catch ( Exception ex ) {</span>
+<span class="nc" id="L82">            LOGGER.warn(&quot;Error sending output&quot;);</span>
+<span class="nc" id="L83">        }</span>
+<span class="nc" id="L84">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.1.201405082137</span></div></body></html>
