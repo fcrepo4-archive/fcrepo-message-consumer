@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import static com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel;
 import static java.lang.Thread.sleep;
+import static java.util.UUID.randomUUID;
 import static org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countQueryTriples;
 import static org.fcrepo.indexer.integration.sparql.SparqlIndexerITHelper.countDescribeTriples;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
+ * @author lsitu
  * @author Esmé Cowles
  *         Date: Aug 19, 2013
  */
@@ -87,6 +89,39 @@ public class SparqlIndexerIT {
         assertTrue("Triples should not be present!", countDescribeTriples(uri) == 0);
     }
 
+    @Test
+    public void IndexerParentUpdateTest() throws Exception {
+        final String childUri = uri + "/barDS";
+        final String[] uris = { uri, childUri};
+        sparqlIndexer.update(new URI(uri), createDefaultModel().read(
+                new StringReader(fooParentChildResource (uris)), "", "N3"));
+
+        waitForTriples(3);
+
+        // triples should be present in the triplestore
+        assertEquals("Parent triples should be present!", 2, countDescribeTriples(uri));
+        assertEquals("Child triples should be present!", 2, countDescribeTriples(childUri));
+
+        // update parent
+        sparqlIndexer.update(new URI(uri), createDefaultModel().read(
+                new StringReader(fooRDF), "", "N3"));
+
+        waitForTriples(0);
+
+        // triples should be present in the triplestore
+        assertEquals("Parent triples should be updated!", 3, countDescribeTriples(uri));
+        assertEquals("Child triples should be present!", 2, countDescribeTriples(childUri));
+
+        // remove object
+        sparqlIndexer.remove(new URI(uri));
+
+        waitForTriples(0);
+
+        // triples should not be present in the triplestore
+        assertTrue("Parent triples should not be present!", countDescribeTriples(uri) == 0);
+        assertTrue("Child triples should not be present!", countDescribeTriples(childUri) == 0);
+    }
+
     private static void waitForTriples(final int expectTriples) throws InterruptedException {
         long elapsed = 0;
         final long restingWait = 500;
@@ -102,4 +137,13 @@ public class SparqlIndexerIT {
         }
     }
 
+    private static String fooParentChildResource (final String[] uris) {
+        return "@prefix fedora: <http://fedora.info/definitions/v4/repository#> .\n" +
+            "<" + uris[0] + ">\n" +
+            " fedora:hasChild <" + uris[1] + "> ;\n" +
+            " fedora:uuid \"" + randomUUID() + "\" ." +
+            "<" + uris[1] + ">\n" +
+            " fedora:hasParent <" + uris[0] + "> ;\n" +
+            " fedora:uuid \"" + randomUUID() + "\" .";
+    }
 }
