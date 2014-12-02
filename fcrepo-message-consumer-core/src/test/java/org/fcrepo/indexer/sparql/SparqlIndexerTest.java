@@ -68,7 +68,7 @@ public class SparqlIndexerTest {
 
     @Test
     public void testRemoveSynchBlocking() throws URISyntaxException {
-        testIndexer.removeSynch(new URI("info://obj-0"), true);
+        testIndexer.removeSynch(new URI("info://obj-0"), true, true);
         doTestRemoveSynch();
     }
 

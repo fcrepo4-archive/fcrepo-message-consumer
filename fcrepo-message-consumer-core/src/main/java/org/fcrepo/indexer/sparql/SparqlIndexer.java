@@ -81,7 +81,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     @Override
     public Callable<Void> updateSynch(final URI pid, final Model model) {
         LOGGER.debug("Received update for: {}", pid);
-        removeSynch(pid, true);
+        removeSynch(pid, false, true);
         // build a list of triples
         final StmtIterator triples = model.listStatements();
         final QuadDataAcc add = new QuadDataAcc();
@@ -100,11 +100,11 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     **/
     @Override
     public Callable<Void> removeSynch(final URI subject) {
-        return removeSynch(subject, false);
+        return removeSynch(subject, true, false);
     }
 
     @VisibleForTesting
-    protected Callable<Void> removeSynch(final URI subject, final boolean blocking) {
+    protected Callable<Void> removeSynch(final URI subject, final boolean recursive, final boolean blocking) {
 
         LOGGER.debug("Received remove for: {}", subject);
         // find triples/quads to delete
@@ -125,11 +125,13 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
                 }
             }
 
-            // add object uri, if it is part of this object
-            if ( triple.getObject().isURI() ) {
-                final String uri = ((Node_URI)triple.getObject()).getURI();
-                if ( matches(subject, uri) ) {
-                    uris.add(uri);
+            if ( recursive ) {
+                // add object uri, if it is part of this object
+                if ( triple.getObject().isURI() ) {
+                    final String uri = ((Node_URI)triple.getObject()).getURI();
+                    if ( matches(subject, uri) ) {
+                        uris.add(uri);
+                    }
                 }
             }
         }
