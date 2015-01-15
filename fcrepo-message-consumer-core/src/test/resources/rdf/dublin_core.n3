@@ -1,9 +1,9 @@
 @prefix dc:<http://purl.org/dc/elements/1.1/> .
-@prefix indexing:<http://fedora.info/definitions/v4/indexing#>.
+@prefix config:<http://fedora.info/definitions/v4/config#>.
 @prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
 <>	dc:title		"Easy Microwave Meals For Ghouls" ;  
 	dc:creator		"Yubulac Xorhorisa" ; 
 	dc:subject		<http://id.loc.gov/authorities/subjects/sh2012004374> ;
-	rdf:type			<indexing:indexable> ;
-	indexing:hasIndexingTransformation "dc".
+	rdf:type			<config:Indexable> ;
+	config:hasIndexingTransformation "dc".

@@ -83,12 +83,12 @@ public class SolrMappingsIT extends IndexingIT {
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix dc:<http://purl.org/dc/elements/1.1/> ."
-                    + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
+                    + "@prefix config:<http://fedora.info/definitions/v4/config#>."
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      \"goats\" ;"
-                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
-                    + "indexing:hasIndexingTransformation \"default\".";
+                    + "rdf:type  <http://fedora.info/definitions/v4/config#Indexable> ;"
+                    + "config:hasIndexingTransformation \"default\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
         createRequest.addHeader("Content-Type", WebContent.contentTypeN3Alt1);
@@ -174,13 +174,13 @@ public class SolrMappingsIT extends IndexingIT {
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
                     + "@prefix dc:<http://purl.org/dc/elements/1.1/> ."
-                    + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
+                    + "@prefix config:<http://fedora.info/definitions/v4/config#>."
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      \"goats\" ;"
-                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
+                    + "rdf:type  <http://fedora.info/definitions/v4/config#Indexable> ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexingtest#book> ;"
-                    + "indexing:hasIndexingTransformation \"dc\".";
+                    + "config:hasIndexingTransformation \"dc\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
         createRequest.addHeader("Content-Type", contentTypeN3Alt1);

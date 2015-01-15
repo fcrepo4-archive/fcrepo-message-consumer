@@ -205,11 +205,11 @@ public class IndexerGroupTest {
                 "<http://fedora.info/definitions/v4/repository#Container> ;\n" +
                 "\t<http://fedora.info/definitions/v4/repository#primaryType> \"nt:folder\"^^<http://www.w3" +
                 ".org/2001/XMLSchema#string> ;\n" +
-                (indexerName != null ? "\t<http://fedora.info/definitions/v4/indexing#hasIndexingTransformation> \""
+                (indexerName != null ? "\t<http://fedora.info/definitions/v4/config#hasIndexingTransformation> \""
                         + indexerName + "\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" : "") +
                 "\t<http://fedora.info/definitions/v4/repository#uuid> " +
                 "\"b1bfd6b8-b821-48c5-8eb9-05ef47e1b6e6\"^^<http://www.w3.org/2001/XMLSchema#string> ;\n" +
-                "\ta " + (indexable ? "<http://fedora.info/definitions/v4/indexing#indexable> , " +
+                "\ta " + (indexable ? "<http://fedora.info/definitions/v4/config#Indexable> , " +
                 "" : "") + "<http://fedora.info/definitions/v4/repository#Resource> , " +
                 "<http://fedora.info/definitions/v4/repository#Container> .\n";
     }

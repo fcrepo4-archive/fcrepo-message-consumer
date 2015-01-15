@@ -1,5 +1,5 @@
-<indexing = 'http://fedora.info/definitions/v4/indexing#'>
+<config = 'http://fedora.info/definitions/v4/config#'>
 
-[indexing:indexable] mixin
-- indexing:hasIndexingTransformation (STRING) multiple COPY nofulltext noqueryorder
+[config:Indexable] mixin
+- config:hasIndexingTransformation (STRING) multiple COPY nofulltext noqueryorder
 
