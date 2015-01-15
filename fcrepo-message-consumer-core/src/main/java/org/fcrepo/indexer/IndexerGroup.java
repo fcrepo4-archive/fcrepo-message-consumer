@@ -116,21 +116,21 @@ public class IndexerGroup implements MessageListener {
     private static final String REINDEX_EVENT_TYPE = REPOSITORY_NAMESPACE
             + "NODE_REINDEXED";
 
-    public static final String INDEXER_NAMESPACE =
-        "http://fedora.info/definitions/v4/indexing#";
+    public static final String CONFIG_NAMESPACE =
+        "http://fedora.info/definitions/v4/config#";
 
     /**
      * Indicates the transformation to use with this resource to derive indexing
      * information.
      */
     public static final Property INDEXING_TRANSFORM_PREDICATE =
-        createProperty(INDEXER_NAMESPACE + "hasIndexingTransformation");
+        createProperty(CONFIG_NAMESPACE + "hasIndexingTransformation");
 
     /**
      * Indicates that a resource is indexable.
      */
     public static final Resource INDEXABLE_MIXIN =
-        createResource(INDEXER_NAMESPACE + "indexable");
+        createResource(CONFIG_NAMESPACE + "Indexable");
 
     private static final String REST_PREFIX = "/rest/";
     private static final String FCREPO_PREFIX = "/fcrepo/";

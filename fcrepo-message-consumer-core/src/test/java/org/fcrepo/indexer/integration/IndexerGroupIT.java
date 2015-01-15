@@ -71,9 +71,9 @@ public class IndexerGroupIT extends IndexingIT {
     private void createIndexableObject(final String uri) throws Exception {
         final String objectRdf =
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ."
-                    + "@prefix indexing:<http://fedora.info/definitions/v4/indexing#>."
-                    + "<" + uri + ">  rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
-                    + "indexing:hasIndexingTransformation \"default\".";
+                    + "@prefix config:<http://fedora.info/definitions/v4/config#>."
+                    + "<" + uri + ">  rdf:type  <http://fedora.info/definitions/v4/config#Indexable> ;"
+                    + "config:hasIndexingTransformation \"default\".";
 
         createResource(uri, objectRdf, contentTypeN3Alt1);
         LOGGER.debug("Created object at: {}", uri);
@@ -170,7 +170,7 @@ public class IndexerGroupIT extends IndexingIT {
         final URI descURI = Link.valueOf(response.getFirstHeader("Link").getValue()).getUri();
         final HttpPatch patch = new HttpPatch(descURI);
         final String sparqlUpdate = "insert { <> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
-                + "<http://fedora.info/definitions/v4/indexing#indexable> } where {}";
+                + "<http://fedora.info/definitions/v4/config#Indexable> } where {}";
         patch.setEntity(new StringEntity(sparqlUpdate));
         patch.addHeader("Content-Type", "application/sparql-update");
         assertEquals(204, client.execute(patch).getStatusLine().getStatusCode());
