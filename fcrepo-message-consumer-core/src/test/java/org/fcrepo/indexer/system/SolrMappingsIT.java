@@ -87,7 +87,7 @@ public class SolrMappingsIT extends IndexingIT {
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      \"goats\" ;"
-                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
+                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#Indexable> ;"
                     + "indexing:hasIndexingTransformation \"default\".";
 
         createRequest.setEntity(new StringEntity(objectRdf));
@@ -178,7 +178,7 @@ public class SolrMappingsIT extends IndexingIT {
                     + "<" + uri + ">  dc:title        \"500 Easy Microwave Meals\" ; "
                     + "dc:creator      \"Yubulac Xorhorisa\" ; "
                     + "dc:subject      \"goats\" ;"
-                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#indexable> ;"
+                    + "rdf:type  <http://fedora.info/definitions/v4/indexing#Indexable> ;"
                     + "rdf:type  <http://fedora.info/definitions/v4/indexingtest#book> ;"
                     + "indexing:hasIndexingTransformation \"dc\".";
 
