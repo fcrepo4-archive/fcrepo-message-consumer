@@ -13,8 +13,8 @@
 
   <properties>
     <!-- integration test properties -->
-    <test.context.path>/</test.context.path>
-    
+    <fcrepo.test.context.path>/</fcrepo.test.context.path>
+
     <!-- sonar -->
     <sonar.artifact.path>${project.build.directory}${file.separator}${project.artifactId}-${project.version}.war</sonar.artifact.path>
   </properties>
@@ -99,7 +99,7 @@
       <scope>test</scope>
     </dependency>
  <!--  httpmime lib is required for standardalone Solr Server client
-      It is not included in Solr ver. 3.6.2, 
+      It is not included in Solr ver. 3.6.2,
       Solr 4.xx DO NOT need this since it is included.-->
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -128,11 +128,11 @@
               <properties>
                 <property>
                   <name>fcrepo.username</name>
-                  <value>${fedora.repo.username}</value>
+                  <value>${fcrepo.username}</value>
                 </property>
                 <property>
                   <name>fcrepo.password</name>
-                  <value>${fedora.repo.password}</value>
+                  <value>${fcrepo.password}</value>
                 </property>
               </properties>
             </configuration>
@@ -179,9 +179,9 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>
-            <test.port>${test.port}</test.port>
-            <jms.port>${jms.port}</jms.port>
-            <test.context.path>${test.context.path}</test.context.path>
+            <fcrepo.test.port>${fcrepo.test.port}</fcrepo.test.port>
+            <fcrepo.jms.port>${fcrepo.jms.port}</fcrepo.jms.port>
+            <fcrepo.test.context.path>${fcrepo.test.context.path}</fcrepo.test.context.path>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -190,11 +190,11 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <configuration>
           <portNames>
-            <portName>test.port</portName>
-            <portName>jms.port</portName>
+            <portName>fcrepo.test.port</portName>
+            <portName>fcrepo.jms.port</portName>
             <!-- reserves the stop port for jetty-maven-plugin -->
             <portName>jetty.port.stop</portName>
-            <portName>stomp.port</portName>
+            <portName>fcrepo.stomp.port</portName>
           </portNames>
         </configuration>
       </plugin>
@@ -206,7 +206,7 @@
           <scanIntervalSeconds>2</scanIntervalSeconds>
           <stopKey>STOP</stopKey>
           <webApp>
-            <contextPath>${test.context.path}</contextPath>
+            <contextPath>${fcrepo.test.context.path}</contextPath>
             <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
           </webApp>
 
@@ -223,7 +223,7 @@
             <configuration>
               <connectors>
                 <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                  <port>${test.port}</port>
+                  <port>${fcrepo.test.port}</port>
                   <maxIdleTime>60000</maxIdleTime>
                 </connector>
               </connectors>
@@ -231,20 +231,12 @@
               <stopPort>${jetty.port.stop}</stopPort>
               <systemProperties>
                 <systemProperty>
-                  <name>jms.port</name>
-                  <value>${jms.port}</value>
+                  <name>fcrepo.jms.port</name>
+                  <value>${fcrepo.jms.port}</value>
                 </systemProperty>
                 <systemProperty>
-                  <name>stomp.port</name>
-                  <value>${stomp.port}</value>
-                </systemProperty>
-                <systemProperty>
-                  <name>fcrepo.port</name>
-                  <value>${test.port}</value>
-                </systemProperty>
-                <systemProperty>
-                  <name>fcrepo.context</name>
-                  <value>/f4/</value>
+                  <name>fcrepo.stomp.port</name>
+                  <value>${fcrepo.stomp.port}</value>
                 </systemProperty>
               </systemProperties>
 

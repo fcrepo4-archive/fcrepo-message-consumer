@@ -12,9 +12,9 @@
 
     <!-- fuseki -->
     <property name="queryBase"
-      value="http://localhost:${test.fuseki.port:3030}/test/query"/>
+      value="http://localhost:${fuseki.test.port:3030}/test/query"/>
     <property name="updateBase"
-      value="http://localhost:${test.fuseki.port:3030}/test/update"/>
+      value="http://localhost:${fuseki.test.port:3030}/test/update"/>
     <property name="formUpdates">
       <value type="java.lang.Boolean">false</value>
     </property>
