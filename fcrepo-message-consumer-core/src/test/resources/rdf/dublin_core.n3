@@ -5,5 +5,5 @@
 <>	dc:title		"Easy Microwave Meals For Ghouls" ;  
 	dc:creator		"Yubulac Xorhorisa" ; 
 	dc:subject		<http://id.loc.gov/authorities/subjects/sh2012004374> ;
-	rdf:type			<indexing:indexable> ;
+	rdf:type			<indexing:Indexable> ;
 	indexing:hasIndexingTransformation "dc".

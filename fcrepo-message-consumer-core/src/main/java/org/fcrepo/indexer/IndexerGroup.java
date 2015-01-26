@@ -130,7 +130,7 @@ public class IndexerGroup implements MessageListener {
      * Indicates that a resource is indexable.
      */
     public static final Resource INDEXABLE_MIXIN =
-        createResource(INDEXER_NAMESPACE + "indexable");
+        createResource(INDEXER_NAMESPACE + "Indexable");
 
     private static final String REST_PREFIX = "/rest/";
     private static final String FCREPO_PREFIX = "/fcrepo/";
