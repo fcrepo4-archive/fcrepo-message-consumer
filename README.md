@@ -28,7 +28,7 @@ indexer-core.xml
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
     <!-- base URL for triplestore subjects, PID will be appended -->
-    <property name="prefix" value="http://localhost:${test.port:8080}/rest/objects/"/>
+    <property name="prefix" value="http://localhost:${fcrepo.test.port:8080}/rest/objects/"/>
 
     <!-- fuseki (used by tests) -->
     <property name="queryBase" value="http://localhost:3030/test/query"/>
@@ -83,7 +83,7 @@ indexer-core.xml
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://localhost:${test.port:8080}/rest/objects/" />
+    <property name="repositoryURL" value="http://localhost:${fcrepo.test.port:8080}/rest/objects/" />
     <property name="indexers">
       <set>
         <ref bean="sparqlUpdate"/>
@@ -181,7 +181,7 @@ Solr can be installed embedded into a jetty server (recommended for test) or in 
 Use the following MAVEN_OPTS on build
 
    ``` sh
-   MAVEN_OPTS=-Xmx750M -XX:MaxPermSize=300M clean install
+   MAVEN_OPTS="-Xmx750M -XX:MaxPermSize=300M" mvn clean install
    ```
 
 ### Caveat: Blank Nodes
@@ -204,8 +204,8 @@ file that will later be set to these two system variables:
       <activeByDefault>true</activeByDefault>
     </activation>
     <properties>
-      <fedora.repo.username>example</fedora.repo.username>
-      <fedora.repo.password>xxxxxxxx</fedora.repo.password>
+      <fcrepo.username>example</fcrepo.username>
+      <fcrepo.password>xxxxxxxx</fcrepo.password>
     </properties>
   </profile>
 </profiles>

@@ -240,9 +240,9 @@
         <!-- reserve ports for integration tests -->
         <configuration>
           <portNames>
-            <portName>test.port</portName>
-            <portName>test.mgt.port</portName>
-            <portName>test.fuseki.port</portName>
+            <portName>fcrepo.test.port</portName>
+            <portName>fuseki.test.mgt.port</portName>
+            <portName>fuseki.test.port</portName>
           </portNames>
         </configuration>
         <executions>
@@ -263,9 +263,9 @@
         <configuration>
           <!-- export ports for integration tests to system.env-->
           <systemPropertyVariables>
-            <test.port>${test.port}</test.port>
-            <test.mgt.port>${test.mgt.port}</test.mgt.port>
-            <test.fuseki.port>${test.fuseki.port}</test.fuseki.port>
+            <fcrepo.test.port>${fcrepo.test.port}</fcrepo.test.port>
+            <fuseki.test.mgt.port>${fuseki.test.mgt.port}</fuseki.test.mgt.port>
+            <fuseki.test.port>${fuseki.test.port}</fuseki.test.port>
           </systemPropertyVariables>
         </configuration>
       </plugin>
