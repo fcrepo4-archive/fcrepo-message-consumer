@@ -7,7 +7,7 @@ This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves a m
 
 ## Running the indexer
 
-In the simplest case, the indexer can be configured in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/futures/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
+In the simplest case, the indexer can be configured in the same container as the repository.   See [kitchen-sink/fuseki](https://github.com/fcrepo4-labs/fcrepo-kitchen-sink/tree/fuseki) for an example of this configuration.
 
 For production deployment, it is more typical to run the indexer on a separate machine.  So we also have a stand-alone mode where the indexer is run as its own webapp:
 
@@ -19,9 +19,9 @@ $ mvn -D jetty.port=9999 install jetty:run
 
 ## Configuring the indexer
 
- [Test Spring Configuration](https://github.com/futures/fcrepo-jms-indexer-pluggable/tree/master/fcrepo-jms-indexer-core/src/test/resources/spring-test)
+ [Test Spring Configuration](https://github.com/fcrepo4/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-core/src/test/resources/spring-test)
  
- [Production Spring Configuration](https://github.com/futures/fcrepo-jms-indexer-pluggable/tree/master/fcrepo-jms-indexer-webapp/src/main/resources/spring) 
+ [Production Spring Configuration](https://github.com/fcrepo4/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-webapp/src/main/resources/spring) 
 
 indexer-core.xml
 ```xml
@@ -95,7 +95,7 @@ indexer-core.xml
   <!--end indexer-core.xml-->
 ```
 
-Here 3 indexers are implemented, sparqlUpdate writing to an as configured fuseki triplestore, solrIndexer writing to an as configured standalone solr instance, and fileSerializer writing to an arbitrary path.  
+Here 3 indexers are implemented, sparqlUpdate writing to an as configured fuseki triplestore, solrIndexer writing to an as configured standalone solr instance, and fileSerializer writing to an arbitrary path.
 
 indexer-events.xml
 ```xml
