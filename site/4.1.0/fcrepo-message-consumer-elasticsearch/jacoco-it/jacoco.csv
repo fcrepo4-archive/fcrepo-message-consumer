@@ -1,0 +1,4 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+fcrepo-message-consumer-elasticsearch,org.fcrepo.indexer.elastic,ElasticIndexer.new Callable() {...},17,9,0,0,2,1,1,1,1,1
+fcrepo-message-consumer-elasticsearch,org.fcrepo.indexer.elastic,ElasticIndexer.new Callable() {...},26,0,0,0,3,0,2,0,2,0
+fcrepo-message-consumer-elasticsearch,org.fcrepo.indexer.elastic,ElasticIndexer,23,68,1,1,5,18,3,9,2,9
