@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FileSerializer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer</a> &gt; <span class="el_source">FileSerializer.java</span></div><h1>FileSerializer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2015 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer;
+
+import static com.google.common.base.Throwables.propagate;
+import static java.util.Locale.US;
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.Callable;
+
+import org.slf4j.Logger;
+
+/**
+ * Basic Indexer implementation that writes object content to timestamped files
+ * on disk.
+ *
+ * @author ajs6f
+ * @author Esmé Cowles
+ * @since Aug 19, 2013
+**/
+<span class="fc" id="L44">public class FileSerializer extends SynchIndexer&lt;NamedFields, File&gt; {</span>
+
+<span class="fc" id="L46">    private static final Logger LOGGER = getLogger(FileSerializer.class);</span>
+
+<span class="fc" id="L48">    private static SimpleDateFormat fmt =</span>
+        new SimpleDateFormat(&quot;yyyyMMddHHmmss&quot;, US);
+
+    private File path;
+
+    /**
+     * Set path to write files.
+     *
+     * @param pathName
+     */
+    public void setPath( final String pathName ) {
+<span class="fc" id="L59">        this.path = new File(pathName);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (!this.path.exists()) {</span>
+<span class="fc" id="L61">            this.path.mkdirs();</span>
+        }
+<span class="fc" id="L63">    }</span>
+    /**
+     * Return path where files are written.
+     *
+     * @return
+     */
+    public String getPath() {
+<span class="nc" id="L70">        return path.getAbsolutePath();</span>
+    }
+
+    /**
+     * Create or update an index entry for the object.
+     * @return
+    **/
+    @Override
+    public Callable&lt;File&gt; updateSynch(final URI id, final NamedFields content) {
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (id.toString().endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L81">            throw new IllegalArgumentException(</span>
+                    &quot;Identifiers for use with this indexer may not end in '/'!&quot;);
+        }
+
+        // timestamped filename
+<span class="fc" id="L86">        String fn = id.toString() + &quot;@&quot; + fmt.format(new Date());</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (fn.indexOf('/') != -1) {</span>
+<span class="fc" id="L88">            fn = substringAfterLast(fn, &quot;/&quot;);</span>
+        }
+<span class="fc" id="L90">        final File file = new File(path, fn);</span>
+<span class="fc" id="L91">        LOGGER.debug(&quot;Updating to file: {}&quot;, file);</span>
+<span class="fc" id="L92">        return new Callable&lt;File&gt;() {</span>
+
+            @Override
+            public File call() {
+                // write content to disk
+<span class="pc" id="L97">                try (</span>
+<span class="fc" id="L98">                    Writer w =</span>
+                        new OutputStreamWriter(new FileOutputStream(file),
+                                &quot;UTF8&quot;)) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                    if (content.isEmpty()) {</span>
+<span class="fc" id="L102">                        w.write(&quot;&quot;);</span>
+                    } else {
+<span class="fc" id="L104">                        w.write(content.toString());</span>
+                    }
+<span class="pc bpc" id="L106" title="6 of 8 branches missed.">                } catch (final IOException e) {</span>
+<span class="nc" id="L107">                    LOGGER.error(&quot;Failed to write to file: {}&quot;, file);</span>
+<span class="nc" id="L108">                    propagate(e);</span>
+<span class="fc" id="L109">                }</span>
+<span class="fc" id="L110">                return file;</span>
+            }
+        };
+
+    }
+
+
+    /**
+     * Remove the object from the index.
+    **/
+    @Override
+    public Callable&lt;File&gt; removeSynch(final URI id) {
+        // empty update
+<span class="fc" id="L123">        LOGGER.debug(&quot;Received remove for identifier: {}&quot;, id);</span>
+<span class="fc" id="L124">        return updateSynch(id, new NamedFields());</span>
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+<span class="fc" id="L129">        return NAMEDFIELDS;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.1.201405082137</span></div></body></html>
