@@ -42,7 +42,7 @@ public class FedoraIndexerIT {
      * The server port of the application, set as system property by
      * maven-failsafe-plugin.
      */
-    private static final String SERVER_PORT = System.getProperty("fcrepo.test.port");
+    private static final String SERVER_PORT = System.getProperty("fcrepo.dynamic.test.port");
 
     /**
      * The context path of the application (including the leading "/"), set as

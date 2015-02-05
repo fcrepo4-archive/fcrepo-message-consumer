@@ -29,7 +29,8 @@ import static java.lang.System.getProperty;
  */
 public class SparqlIndexerITHelper {
 
-    private static String queryBase = "http://localhost:" + getProperty("fuseki.test.port", "3030") + "/test/query";
+    private static String queryBase =
+        "http://localhost:" + getProperty("fuseki.dynamic.test.port", "3030") + "/test/query";
 
     /**
      * No public constructor for utility class

@@ -43,9 +43,9 @@ public class FusekiContainerWrapper extends ContainerWrapper {
     final private Logger logger = getLogger(FusekiContainerWrapper.class);
 
     private static final int FUSEKI_PORT = parseInt(getProperty(
-            "fuseki.test.port", "3030"));
+            "fuseki.dynamic.test.port", "3030"));
 
-    private static final int MGT_PORT = parseInt(getProperty("fuseki.test.mgt.port",
+    private static final int MGT_PORT = parseInt(getProperty("fuseki.dynamic.test.mgt.port",
             "3031"));
 
     private static final String serverAddress = "http://localhost:" + MGT_PORT

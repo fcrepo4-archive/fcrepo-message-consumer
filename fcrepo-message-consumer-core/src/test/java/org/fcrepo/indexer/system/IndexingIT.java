@@ -37,7 +37,7 @@ public abstract class IndexingIT {
 
     private static final Logger LOGGER = getLogger(IndexingIT.class);
 
-    protected static final int SERVER_PORT = parseInt(getProperty("fcrepo.test.port",
+    protected static final int SERVER_PORT = parseInt(getProperty("fcrepo.dynamic.test.port",
             "8080"));
 
     protected static final String serverAddress = "http://localhost:"

@@ -28,7 +28,7 @@ indexer-core.xml
   <!-- sparql-update indexer -->
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.SparqlIndexer">
     <!-- base URL for triplestore subjects, PID will be appended -->
-    <property name="prefix" value="http://localhost:${fcrepo.test.port:8080}/rest/objects/"/>
+    <property name="prefix" value="http://localhost:${fcrepo.dynamic.test.port:8080}/rest/objects/"/>
 
     <!-- fuseki (used by tests) -->
     <property name="queryBase" value="http://localhost:3030/test/query"/>
@@ -83,7 +83,7 @@ indexer-core.xml
 
   <!-- Message Driven POJO (MDP) that manages individual indexers -->
   <bean id="indexerGroup" class="org.fcrepo.indexer.IndexerGroup">
-    <property name="repositoryURL" value="http://localhost:${fcrepo.test.port:8080}/rest/objects/" />
+    <property name="repositoryURL" value="http://localhost:${fcrepo.dynamic.test.port:8080}/rest/objects/" />
     <property name="indexers">
       <set>
         <ref bean="sparqlUpdate"/>
