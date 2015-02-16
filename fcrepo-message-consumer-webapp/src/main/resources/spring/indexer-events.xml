@@ -10,7 +10,7 @@
 
   <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
     <!--The Reconnect query params allow the broker not to block on start-up-->
-    <property name="brokerURL" value="failover:(tcp://${fcrepo.jms.host:localhost}:${fcrepo.jms.port:61616})?startupMaxReconnectAttempts=1&amp;initialReconnectDelay=1"/>
+    <property name="brokerURL" value="failover:(tcp://${fcrepo.jms.host:localhost}:${fcrepo.dynamic.jms.port:61616})?startupMaxReconnectAttempts=1&amp;initialReconnectDelay=1"/>
   </bean>
 
   <!-- ActiveMQ queue to listen for events -->
