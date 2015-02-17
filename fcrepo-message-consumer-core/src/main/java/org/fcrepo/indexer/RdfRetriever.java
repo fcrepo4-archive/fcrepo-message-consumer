@@ -59,8 +59,8 @@ public class RdfRetriever implements Supplier<Model> {
     private static final Logger LOGGER = getLogger(RdfRetriever.class);
 
     /**
-     * @param identifier
-     * @param client
+     * @param identifier the uri identifier
+     * @param client the http client
      */
     public RdfRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;

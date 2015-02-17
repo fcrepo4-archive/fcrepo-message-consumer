@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * Main interface for individual indexers to implement.  Each type of
  * destination (Solr, triplestore, files, etc.) should have its own
- * implementation. Abstract classes {@link AsynchIndexer} and {@link SynchIndexer
+ * implementation. Abstract classes {@link AsynchIndexer} and {@link SynchIndexer}
  * are provided for convenience.
  *
  * @author ajs6f
@@ -37,19 +37,19 @@ public interface Indexer<Content> {
     /**
      * Create or update an index entry for the object.
      *
-     * @param id
-     * @param content
+     * @param id the object id
+     * @param content the object content
      * @return the results of addition
-     * @throws IOException
+     * @throws IOException if IO exception occurred
      */
     public ListenableFuture<?> update(final URI id, final Content content) throws IOException;
 
     /**
      * Remove the object from the index.
      *
-     * @param id
+     * @param id the object id
      * @return the results of removal
-     * @throws IOException
+     * @throws IOException if IO exception occurred
      */
     public ListenableFuture<?> remove(final URI id) throws IOException;
 

@@ -58,6 +58,8 @@ public abstract class BasePersistenceIndexer<Content, File> extends SynchIndexer
     /**
      * Return the path where a given record should be persisted.
      * @param id The record's URI
+     * @return the path where a given record should be persisted.
+     * @throws IOException if there is IO failure
     **/
     protected Path pathFor(final URI id) throws IOException {
 

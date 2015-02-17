@@ -83,17 +83,8 @@ public abstract class AsynchIndexer<Content, Result> implements
         return task;
     }
 
-    /**
-     * @param identifier
-     * @return
-     */
     public abstract Callable<Result> removeSynch(final URI identifier);
 
-    /**
-     * @param identifier
-     * @param content
-     * @return
-     */
     public abstract Callable<Result> updateSynch(final URI identifier, final Content content);
 
 }
