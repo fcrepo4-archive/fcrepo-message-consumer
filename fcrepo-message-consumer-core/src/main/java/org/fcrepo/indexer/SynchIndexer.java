@@ -20,7 +20,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * An Indexer that completes its operations synchronously.
+ * An {@link Indexer} that completes its operations synchronously.
  *
  * @author ajs6f
  * @since Dec 8, 2013
