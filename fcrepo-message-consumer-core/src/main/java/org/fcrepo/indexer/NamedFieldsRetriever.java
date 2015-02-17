@@ -62,7 +62,7 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
     private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);
 
     /**
-     * @param uri the uri
+     * @param uri the URI identifier
      * @param client the http client
      * @param rdfr Used to determine the transform to use with this indexing
      *        step

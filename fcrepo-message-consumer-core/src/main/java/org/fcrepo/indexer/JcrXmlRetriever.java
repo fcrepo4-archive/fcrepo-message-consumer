@@ -49,6 +49,11 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
 
     private static final Logger LOGGER = getLogger(JcrXmlRetriever.class);
 
+    /**
+     * Constructor
+     * @param identifier the URI identifier
+     * @param client the http client
+     */
     public JcrXmlRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
         this.httpClient = client;

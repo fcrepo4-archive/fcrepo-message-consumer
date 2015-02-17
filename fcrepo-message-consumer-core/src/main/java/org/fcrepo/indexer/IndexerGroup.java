@@ -147,6 +147,12 @@ public class IndexerGroup implements MessageListener {
     private final Map<String,DefaultHttpClient> clients;
     private final DefaultHttpClient defaultClient;
 
+    /**
+     * Default constructor.
+     * @param indexers the set of indexers
+     * @param fedoraUsername the fedora user name
+     * @param fedoraPassword the fedora password
+     **/
     public IndexerGroup(final Set<Indexer<Object>> indexers,
                         final String fedoraUsername,
                         final String fedoraPassword) {
@@ -162,7 +168,7 @@ public class IndexerGroup implements MessageListener {
     /**
      * Constructor with provided default HttpClient instance added for testing.
      * @param indexers the set of indexers
-     * @param httpClient http client for testing
+     * @param httpClient the http client for testing
     **/
     public IndexerGroup(final Set<Indexer<Object>> indexers, final DefaultHttpClient httpClient) {
         LOGGER.debug("Creating IndexerGroup: {}", this);

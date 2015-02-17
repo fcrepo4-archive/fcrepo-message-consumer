@@ -64,7 +64,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
     /**
      * Return path where files are written.
      *
-     * @return the path were files are written
+     * @return the path where files are written
      */
     public String getPath() {
         return path.getAbsolutePath();

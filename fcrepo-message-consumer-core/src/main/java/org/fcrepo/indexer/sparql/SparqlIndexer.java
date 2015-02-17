@@ -75,7 +75,8 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
     /**
      * Remove any current triples about the Fedora object and replace them with
-     * the provided content. {@literal @content RDF in N3 format}.
+     * the provided content.
+     * {@literal @content RDF in N3 format.}
     **/
     @Override
     public Callable<Void> updateSynch(final URI pid, final Model model) {
@@ -248,7 +249,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
     /**
      * Set whether to use SPARQL Update or form updates.
-     * @param b wether to use SPARQL update or form update
+     * @param b boolean value for whether to use SPARQL update or form update
     **/
     public void setFormUpdates( final boolean b ) {
         this.formUpdates = b;
@@ -264,7 +265,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
 
     /**
      * Set base URL for SPARQL Update requests.
-     * @param url base URL for SPARQL update request
+     * @param url base URL for SPARQL update requests
     **/
     public void setUpdateBase( final String url ) {
         this.updateBase = url;
@@ -278,7 +279,7 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
     /**
      * Note: Protected for Unit Tests to overwrite.
      * @param describeQuery the describe query
-     * @return query engine http
+     * @return the query engine http
      */
     protected QueryEngineHTTP buildQueryEngineHTTP(final String describeQuery) {
         return new QueryEngineHTTP( queryBase, describeQuery );
