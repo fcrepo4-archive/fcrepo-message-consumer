@@ -7,8 +7,8 @@
   <bean id="sparqlUpdate" class="org.fcrepo.indexer.sparql.SparqlIndexer">
 
     <!-- fuseki -->
-    <property name="queryBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/query"/>
-    <property name="updateBase" value="http://${fuseki.host:localhost}:${fuseki.port:3030}/test/update"/>
+    <property name="queryBase" value="http://${fuseki.host:localhost}:${fuseki.dynamic.test.port:3030}/test/query"/>
+    <property name="updateBase" value="http://${fuseki.host:localhost}:${fuseki.dynamic.test.port:3030}/test/update"/>
     <property name="formUpdates">
       <value type="java.lang.Boolean">false</value>
     </property>
