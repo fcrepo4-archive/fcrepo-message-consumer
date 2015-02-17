@@ -72,8 +72,8 @@ public class SolrIndexer extends AsynchIndexer<NamedFields, UpdateResponse> {
     private static final Logger LOGGER = getLogger(SolrIndexer.class);
 
     /**
-     * @Autowired solrServer instance is auto-@Autowired in indexer-core.xml
-     * @param solrServer
+     * solrServer instance is autowired in indexer-core.xml
+     * @param solrServer the solr server
      */
     @Autowired
     public SolrIndexer(final SolrServer solrServer) {

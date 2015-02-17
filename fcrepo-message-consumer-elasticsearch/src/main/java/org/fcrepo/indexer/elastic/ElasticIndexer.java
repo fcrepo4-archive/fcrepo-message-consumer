@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * {@link Indexer} for Elasticsearch.
+ * {@link org.fcrepo.indexer.Indexer} for Elasticsearch.
  *
  * @author ajs6f
  * @since Dec 14, 2013
@@ -60,7 +60,7 @@ public class ElasticIndexer extends AsynchIndexer<NamedFields, ActionResponse> {
 
     /**
      * Constructs an index with the name supplied.
-     * @throws InterruptedException
+     * @throws InterruptedException if interrupted exception occurred
      */
     @PostConstruct
     public void initIndex() throws InterruptedException {

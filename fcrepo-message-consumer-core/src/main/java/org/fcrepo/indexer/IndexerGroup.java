@@ -149,6 +149,9 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Default constructor.
+     * @param indexers the set of indexers
+     * @param fedoraUsername the fedora user name
+     * @param fedoraPassword the fedora password
      **/
     public IndexerGroup(final Set<Indexer<Object>> indexers,
                         final String fedoraUsername,
@@ -164,6 +167,8 @@ public class IndexerGroup implements MessageListener {
 
     /**
      * Constructor with provided default HttpClient instance added for testing.
+     * @param indexers the set of indexers
+     * @param httpClient the http client for testing
     **/
     public IndexerGroup(final Set<Indexer<Object>> indexers, final DefaultHttpClient httpClient) {
         LOGGER.debug("Creating IndexerGroup: {}", this);
@@ -366,6 +371,7 @@ public class IndexerGroup implements MessageListener {
      * Reindex a resource (and optionally all of its children).
      * @param uri The resource URI to reindex.
      * @param recursive If true, also recursively reindex all children.
+     * @throws URISyntaxException if URI syntax exception occurred
     **/
     public void reindex( final URI uri, final boolean recursive ) throws URISyntaxException {
         reindexed = new HashSet<>();

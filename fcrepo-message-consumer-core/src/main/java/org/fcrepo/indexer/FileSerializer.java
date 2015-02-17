@@ -53,7 +53,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
     /**
      * Set path to write files.
      *
-     * @param pathName
+     * @param pathName the path name
      */
     public void setPath( final String pathName ) {
         this.path = new File(pathName);
@@ -64,7 +64,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
     /**
      * Return path where files are written.
      *
-     * @return
+     * @return the path where files are written
      */
     public String getPath() {
         return path.getAbsolutePath();
@@ -72,7 +72,7 @@ public class FileSerializer extends SynchIndexer<NamedFields, File> {
 
     /**
      * Create or update an index entry for the object.
-     * @return
+     * @return the index entry for the object
     **/
     @Override
     public Callable<File> updateSynch(final URI id, final NamedFields content) {

@@ -31,7 +31,7 @@ public class NamedFields extends HashMap<String, Collection<String>> {
     /**
      * Default constructor
      *
-     * @param values
+     * @param values the values
      */
     public NamedFields(final Map<String, Collection<String>> values) {
         super(values);

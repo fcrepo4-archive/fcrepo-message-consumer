@@ -31,7 +31,7 @@ public class AbsentTransformPropertyException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     /**
-     * @param msg
+     * @param msg the message
      */
     public AbsentTransformPropertyException(final String msg) {
         super(msg);

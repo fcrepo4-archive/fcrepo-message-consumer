@@ -51,8 +51,8 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
 
     /**
      * Constructor
-     * @param identifier
-     * @param client
+     * @param identifier the URI identifier
+     * @param client the http client
      */
     public JcrXmlRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
