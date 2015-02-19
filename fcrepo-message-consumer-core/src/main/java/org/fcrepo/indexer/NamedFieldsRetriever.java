@@ -26,10 +26,14 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URI;
+
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
@@ -38,6 +42,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+
+import javax.ws.rs.core.Link;
 
 /**
  * Retrieves resources transformed into sets of named fields via LDPath.
@@ -85,38 +91,66 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
         LOGGER.debug("Retrieving RDF representation for: {}", uri);
         try {
             final Model rdf = rdfr.get();
+
+            // If there is no transform-predicate on this resource, look deeper...
             if (!rdf.contains(createResource(uri.toString()), INDEXING_TRANSFORM_PREDICATE)) {
-                LOGGER.info(
-                        "Found no property locating LDPath transform for: {}, will not retrieve transformed content.",
-                        uri);
-                throw new AbsentTransformPropertyException(uri.toString());
+                LOGGER.info("Looking up property locating LDPath transform for: {}", uri);
+                // make an initial HEAD request and check Link headers for descriptions located elsewhere
+                final HttpHead headRequest = new HttpHead(uri);
+                final HttpResponse headResponse = httpClient.execute(headRequest);
+                URI descriptionURI = null;
+                final Header[] links = headResponse.getHeaders("Link");
+                if ( links != null ) {
+                    for ( Header h : headResponse.getHeaders("Link") ) {
+                        final Link link = Link.valueOf(h.getValue());
+                        if (link.getRel().equals("describedby")) {
+                            descriptionURI = link.getUri();
+                            LOGGER.debug("Using URI from Link header: {}", descriptionURI);
+                        }
+                    }
+                }
+                if (descriptionURI == null) {
+                    throw new AbsentTransformPropertyException("Property lookup failed for uri: " + uri);
+                }
+
+                // Return fields based on transform-predicate defined on the resource-description
+                return getNamedFields(rdf, descriptionURI);
             }
-            final RDFNode indexingTransform =
+
+            // Return fields based on transform-predicate defined on the original resource
+            return getNamedFields(rdf, uri);
+        } catch (IOException | HttpException e) {
+            throw propagate(e);
+        }
+    }
+
+    private NamedFields getNamedFields(final Model rdf, final URI uri) throws IOException, HttpException {
+        final NodeIterator nodeIterator =
                 rdf.listObjectsOfProperty(createResource(uri.toString()),
-                        INDEXING_TRANSFORM_PREDICATE).next();
-            final String transformKey =
+                        INDEXING_TRANSFORM_PREDICATE);
+        if (!nodeIterator.hasNext()) {
+            throw new AbsentTransformPropertyException("Property lookup failed for uri: " + uri);
+        }
+
+        final RDFNode indexingTransform = nodeIterator.next();
+        final String transformKey =
                 indexingTransform.asLiteral().getString();
-
-            LOGGER.debug("Discovered transform key: {}", transformKey);
-            final HttpGet transformedResourceRequest =
+        LOGGER.debug("Discovered transform key: {}", transformKey);
+        final HttpGet transformedResourceRequest =
                 new HttpGet(uri.toString() + "/fcr:transform/" + transformKey);
-            LOGGER.debug("Retrieving transformed resource from: {}",
-                    transformedResourceRequest.getURI());
+        LOGGER.debug("Retrieving transformed resource from: {}",
+                transformedResourceRequest.getURI());
 
-            final HttpResponse response =
+        final HttpResponse response =
                 httpClient.execute(transformedResourceRequest);
-            if (response.getStatusLine().getStatusCode() != SC_OK) {
-                throw new HttpException(response.getStatusLine().toString());
-            }
-            try (
+        if (response.getStatusLine().getStatusCode() != SC_OK) {
+            throw new HttpException(response.getStatusLine().toString());
+        }
+        try (
                 Reader r =
                     new InputStreamReader(response.getEntity().getContent(),
                             "UTF8")) {
-                return gson.fromJson(r, typeToken);
-            }
-
-        } catch (IOException | HttpException e) {
-            throw propagate(e);
+            return gson.fromJson(r, typeToken);
         }
     }
 
