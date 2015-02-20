@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URI;
 
+import com.hp.hpl.jena.rdf.model.NodeIterator;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -107,7 +108,7 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
                     }
                 }
                 if (descriptionURI == null) {
-                    throw new AbsentTransformPropertyException("Property lookup failed");
+                    throw new AbsentTransformPropertyException("Property lookup failed for uri: " + uri);
                 }
                 return getNamedFields(rdf, descriptionURI);
             }
@@ -118,12 +119,16 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
     }
 
     private NamedFields getNamedFields(final Model rdf, final URI uri) throws IOException, HttpException {
-        final RDFNode indexingTransform =
+        final NodeIterator nodeIterator =
                 rdf.listObjectsOfProperty(createResource(uri.toString()),
-                        INDEXING_TRANSFORM_PREDICATE).next();
+                        INDEXING_TRANSFORM_PREDICATE);
+        if (!nodeIterator.hasNext()) {
+            throw new AbsentTransformPropertyException("Property lookup failed for uri: " + uri);
+        }
+
+        final RDFNode indexingTransform = nodeIterator.next();
         final String transformKey =
                 indexingTransform.asLiteral().getString();
-
         LOGGER.debug("Discovered transform key: {}", transformKey);
         final HttpGet transformedResourceRequest =
                 new HttpGet(uri.toString() + "/fcr:transform/" + transformKey);

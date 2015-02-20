@@ -190,6 +190,7 @@ public class NamedFieldsRetrieverTest {
         final NodeIterator mockNoderIterator = mock(NodeIterator.class);
         when(mockModel.listObjectsOfProperty(any(Resource.class), any(Property.class))).thenReturn(mockNoderIterator);
         when(mockNoderIterator.next()).thenReturn(mockNode);
+        when(mockNoderIterator.hasNext()).thenReturn(true);
         final Literal mockLiteral = mock(Literal.class);
         when(mockNode.asLiteral()).thenReturn(mockLiteral);
         when(mockNode.asLiteral().getString()).thenReturn("default");
@@ -197,6 +198,29 @@ public class NamedFieldsRetrieverTest {
             new NamedFieldsRetriever(new URI(testUri), mockClient, mockRetriever).get();
         LOGGER.debug("Received results: {}", results);
         assertEquals(testUri, results.get("id").iterator().next());
+    }
+
+    @Test (expected = AbsentTransformPropertyException.class)
+    public void testTransformPropertyBadLookup() throws Exception {
+        final String testUri = "indexing:goodTransform";
+        final String testRdf = dc_rdf.replace("<>", "<" + testUri + ">");
+        LOGGER.debug("Using test RDF: {}", testRdf);
+        try (Reader r = new StringReader(testRdf)) {
+            final Model mockRdf = createDefaultModel().read(r, "", "N3");
+            when(mockRetriever.get()).thenReturn(mockRdf);
+        }
+
+        final Model mockModel = mock(Model.class);
+        when(mockRetriever.get()).thenReturn(mockModel);
+        when(mockModel.contains(any(Resource.class), any(Property.class))).thenReturn(false);
+        final NodeIterator mockIterator = mock(NodeIterator.class);
+        when(mockModel.listObjectsOfProperty(any(Resource.class), any(Property.class))).thenReturn(mockIterator);
+        when(mockIterator.hasNext()).thenReturn(false);
+        final Header mockHeader = mock(Header.class);
+        when(mockHeader.getValue()).thenReturn("<http://example.com/tet>; rel=\"describedby\"");
+        final Header[] headers = new Header[] {mockHeader};
+        when(mockResponse.getHeaders("Link")).thenReturn(headers);
+        new NamedFieldsRetriever(new URI(testUri), mockClient, mockRetriever).get();
     }
 
     private static final Logger LOGGER =
