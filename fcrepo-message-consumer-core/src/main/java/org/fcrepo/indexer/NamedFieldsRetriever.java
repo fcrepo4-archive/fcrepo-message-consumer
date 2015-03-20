@@ -62,33 +62,36 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
 
     private Gson gson;
 
-    private static final Type typeToken = new TypeToken<NamedFields>() {}
+    private static final Type typeToken = new TypeToken<NamedFields>() {
+    }
             .getType();
 
     private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);
 
     /**
-     * @param uri the URI identifier
+     * @param uri    the URI identifier
      * @param client the http client
-     * @param rdfr Used to determine the transform to use with this indexing
-     *        step
+     * @param rdfr   Used to determine the transform to use with this indexing
+     *               step
      */
     public NamedFieldsRetriever(final URI uri, final HttpClient client,
-        final Supplier<Model> rdfr) {
+                                final Supplier<Model> rdfr) {
         this.uri = uri;
         this.httpClient = client;
         this.rdfr = rdfr;
         final NamedFieldsDeserializer deserializer =
-            new NamedFieldsDeserializer();
+                new NamedFieldsDeserializer();
         this.gson =
-            new GsonBuilder().registerTypeAdapter(typeToken, deserializer)
-                    .create();
+                new GsonBuilder().registerTypeAdapter(typeToken, deserializer)
+                        .create();
         deserializer.setGson(gson);
     }
 
     @Override
     public NamedFields get() {
         LOGGER.debug("Retrieving RDF representation for: {}", uri);
+        final HttpHead headRequest = new HttpHead(uri);
+
         try {
             final Model rdf = rdfr.get();
 
@@ -96,12 +99,11 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
             if (!rdf.contains(createResource(uri.toString()), INDEXING_TRANSFORM_PREDICATE)) {
                 LOGGER.info("Looking up property locating LDPath transform for: {}", uri);
                 // make an initial HEAD request and check Link headers for descriptions located elsewhere
-                final HttpHead headRequest = new HttpHead(uri);
                 final HttpResponse headResponse = httpClient.execute(headRequest);
                 URI descriptionURI = null;
                 final Header[] links = headResponse.getHeaders("Link");
-                if ( links != null ) {
-                    for ( Header h : headResponse.getHeaders("Link") ) {
+                if (links != null) {
+                    for (Header h : headResponse.getHeaders("Link")) {
                         final Link link = Link.valueOf(h.getValue());
                         if (link.getRel().equals("describedby")) {
                             descriptionURI = link.getUri();
@@ -121,10 +123,14 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
             return getNamedFields(rdf, uri);
         } catch (IOException | HttpException e) {
             throw propagate(e);
+        } finally {
+            headRequest.releaseConnection();
         }
     }
 
     private NamedFields getNamedFields(final Model rdf, final URI uri) throws IOException, HttpException {
+        HttpGet transformedResourceRequest = null;
+
         final NodeIterator nodeIterator =
                 rdf.listObjectsOfProperty(createResource(uri.toString()),
                         INDEXING_TRANSFORM_PREDICATE);
@@ -136,21 +142,27 @@ public class NamedFieldsRetriever implements Supplier<NamedFields> {
         final String transformKey =
                 indexingTransform.asLiteral().getString();
         LOGGER.debug("Discovered transform key: {}", transformKey);
-        final HttpGet transformedResourceRequest =
+        transformedResourceRequest =
                 new HttpGet(uri.toString() + "/fcr:transform/" + transformKey);
-        LOGGER.debug("Retrieving transformed resource from: {}",
-                transformedResourceRequest.getURI());
+        try {
+            LOGGER.debug("Retrieving transformed resource from: {}",
+                    transformedResourceRequest.getURI());
 
-        final HttpResponse response =
-                httpClient.execute(transformedResourceRequest);
-        if (response.getStatusLine().getStatusCode() != SC_OK) {
-            throw new HttpException(response.getStatusLine().toString());
-        }
-        try (
-                Reader r =
-                    new InputStreamReader(response.getEntity().getContent(),
-                            "UTF8")) {
-            return gson.fromJson(r, typeToken);
+            final HttpResponse response =
+                    httpClient.execute(transformedResourceRequest);
+            if (response.getStatusLine().getStatusCode() != SC_OK) {
+                throw new HttpException(response.getStatusLine().toString());
+            }
+            try (
+                    Reader r =
+                            new InputStreamReader(response.getEntity().getContent(),
+                                    "UTF8")) {
+                return gson.fromJson(r, typeToken);
+            }
+        } finally {
+            if (transformedResourceRequest != null) {
+                transformedResourceRequest.releaseConnection();
+            }
         }
     }
 
