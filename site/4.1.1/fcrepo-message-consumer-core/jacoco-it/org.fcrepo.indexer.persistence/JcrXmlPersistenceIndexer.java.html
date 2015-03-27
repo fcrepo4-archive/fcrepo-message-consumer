@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JcrXmlPersistenceIndexer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer.persistence</a> &gt; <span class="el_source">JcrXmlPersistenceIndexer.java</span></div><h1>JcrXmlPersistenceIndexer.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2015 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer.persistence;
+
+import static org.fcrepo.indexer.Indexer.IndexerType.JCRXML_PERSISTENCE;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.Callable;
+
+import org.slf4j.Logger;
+
+/**
+ * Basic Indexer implementation to write contents from an InputStream files on disk.
+ * @author ajs6f
+ * @author Esmé Cowles
+ * @since Aug 19, 2013
+ * @author lsitu
+**/
+public class JcrXmlPersistenceIndexer extends BasePersistenceIndexer&lt;InputStream, File&gt; {
+
+<span class="nc" id="L42">    private static final Logger LOGGER = getLogger(JcrXmlPersistenceIndexer.class);</span>
+
+    /**
+     * Constructor
+     * @param pathName of directory in which jcr/xml exports will be stored
+     */
+    public JcrXmlPersistenceIndexer(final String pathName) {
+<span class="nc" id="L49">        super(pathName, &quot;.jcr.xml&quot;);</span>
+<span class="nc" id="L50">    }</span>
+
+    /**
+     * Create/update an index entry for the object.
+     * @param id The object's URI
+     * @param content InputStream containing JCR/XML content
+     * @return The file where the content was written.
+    **/
+    @Override
+    public Callable&lt;File&gt; updateSynch(final URI id, final InputStream content) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (id.toString().endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L61">            throw new IllegalArgumentException(&quot;Identifiers for use with this indexer may not end in '/'!&quot;);</span>
+        }
+
+<span class="nc" id="L64">        return new Callable&lt;File&gt;() {</span>
+            @Override
+            public File call() throws IOException {
+<span class="nc" id="L67">                final Path p = pathFor(id);</span>
+<span class="nc" id="L68">                LOGGER.debug(&quot;Updating {} to file: {}&quot;, id, p.toAbsolutePath().toString());</span>
+<span class="nc" id="L69">                Files.copy(content, p, new CopyOption[]{});</span>
+<span class="nc" id="L70">                return p.toFile();</span>
+            }
+        };
+    }
+
+    /**
+     * Remove the object from the file system.
+     * @param id The object's URI
+    **/
+    @Override
+    public Callable&lt;File&gt; removeSynch(final URI id) {
+        // empty update
+<span class="nc" id="L82">        LOGGER.debug(&quot;Received remove for identifier: {}&quot;, id);</span>
+<span class="nc" id="L83">        return updateSynch(id, new ByteArrayInputStream(&quot;&quot;.getBytes()));</span>
+    }
+
+    @Override
+    public IndexerType getIndexerType() {
+<span class="nc" id="L88">        return JCRXML_PERSISTENCE;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.2.201409121644</span></div></body></html>

@@ -1,0 +1,33 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+fcrepo-message-consumer-core,org.fcrepo.indexer.sparql,SparqlIndexer,7,287,3,23,2,62,3,25,0,15
+fcrepo-message-consumer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Callable() {...},0,8,0,0,0,2,0,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Callable() {...},15,28,1,1,5,6,1,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.sparql,SparqlIndexer.new Runnable() {...},65,16,9,1,9,4,5,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFieldsRetriever,61,209,10,12,6,39,7,8,0,4
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFields,0,7,0,0,0,4,0,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFieldsDeserializer,11,41,0,0,4,9,1,4,1,4
+fcrepo-message-consumer-core,org.fcrepo.indexer,Indexer.IndexerType,5,53,0,0,0,2,1,3,1,3
+fcrepo-message-consumer-core,org.fcrepo.indexer,FileSerializer.new Callable() {...},39,48,6,4,2,9,4,3,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,AsynchIndexer,0,60,0,0,0,13,0,4,0,4
+fcrepo-message-consumer-core,org.fcrepo.indexer,JcrXmlRetriever,112,13,10,0,20,5,6,2,1,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,FileSerializer,9,89,3,3,2,17,4,6,1,6
+fcrepo-message-consumer-core,org.fcrepo.indexer,RdfRetriever,34,126,7,11,2,27,5,7,0,3
+fcrepo-message-consumer-core,org.fcrepo.indexer,IndexerGroup,164,470,19,37,36,107,17,20,1,7
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFieldsDeserializer.new Function() {...},0,30,0,2,0,7,0,3,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFieldsRetriever.new TypeToken() {...},0,3,0,0,0,1,0,1,0,1
+fcrepo-message-consumer-core,org.fcrepo.indexer,NamedFieldsDeserializer.new TypeToken() {...},0,3,0,0,0,1,0,1,0,1
+fcrepo-message-consumer-core,org.fcrepo.indexer,AsynchIndexer.new Runnable() {...},5,16,0,0,0,5,0,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,AbsentTransformPropertyException,0,4,0,0,0,2,0,1,0,1
+fcrepo-message-consumer-core,org.fcrepo.indexer,AsynchIndexer.new Runnable() {...},5,16,0,0,0,5,0,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer,IndexerGroup.new Object() {...},3,23,0,0,0,1,0,1,0,1
+fcrepo-message-consumer-core,org.fcrepo.indexer,SynchIndexer,0,9,0,0,0,3,0,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.solr,SolrIndexer.new Callable() {...},16,63,1,1,4,10,1,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.solr,SolrIndexer.new Maps.EntryTransformer() {...},0,32,0,2,0,7,0,3,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.solr,SolrIndexer.new Callable() {...},16,33,1,1,4,6,1,2,0,2
+fcrepo-message-consumer-core,org.fcrepo.indexer.solr,SolrIndexer,0,62,0,0,0,16,0,7,0,7
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,JcrXmlPersistenceIndexer,41,0,2,0,9,0,6,0,5,0
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,BasePersistenceIndexer,148,0,6,0,18,0,6,0,3,0
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,RdfPersistenceIndexer,41,0,2,0,10,0,6,0,5,0
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,RdfPersistenceIndexer.new Callable() {...},44,0,0,0,6,0,2,0,2,0
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,JcrXmlPersistenceIndexer.new Callable() {...},36,0,0,0,5,0,2,0,2,0
+fcrepo-message-consumer-core,org.fcrepo.indexer.persistence,RdfPersistenceIndexer.RDFLang,79,0,0,0,10,0,5,0,5,0

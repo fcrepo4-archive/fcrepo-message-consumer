@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>IndexerGroup.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer</a> &gt; <span class="el_source">IndexerGroup.java</span></div><h1>IndexerGroup.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2015 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer;
+
+import com.google.common.base.Strings;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.fcrepo.kernel.utils.EventType;
+import org.slf4j.Logger;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Suppliers.memoize;
+import static com.google.common.base.Throwables.propagate;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
+import static com.hp.hpl.jena.vocabulary.RDF.type;
+import static java.lang.Integer.MAX_VALUE;
+import static javax.jcr.observation.Event.NODE_REMOVED;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.fcrepo.kernel.FedoraJcrTypes.FCR_METADATA;
+import static org.fcrepo.jms.headers.DefaultMessageFactory.JMS_NAMESPACE;
+import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
+import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
+import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
+import static org.slf4j.LoggerFactory.getLogger;
+
+/**
+ * MessageListener implementation that retrieves objects from the repository and
+ * invokes one or more indexers to index the content. documentation:
+ * https://wiki.duraspace.org/display/FF/Design+-+Messaging+for+Workflow
+ *
+ * @author Esmé Cowles
+ * @author ajs6f
+ * @since Aug 19 2013
+ **/
+public class IndexerGroup implements MessageListener {
+
+<span class="fc" id="L78">    private static final Logger LOGGER = getLogger(IndexerGroup.class);</span>
+
+    @VisibleForTesting
+    protected final Set&lt;Indexer&lt;Object&gt;&gt; indexers;
+
+    private Set&lt;URI&gt; reindexed;
+
+    /**
+     * Identifier message header
+     */
+    static final String IDENTIFIER_HEADER_NAME = JMS_NAMESPACE
+            + &quot;identifier&quot;;
+
+    /**
+     * Properties message header
+     */
+    static final String PROPERTIES_HEADER_NAME = JMS_NAMESPACE + &quot;properties&quot;;
+
+    /**
+     * BaseURL message header
+     */
+    static final String BASE_URL_HEADER_NAME = JMS_NAMESPACE + &quot;baseURL&quot;;
+
+    /**
+     * Event type message header
+     */
+    static final String EVENT_TYPE_HEADER_NAME = JMS_NAMESPACE
+            + &quot;eventType&quot;;
+
+    /**
+     * Type of event that qualifies as a removal.
+     */
+<span class="fc" id="L110">    static final String REMOVAL_EVENT_TYPE = REPOSITORY_NAMESPACE</span>
+            + EventType.valueOf(NODE_REMOVED).toString();
+
+    /**
+     * Type of event to indicate reindexing.
+     */
+    private static final String REINDEX_EVENT_TYPE = REPOSITORY_NAMESPACE
+            + &quot;NODE_REINDEXED&quot;;
+
+    public static final String INDEXER_NAMESPACE =
+        &quot;http://fedora.info/definitions/v4/indexing#&quot;;
+
+    /**
+     * Indicates the transformation to use with this resource to derive indexing
+     * information.
+     */
+<span class="fc" id="L126">    public static final Property INDEXING_TRANSFORM_PREDICATE =</span>
+        createProperty(INDEXER_NAMESPACE + &quot;hasIndexingTransformation&quot;);
+
+    /**
+     * Indicates that a resource is indexable.
+     */
+<span class="fc" id="L132">    public static final Resource INDEXABLE_MIXIN =</span>
+        createResource(INDEXER_NAMESPACE + &quot;Indexable&quot;);
+
+    private static final String REST_PREFIX = &quot;/rest/&quot;;
+    private static final String FCREPO_PREFIX = &quot;/fcrepo/&quot;;
+
+    /**
+     * Indicates that a resource is a datastream.
+    **/
+<span class="fc" id="L141">    static final Resource DATASTREAM_TYPE = createResource(REPOSITORY_NAMESPACE + &quot;NonRdfSourceDescription&quot;);</span>
+
+<span class="fc" id="L143">    private static final Reader EMPTY_CONTENT = null;</span>
+
+    private final String fedoraUsername;
+    private final String fedoraPassword;
+    private final Map&lt;String,DefaultHttpClient&gt; clients;
+    private final DefaultHttpClient defaultClient;
+
+    /**
+     * Default constructor.
+     * @param indexers the set of indexers
+     * @param fedoraUsername the fedora user name
+     * @param fedoraPassword the fedora password
+     **/
+    public IndexerGroup(final Set&lt;Indexer&lt;Object&gt;&gt; indexers,
+                        final String fedoraUsername,
+<span class="fc" id="L158">                        final String fedoraPassword) {</span>
+<span class="fc" id="L159">        this.fedoraUsername = fedoraUsername;</span>
+<span class="fc" id="L160">        this.fedoraPassword = fedoraPassword;</span>
+
+<span class="fc" id="L162">        LOGGER.debug(&quot;Creating IndexerGroup: {}&quot;, this);</span>
+<span class="fc" id="L163">        this.indexers = indexers;</span>
+<span class="fc" id="L164">        this.clients = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L165">        this.defaultClient = null;</span>
+<span class="fc" id="L166">    }</span>
+
+    /**
+     * Constructor with provided default HttpClient instance added for testing.
+     * @param indexers the set of indexers
+     * @param httpClient the http client for testing
+    **/
+<span class="nc" id="L173">    public IndexerGroup(final Set&lt;Indexer&lt;Object&gt;&gt; indexers, final DefaultHttpClient httpClient) {</span>
+<span class="nc" id="L174">        LOGGER.debug(&quot;Creating IndexerGroup: {}&quot;, this);</span>
+<span class="nc" id="L175">        this.indexers = indexers;</span>
+<span class="nc" id="L176">        this.clients = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L177">        this.fedoraUsername = null;</span>
+<span class="nc" id="L178">        this.fedoraPassword = null;</span>
+<span class="nc" id="L179">        this.defaultClient = httpClient;</span>
+<span class="nc" id="L180">    }</span>
+
+    @VisibleForTesting
+    protected DefaultHttpClient httpClient(final String repositoryURL) {
+        // try to find existing client
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if ( clients.size() &gt; 0 ) {</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            for ( final Iterator&lt;String&gt; it = clients.keySet().iterator(); it.hasNext(); ) {</span>
+<span class="fc" id="L187">                final String base = it.next();</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">                if ( repositoryURL.startsWith(base) ) {</span>
+<span class="fc" id="L189">                    return clients.get(base);</span>
+                }
+<span class="nc" id="L191">            }</span>
+        }
+
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if ( defaultClient != null ) {</span>
+<span class="nc" id="L195">            return defaultClient;</span>
+        }
+
+        // if no existing client matched, create a new one
+        final String baseURL;
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        if ( repositoryURL.indexOf(REST_PREFIX) &gt; 0 ) {</span>
+<span class="nc" id="L201">            baseURL = repositoryURL.substring(0, repositoryURL.indexOf(REST_PREFIX) + REST_PREFIX.length());</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        } else if ( repositoryURL.indexOf(&quot;/&quot;,FCREPO_PREFIX.length()) &gt; 0 ) {</span>
+<span class="fc" id="L203">            baseURL = repositoryURL.substring(0, repositoryURL.indexOf(&quot;/&quot;,FCREPO_PREFIX.length()) + 1);</span>
+        } else {
+<span class="nc" id="L205">            baseURL = repositoryURL;</span>
+        }
+
+<span class="fc" id="L208">        final PoolingClientConnectionManager connMann = new PoolingClientConnectionManager();</span>
+<span class="fc" id="L209">        connMann.setMaxTotal(MAX_VALUE);</span>
+<span class="fc" id="L210">        connMann.setDefaultMaxPerRoute(MAX_VALUE);</span>
+
+<span class="fc" id="L212">        final DefaultHttpClient httpClient = new DefaultHttpClient(connMann);</span>
+<span class="fc" id="L213">        httpClient.setRedirectStrategy(new DefaultRedirectStrategy());</span>
+<span class="fc" id="L214">        httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(0, false));</span>
+
+        // If the Fedora instance requires authentication, set it up here
+<span class="pc bpc" id="L217" title="3 of 4 branches missed.">        if (!isBlank(fedoraUsername) &amp;&amp; !isBlank(fedoraPassword)) {</span>
+<span class="nc" id="L218">            LOGGER.debug(&quot;Adding BASIC credentials to client for repo requests.&quot;);</span>
+
+<span class="nc" id="L220">            final URI fedoraUri = URI.create(baseURL);</span>
+<span class="nc" id="L221">            final CredentialsProvider credsProvider = new BasicCredentialsProvider();</span>
+<span class="nc" id="L222">            credsProvider.setCredentials(new AuthScope(fedoraUri.getHost(), fedoraUri.getPort()),</span>
+                                         new UsernamePasswordCredentials(fedoraUsername, fedoraPassword));
+
+<span class="nc" id="L225">            httpClient.setCredentialsProvider(credsProvider);</span>
+        }
+<span class="fc" id="L227">        clients.put(baseURL, httpClient);</span>
+<span class="fc" id="L228">        return httpClient;</span>
+    }
+
+
+    /**
+     * Handle a JMS message representing an object update or deletion event.
+     **/
+    @Override
+    public void onMessage(final Message message) {
+        try {
+<span class="fc" id="L238">            LOGGER.debug(&quot;Received message: {}&quot;, message.getJMSMessageID());</span>
+<span class="nc" id="L239">        } catch (final JMSException e) {</span>
+<span class="nc" id="L240">            LOGGER.error(&quot;Received unintelligible message: {}&quot;, e);</span>
+<span class="nc" id="L241">            propagate(e);</span>
+<span class="fc" id="L242">        }</span>
+        try {
+            // get id and eventType from message
+<span class="fc" id="L245">            final String eventType =</span>
+                message.getStringProperty(EVENT_TYPE_HEADER_NAME);
+<span class="fc" id="L247">            final String id = message.getStringProperty(IDENTIFIER_HEADER_NAME);</span>
+<span class="fc" id="L248">            String baseURL = message.getStringProperty(BASE_URL_HEADER_NAME);</span>
+
+<span class="fc" id="L250">            LOGGER.debug(&quot;Discovered id: {} in message.&quot;, id);</span>
+<span class="fc" id="L251">            LOGGER.debug(&quot;Discovered event type: {} in message.&quot;, eventType);</span>
+<span class="fc" id="L252">            LOGGER.debug(&quot;Discovered baseURL: {} in message.&quot;, baseURL);</span>
+<span class="fc" id="L253">            LOGGER.debug(&quot;Discovered properties: {} in message.&quot;, message.getStringProperty(PROPERTIES_HEADER_NAME));</span>
+
+            // Trim trailing '/'
+<span class="pc bpc" id="L256" title="2 of 4 branches missed.">            while (!Strings.isNullOrEmpty(baseURL) &amp;&amp; baseURL.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L257">                baseURL = baseURL.substring(0, baseURL.length() - 1);</span>
+            }
+
+<span class="fc" id="L260">            index( new URI(baseURL + id), eventType );</span>
+<span class="nc" id="L261">        } catch (final URISyntaxException e) {</span>
+<span class="nc" id="L262">            LOGGER.error(&quot;Error creating URI&quot;, e);</span>
+<span class="nc" id="L263">        } catch (final JMSException e) {</span>
+<span class="nc" id="L264">            LOGGER.error(&quot;Error processing JMS event!&quot;, e);</span>
+<span class="pc" id="L265">        }</span>
+<span class="fc" id="L266">    }</span>
+
+    /**
+     * Index a resource.
+    **/
+    private void index( final URI uri, final String eventType ) throws URISyntaxException {
+<span class="fc" id="L272">        final Boolean removal = REMOVAL_EVENT_TYPE.equals(eventType);</span>
+<span class="fc" id="L273">        final HttpClient httpClient = httpClient(uri.toString());</span>
+<span class="fc" id="L274">        LOGGER.debug(&quot;It is {} that this is a removal operation.&quot;, removal);</span>
+<span class="fc" id="L275">        final Supplier&lt;Model&gt; rdfr =</span>
+            memoize(new RdfRetriever(uri, httpClient));
+<span class="fc" id="L277">        final Supplier&lt;NamedFields&gt; nfr =</span>
+            memoize(new NamedFieldsRetriever(uri, httpClient, rdfr));
+<span class="fc" id="L279">        final Supplier&lt;InputStream&gt; jcrfr =</span>
+             memoize(new JcrXmlRetriever(uri, httpClient));
+<span class="fc" id="L281">        Boolean indexable = false;</span>
+
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        if (!removal) {</span>
+<span class="fc" id="L284">            final Model rdf = rdfr.get();</span>
+<span class="fc bfc" id="L285" title="All 4 branches covered.">            if (rdf.contains(createResource(uri.toString()), type, INDEXABLE_MIXIN)</span>
+                    || rdf.contains(createResource(uri.toString() + &quot;/&quot; + FCR_METADATA), type, INDEXABLE_MIXIN)) {
+<span class="fc" id="L287">                LOGGER.debug(&quot;Resource: {} retrieved with indexable type.&quot;, uri);</span>
+<span class="fc" id="L288">                indexable = true;</span>
+            } else {
+<span class="fc" id="L290">                LOGGER.debug(&quot;Resource: {} retrieved without indexable type.&quot;, uri);</span>
+            }
+
+            // if this is a datastream, also index the parent object
+<span class="fc" id="L294">            final Resource subj = createResource(uri.toString());</span>
+<span class="pc bpc" id="L295" title="3 of 4 branches missed.">            if (rdf.contains(subj, type, DATASTREAM_TYPE)</span>
+                    &amp;&amp; uri.toString().indexOf(&quot;/fedora:system/&quot;) == -1 ) {
+<span class="nc" id="L297">                final NodeIterator parents = rdf.listObjectsOfProperty(subj, HAS_PARENT);</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">                if ( parents.hasNext() ) {</span>
+<span class="nc" id="L299">                    final String parent = parents.nextNode().asResource().getURI();</span>
+<span class="nc" id="L300">                    LOGGER.info(&quot;Datastream found, also indexing parent {}&quot;, parent);</span>
+<span class="nc" id="L301">                    index( new URI(parent), &quot;NODE_UPDATED&quot;);</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L306" title="All 2 branches covered.">        for (final Indexer&lt;Object&gt; indexer : indexers) {</span>
+<span class="fc" id="L307">            LOGGER.debug(&quot;Operating for indexer: {}&quot;, indexer);</span>
+<span class="fc" id="L308">            Boolean hasContent = false;</span>
+<span class="fc" id="L309">            Object content = EMPTY_CONTENT;</span>
+<span class="fc bfc" id="L310" title="All 4 branches covered.">            if (!removal &amp;&amp; indexable) {</span>
+<span class="pc bpc" id="L311" title="1 of 4 branches missed.">                switch (indexer.getIndexerType()) {</span>
+                    case NAMEDFIELDS:
+<span class="fc" id="L313">                        LOGGER.debug(</span>
+                                &quot;Retrieving named fields for: {}, (may be cached) to index to {}...&quot;,
+                                uri, indexer);
+                        try  {
+<span class="fc" id="L317">                            content = nfr.get();</span>
+<span class="fc" id="L318">                            hasContent = true;</span>
+<span class="fc" id="L319">                        } catch (final AbsentTransformPropertyException e) {</span>
+<span class="fc" id="L320">                            LOGGER.error(&quot;Failed to retrieve indexable content:&quot;</span>
+                                    + &quot;could not find transform property!&quot;);
+<span class="fc" id="L322">                            hasContent = false;</span>
+<span class="fc" id="L323">                        }</span>
+<span class="fc" id="L324">                        break;</span>
+                    case RDF:
+<span class="fc" id="L326">                        LOGGER.debug(</span>
+                                &quot;Retrieving RDF for: {}, (may be cached) to index to {}...&quot;,
+                                uri, indexer);
+<span class="fc" id="L329">                        content = rdfr.get();</span>
+<span class="fc" id="L330">                        hasContent = true;</span>
+<span class="fc" id="L331">                        break;</span>
+                    case JCRXML_PERSISTENCE:
+<span class="nc" id="L333">                        LOGGER.debug(</span>
+                                &quot;Retrieving jcr/xml for: {} and persist it to {}...&quot;,
+                                uri, indexer);
+<span class="nc" id="L336">                        content = jcrfr.get();</span>
+<span class="nc" id="L337">                        hasContent = true;</span>
+<span class="nc" id="L338">                        break;</span>
+                    default:
+<span class="fc" id="L340">                        hasContent = true;</span>
+                        break;
+                }
+            }
+
+            try {
+<span class="fc bfc" id="L346" title="All 2 branches covered.">                if (removal) {</span>
+<span class="fc" id="L347">                    LOGGER.debug(</span>
+                            &quot;Executing removal of: {} to indexer: {}...&quot;,
+                            uri, indexer);
+<span class="fc" id="L350">                    indexer.remove(uri);</span>
+                } else {
+<span class="fc bfc" id="L352" title="All 2 branches covered.">                    if (hasContent) {</span>
+<span class="fc" id="L353">                        LOGGER.debug(</span>
+                                &quot;Executing update of: {} to indexer: {}...&quot;,
+                                uri, indexer);
+<span class="fc" id="L356">                        indexer.update(uri, content);</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">                    } else if (indexable) {</span>
+<span class="fc" id="L358">                        LOGGER.error(</span>
+                                &quot;Received update for: {} but was unable to retrieve &quot;
+                                        + &quot;content for update to indexer: {}!&quot;,
+                                uri, indexer);
+                    }
+                }
+<span class="nc" id="L364">            } catch (final Exception e) {</span>
+<span class="nc" id="L365">                LOGGER.error(&quot;Error {} indexing {}: {}!&quot;, indexer.getClass().getName(), uri, e);</span>
+<span class="fc" id="L366">            }</span>
+<span class="fc" id="L367">        }</span>
+<span class="fc" id="L368">    }</span>
+
+    /**
+     * Reindex a resource (and optionally all of its children).
+     * @param uri The resource URI to reindex.
+     * @param recursive If true, also recursively reindex all children.
+     * @throws URISyntaxException if URI syntax exception occurred
+    **/
+    public void reindex( final URI uri, final boolean recursive ) throws URISyntaxException {
+<span class="fc" id="L377">        reindexed = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L378">        reindexURI( uri, recursive );</span>
+<span class="fc" id="L379">    }</span>
+
+    private void reindexURI( final URI uri, final boolean recursive ) throws URISyntaxException {
+<span class="fc" id="L382">        LOGGER.debug(&quot;Reindexing {}, recursive: {}&quot;, uri, recursive);</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">        if ( !reindexed.contains(uri) ) {</span>
+            // index() will check for indexable mixin
+<span class="fc" id="L385">            index( uri, REINDEX_EVENT_TYPE );</span>
+        }
+
+        // prevent infinite recursion
+<span class="fc" id="L389">        reindexed.add( uri );</span>
+
+        // check for children (rdf should be cached...)
+<span class="pc bpc" id="L392" title="1 of 2 branches missed.">        if ( recursive ) {</span>
+<span class="fc" id="L393">            final Supplier&lt;Model&gt; rdfr = memoize(new RdfRetriever(uri, httpClient(uri.toString())));</span>
+<span class="fc" id="L394">            final Model model = rdfr.get();</span>
+<span class="fc" id="L395">            final NodeIterator children = model.listObjectsOfProperty( CONTAINS );</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">            while ( children.hasNext() ) {</span>
+<span class="fc" id="L397">                final URI child = new URI(children.nextNode().asResource().getURI());</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">                if ( !reindexed.contains(child) ) {</span>
+<span class="fc" id="L399">                    reindexURI( child, true );</span>
+                }
+<span class="fc" id="L401">            }</span>
+        }
+<span class="fc" id="L403">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.2.201409121644</span></div></body></html>

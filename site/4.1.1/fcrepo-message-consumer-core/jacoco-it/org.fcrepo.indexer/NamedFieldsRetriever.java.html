@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NamedFieldsRetriever.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">fcrepo-message-consumer-core</a> &gt; <a href="index.source.html" class="el_package">org.fcrepo.indexer</a> &gt; <span class="el_source">NamedFieldsRetriever.java</span></div><h1>NamedFieldsRetriever.java</h1><pre class="source lang-java linenums">/**
+ * Copyright 2015 DuraSpace, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.fcrepo.indexer;
+
+import static com.google.common.base.Throwables.propagate;
+import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
+import static org.apache.http.HttpStatus.SC_OK;
+import static org.fcrepo.indexer.IndexerGroup.INDEXING_TRANSFORM_PREDICATE;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.net.URI;
+
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.slf4j.Logger;
+
+import com.google.common.base.Supplier;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+
+import javax.ws.rs.core.Link;
+
+/**
+ * Retrieves resources transformed into sets of named fields via LDPath.
+ * For use with indexers like Solr.
+ *
+ * @author ajs6f
+ * @since Dec 6, 2013
+ */
+public class NamedFieldsRetriever implements Supplier&lt;NamedFields&gt; {
+
+    private final URI uri;
+
+    private final HttpClient httpClient;
+
+    private final Supplier&lt;Model&gt; rdfr;
+
+    private Gson gson;
+
+<span class="fc" id="L65">    private static final Type typeToken = new TypeToken&lt;NamedFields&gt;() {}</span>
+            .getType();
+
+<span class="fc" id="L68">    private static final Logger LOGGER = getLogger(NamedFieldsRetriever.class);</span>
+
+    /**
+     * @param uri the URI identifier
+     * @param client the http client
+     * @param rdfr Used to determine the transform to use with this indexing
+     *        step
+     */
+    public NamedFieldsRetriever(final URI uri, final HttpClient client,
+<span class="fc" id="L77">        final Supplier&lt;Model&gt; rdfr) {</span>
+<span class="fc" id="L78">        this.uri = uri;</span>
+<span class="fc" id="L79">        this.httpClient = client;</span>
+<span class="fc" id="L80">        this.rdfr = rdfr;</span>
+<span class="fc" id="L81">        final NamedFieldsDeserializer deserializer =</span>
+            new NamedFieldsDeserializer();
+<span class="fc" id="L83">        this.gson =</span>
+            new GsonBuilder().registerTypeAdapter(typeToken, deserializer)
+                    .create();
+<span class="fc" id="L86">        deserializer.setGson(gson);</span>
+<span class="fc" id="L87">    }</span>
+
+    @Override
+    public NamedFields get() {
+<span class="fc" id="L91">        LOGGER.debug(&quot;Retrieving RDF representation for: {}&quot;, uri);</span>
+        try {
+<span class="fc" id="L93">            final Model rdf = rdfr.get();</span>
+
+            // If there is no transform-predicate on this resource, look deeper...
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (!rdf.contains(createResource(uri.toString()), INDEXING_TRANSFORM_PREDICATE)) {</span>
+<span class="fc" id="L97">                LOGGER.info(&quot;Looking up property locating LDPath transform for: {}&quot;, uri);</span>
+                // make an initial HEAD request and check Link headers for descriptions located elsewhere
+<span class="fc" id="L99">                final HttpHead headRequest = new HttpHead(uri);</span>
+<span class="fc" id="L100">                final HttpResponse headResponse = httpClient.execute(headRequest);</span>
+<span class="fc" id="L101">                URI descriptionURI = null;</span>
+<span class="fc" id="L102">                final Header[] links = headResponse.getHeaders(&quot;Link&quot;);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                if ( links != null ) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                    for ( Header h : headResponse.getHeaders(&quot;Link&quot;) ) {</span>
+<span class="fc" id="L105">                        final Link link = Link.valueOf(h.getValue());</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                        if (link.getRel().equals(&quot;describedby&quot;)) {</span>
+<span class="fc" id="L107">                            descriptionURI = link.getUri();</span>
+<span class="fc" id="L108">                            LOGGER.debug(&quot;Using URI from Link header: {}&quot;, descriptionURI);</span>
+                        }
+                    }
+                }
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (descriptionURI == null) {</span>
+<span class="nc" id="L113">                    throw new AbsentTransformPropertyException(&quot;Property lookup failed for uri: &quot; + uri);</span>
+                }
+
+                // Return fields based on transform-predicate defined on the resource-description
+<span class="nc" id="L117">                return getNamedFields(rdf, descriptionURI);</span>
+            }
+
+            // Return fields based on transform-predicate defined on the original resource
+<span class="fc" id="L121">            return getNamedFields(rdf, uri);</span>
+<span class="nc" id="L122">        } catch (IOException | HttpException e) {</span>
+<span class="nc" id="L123">            throw propagate(e);</span>
+        }
+    }
+
+    private NamedFields getNamedFields(final Model rdf, final URI uri) throws IOException, HttpException {
+<span class="fc" id="L128">        final NodeIterator nodeIterator =</span>
+                rdf.listObjectsOfProperty(createResource(uri.toString()),
+                        INDEXING_TRANSFORM_PREDICATE);
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (!nodeIterator.hasNext()) {</span>
+<span class="fc" id="L132">            throw new AbsentTransformPropertyException(&quot;Property lookup failed for uri: &quot; + uri);</span>
+        }
+
+<span class="fc" id="L135">        final RDFNode indexingTransform = nodeIterator.next();</span>
+<span class="fc" id="L136">        final String transformKey =</span>
+                indexingTransform.asLiteral().getString();
+<span class="fc" id="L138">        LOGGER.debug(&quot;Discovered transform key: {}&quot;, transformKey);</span>
+<span class="fc" id="L139">        final HttpGet transformedResourceRequest =</span>
+                new HttpGet(uri.toString() + &quot;/fcr:transform/&quot; + transformKey);
+<span class="fc" id="L141">        LOGGER.debug(&quot;Retrieving transformed resource from: {}&quot;,</span>
+                transformedResourceRequest.getURI());
+
+<span class="fc" id="L144">        final HttpResponse response =</span>
+                httpClient.execute(transformedResourceRequest);
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (response.getStatusLine().getStatusCode() != SC_OK) {</span>
+<span class="nc" id="L147">            throw new HttpException(response.getStatusLine().toString());</span>
+        }
+<span class="pc" id="L149">        try (</span>
+<span class="fc" id="L150">                Reader r =</span>
+                    new InputStreamReader(response.getEntity().getContent(),
+                            &quot;UTF8&quot;)) {
+<span class="fc" id="L153">            return gson.fromJson(r, typeToken);</span>
+<span class="pc bpc" id="L154" title="6 of 8 branches missed.">        }</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.2.201409121644</span></div></body></html>
