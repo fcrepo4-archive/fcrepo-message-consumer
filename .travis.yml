@@ -9,7 +9,7 @@ branches:
     only:
         - master
 notifications:
-  irc: "irc.freenode.org#duraspace-ff"
+  irc: "irc.freenode.org#fcrepo"
   email:
       - ff-tech@googlegroups.com
 
