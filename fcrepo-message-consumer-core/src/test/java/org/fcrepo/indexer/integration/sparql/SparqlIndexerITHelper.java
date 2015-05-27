@@ -59,7 +59,7 @@ public class SparqlIndexerITHelper {
     /**
      * Perform a SPARQL search and return the number of triples returned.
      *
-     * @param searchQuery The SPARQL query to perform 
+     * @param searchQuery The SPARQL query to perform
      * @return the number of triples found by the query
      */
     public static int countQueryTriples(final String searchQuery) {
