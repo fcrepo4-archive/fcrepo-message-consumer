@@ -1,3 +1,6 @@
+fcrepo-message-consumer
+=======================
+
 [![Build Status](https://travis-ci.org/fcrepo4/fcrepo-message-consumer.png?branch=master)](https://travis-ci.org/fcrepo4/fcrepo-message-consumer)
 
 
