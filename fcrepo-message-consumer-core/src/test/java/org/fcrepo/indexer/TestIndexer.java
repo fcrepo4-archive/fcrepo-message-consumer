@@ -80,6 +80,9 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
 
     /**
      * Test whether an update message has been received for a PID.
+     *
+     * @param id Pid to check for updates
+     * @return true if one or more messasges were received for this Pid
     **/
     public boolean receivedUpdate(final URI id) {
         LOGGER.debug("Checked whether we received an update for: {}, {}", id,
@@ -89,6 +92,9 @@ public class TestIndexer extends SynchIndexer<NoContent, Boolean> {
 
     /**
      * Test whether a remove message has been received for a PID.
+     *
+     * @param id Pid to check if a remove message has been received
+     * @return true if one or more remove messages have been received
     **/
     public boolean receivedRemove(final URI id) {
         LOGGER.debug("Checked whether we received a remove for: {}, {}", id,

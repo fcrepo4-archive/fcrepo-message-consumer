@@ -41,7 +41,7 @@ public class SparqlIndexerITHelper {
     /**
      * Count the number of triples in the triplestore for a Fedora object.
      *
-     * @param uri
+     * @param uri URI to object to perform this action on
      * @return the number of triples
      */
     public static int countDescribeTriples(final String uri) {
@@ -58,6 +58,9 @@ public class SparqlIndexerITHelper {
 
     /**
      * Perform a SPARQL search and return the number of triples returned.
+     *
+     * @param searchQuery The SPARQL query to perform
+     * @return the number of triples found by the query
      */
     public static int countQueryTriples(final String searchQuery) {
         // perform query
