@@ -8,6 +8,10 @@ install: JAVA_OPTS=-Xmx512m mvn install -DskipTests=true
 branches:
     only:
         - master
+script:
+ - mvn javadoc:jar
+ - mvn javadoc:test-aggregate
+
 notifications:
   irc: "irc.freenode.org#fcrepo"
   email:
