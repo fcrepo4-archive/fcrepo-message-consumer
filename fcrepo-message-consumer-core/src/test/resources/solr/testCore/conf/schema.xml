@@ -107,7 +107,9 @@
    -->
         
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
-   <field name="uuid" type="string" indexed="true" stored="true" required="false" multiValued="false" /> 
+   <field name="uuid" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+   <field name="created" type="text_general" indexed="true" stored="true" required="false" multiValued="false" />
+   <field name="has_parent" type="text_general" indexed="true" stored="true" required="false" multiValued="false" />
    
    <!-- points to the root document of a block of nested documents -->
    <field name="_root_" type="string" indexed="true" stored="false"/>
@@ -145,7 +147,7 @@
    <field name="resourcename" type="text_general" indexed="true" stored="true"/>
    <field name="url" type="text_general" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="last_modified" type="date" indexed="true" stored="true"/>
+   <field name="last_modified" type="text_general" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Main body of document extracted by SolrCell.
