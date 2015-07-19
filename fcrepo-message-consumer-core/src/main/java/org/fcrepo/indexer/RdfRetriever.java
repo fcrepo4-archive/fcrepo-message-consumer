@@ -34,7 +34,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.slf4j.Logger;
 
 import com.google.common.base.Supplier;
@@ -60,7 +59,7 @@ public class RdfRetriever implements Supplier<Model> {
 
     /**
      * @param identifier the URI identifier
-     * @param client the http client
+     * @param client     the http client
      */
     public RdfRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
@@ -70,34 +69,36 @@ public class RdfRetriever implements Supplier<Model> {
     @Override
     public Model get() {
 
+        final HttpHead headRequest = new HttpHead(identifier);
+        HttpGet request = null;
+
         try {
             // make an initial HEAD request and check Link headers for descriptions located elsewhere
-            final HttpHead headRequest = new HttpHead(identifier);
             final HttpResponse headResponse = httpClient.execute(headRequest);
             URI descriptionURI = null;
             final Header[] links = headResponse.getHeaders("Link");
-            if ( links != null ) {
-                for ( Header h : headResponse.getHeaders("Link") ) {
+            if (links != null) {
+                for (Header h : headResponse.getHeaders("Link")) {
                     final Link link = Link.valueOf(h.getValue());
-                    if ( link.getRel().equals("describedby") ) {
+                    if (link.getRel().equals("describedby")) {
                         descriptionURI = link.getUri();
                         LOGGER.debug("Using URI from Link header: {}", descriptionURI);
                     }
                 }
             }
-            if ( descriptionURI == null ) {
+            if (descriptionURI == null) {
                 descriptionURI = identifier;
             }
 
-            final HttpUriRequest request = new HttpGet(descriptionURI);
+            request = new HttpGet(descriptionURI);
             request.addHeader("Accept", RDF_SERIALIZATION);
             LOGGER.debug("Retrieving RDF content from: {}...", request.getURI());
             final HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
                 try (
-                    Reader r =
-                        new InputStreamReader(
-                                response.getEntity().getContent(), "UTF8")) {
+                        Reader r =
+                                new InputStreamReader(
+                                        response.getEntity().getContent(), "UTF8")) {
                     return createDefaultModel().read(r, "", "N3");
                 }
             } else {
@@ -105,6 +106,11 @@ public class RdfRetriever implements Supplier<Model> {
             }
         } catch (IOException | HttpException e) {
             throw propagate(e);
+        } finally {
+            headRequest.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
+            }
         }
     }
 

@@ -29,7 +29,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 
@@ -39,6 +38,7 @@ import javax.ws.rs.core.Link;
 
 /**
  * Retrieves Modeshape jcr/xml for file system persistence
+ *
  * @author lsitu
  */
 public class JcrXmlRetriever implements Supplier<InputStream> {
@@ -51,8 +51,9 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
 
     /**
      * Constructor
+     *
      * @param identifier the URI identifier
-     * @param client the http client
+     * @param client     the http client
      */
     public JcrXmlRetriever(final URI identifier, final HttpClient client) {
         this.identifier = identifier;
@@ -64,37 +65,43 @@ public class JcrXmlRetriever implements Supplier<InputStream> {
      * Retrieve jcr/xml with no binary contents from the repository
      */
     public InputStream get() {
+        final HttpHead headRequest = new HttpHead(identifier);
+        HttpGet request = null;
 
         try {
             // make an initial HEAD request and check Link headers for descriptions located elsewhere
-            final HttpHead headRequest = new HttpHead(identifier);
             final HttpResponse headResponse = httpClient.execute(headRequest);
             URI descriptionURI = null;
             final Header[] links = headResponse.getHeaders("Link");
-            if ( links != null ) {
-                for ( Header h : headResponse.getHeaders("Link") ) {
+            if (links != null) {
+                for (Header h : headResponse.getHeaders("Link")) {
                     final Link link = Link.valueOf(h.getValue());
-                    if ( link.getRel().equals("describedby") ) {
+                    if (link.getRel().equals("describedby")) {
                         descriptionURI = link.getUri();
                         LOGGER.debug("Using URI from Link header: {}", descriptionURI);
                     }
                 }
             }
-            if ( descriptionURI == null ) {
+            if (descriptionURI == null) {
                 descriptionURI = identifier;
             }
 
-            final HttpUriRequest request = new HttpGet(descriptionURI.toString() + "/fcr:export?skipBinary=true");
+            request = new HttpGet(descriptionURI.toString() + "/fcr:export?skipBinary=true");
             LOGGER.debug("Retrieving jcr/xml content from: {}...", request.getURI());
             final HttpResponse response = httpClient.execute(request);
             if (response.getStatusLine().getStatusCode() == SC_OK) {
-               return response.getEntity().getContent();
+                return response.getEntity().getContent();
             } else {
                 throw new HttpException(response.getStatusLine().getStatusCode() + " : " +
-                                                EntityUtils.toString(response.getEntity()));
+                        EntityUtils.toString(response.getEntity()));
             }
         } catch (IOException | HttpException e) {
             throw propagate(e);
+        } finally {
+            headRequest.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
+            }
         }
     }
 

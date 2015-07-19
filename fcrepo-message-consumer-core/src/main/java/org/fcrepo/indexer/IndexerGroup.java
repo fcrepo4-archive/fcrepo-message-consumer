@@ -32,6 +32,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+//import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.fcrepo.kernel.utils.EventType;
 import org.slf4j.Logger;
 
@@ -54,7 +55,7 @@ import static com.google.common.base.Throwables.propagate;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty;
 import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.vocabulary.RDF.type;
-import static java.lang.Integer.MAX_VALUE;
+//import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.fcrepo.kernel.FedoraJcrTypes.FCR_METADATA;
@@ -206,12 +207,13 @@ public class IndexerGroup implements MessageListener {
         }
 
         final PoolingClientConnectionManager connMann = new PoolingClientConnectionManager();
-        connMann.setMaxTotal(MAX_VALUE);
-        connMann.setDefaultMaxPerRoute(MAX_VALUE);
+        connMann.setMaxTotal(200);
+        connMann.setDefaultMaxPerRoute(20);
 
         final DefaultHttpClient httpClient = new DefaultHttpClient(connMann);
         httpClient.setRedirectStrategy(new DefaultRedirectStrategy());
         httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(0, false));
+        //httpClient.setReuseStrategy(new NoConnectionReuseStrategy());
 
         // If the Fedora instance requires authentication, set it up here
         if (!isBlank(fedoraUsername) && !isBlank(fedoraPassword)) {
