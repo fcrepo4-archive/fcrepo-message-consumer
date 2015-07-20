@@ -140,7 +140,7 @@
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
-      <artifactId>fcrepo-kernel</artifactId>
+      <artifactId>fcrepo-kernel-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.fcrepo</groupId>
@@ -158,6 +158,12 @@
       <artifactId>jena-fuseki</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.fcrepo</groupId>
+      <artifactId>fcrepo-kernel-modeshape</artifactId>
+      <scope>test</scope>
+    </dependency>
+ 
     <!-- Start of Solr Indexer libs -->
     <dependency>
       <groupId>org.apache.solr</groupId>

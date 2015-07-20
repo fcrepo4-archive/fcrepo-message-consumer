@@ -32,7 +32,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.fcrepo.kernel.utils.EventType;
+import org.fcrepo.kernel.api.utils.EventType;
 import org.slf4j.Logger;
 
 import javax.jms.JMSException;
@@ -57,11 +57,11 @@ import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.fcrepo.kernel.FedoraJcrTypes.FCR_METADATA;
 import static org.fcrepo.jms.headers.DefaultMessageFactory.JMS_NAMESPACE;
-import static org.fcrepo.kernel.RdfLexicon.CONTAINS;
-import static org.fcrepo.kernel.RdfLexicon.HAS_PARENT;
-import static org.fcrepo.kernel.RdfLexicon.REPOSITORY_NAMESPACE;
+import static org.fcrepo.kernel.api.FedoraJcrTypes.FCR_METADATA;
+import static org.fcrepo.kernel.api.RdfLexicon.CONTAINS;
+import static org.fcrepo.kernel.api.RdfLexicon.HAS_PARENT;
+import static org.fcrepo.kernel.api.RdfLexicon.REPOSITORY_NAMESPACE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
