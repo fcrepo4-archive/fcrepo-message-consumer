@@ -16,7 +16,7 @@
       <item name="Fedora" href="http://fcrepo.org/" />
       <item name="Fedora 4 on GitHub" href="http://github.com/fcrepo4/" />
       <item name="Fedora 4 Developer Documentation" href="http://fcrepo4.github.com/fcrepo4/" />
-      <item name="Fedora 4 JMS Indexer Developer Documentation" href="http://fcrepo4.github.com/fcrepo-jms-indexer-pluggable/" />
+      <item name="Fedora 4 JMS Indexer Developer Documentation" href="http://fcrepo4-ext.github.com/fcrepo-message-consumer/" />
     </links>
 
     <breadcrumbs>
