@@ -18,6 +18,7 @@
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
     <project_name>fcrepo-message-consumer</project_name>
 
+    <joda-time.version>2.4</joda-time.version>
     <junit.version>4.11</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <powermock.version>1.5.5</powermock.version>
@@ -74,6 +75,11 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>3.1</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda-time.version}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.grizzly</groupId>
