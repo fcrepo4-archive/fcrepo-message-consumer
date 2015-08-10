@@ -56,7 +56,7 @@ import static com.hp.hpl.jena.rdf.model.ResourceFactory.createResource;
 import static com.hp.hpl.jena.vocabulary.RDF.type;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.jcr.observation.Event.NODE_REMOVED;
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.fcrepo.jms.headers.DefaultMessageFactory.JMS_NAMESPACE;
 import static org.fcrepo.kernel.api.FedoraJcrTypes.FCR_METADATA;
 import static org.fcrepo.kernel.api.RdfLexicon.CONTAINS;

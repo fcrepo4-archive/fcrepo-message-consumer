@@ -15,7 +15,7 @@
  */
 package org.fcrepo.indexer.persistence;
 
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
