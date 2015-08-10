@@ -17,7 +17,7 @@ package org.fcrepo.indexer;
 
 import static com.google.common.base.Throwables.propagate;
 import static java.util.Locale.US;
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static org.fcrepo.indexer.Indexer.IndexerType.NAMEDFIELDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
