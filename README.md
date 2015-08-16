@@ -1,7 +1,7 @@
 fcrepo-message-consumer
 =======================
 
-[![Build Status](https://travis-ci.org/fcrepo4/fcrepo-message-consumer.png?branch=master)](https://travis-ci.org/fcrepo4/fcrepo-message-consumer)
+[![Build Status](https://travis-ci.org/fcrepo4-exts/fcrepo-message-consumer.png?branch=master)](https://travis-ci.org/fcrepo4-exts/fcrepo-message-consumer)
 
 
 This is a fcrepo 4.x indexer that listens to the Fedora JMS topic, retrieves a message including pid and eventType, looks up object properties, gets and passes the transformed or untransformed properties on to any number of registered handlers.  It is built relying heavily on Spring machinery, including:
@@ -25,9 +25,9 @@ $ mvn -D jetty.port=9999 install jetty:run
 
 ## Configuring the indexer
 
- [Test Spring Configuration](https://github.com/fcrepo4/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-core/src/test/resources/spring-test)
+ [Test Spring Configuration](https://github.com/fcrepo4-exts/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-core/src/test/resources/spring-test)
  
- [Production Spring Configuration](https://github.com/fcrepo4/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-webapp/src/main/resources/spring) 
+ [Production Spring Configuration](https://github.com/fcrepo4-exts/fcrepo-message-consumer/tree/master/fcrepo-message-consumer-webapp/src/main/resources/spring) 
 
 indexer-core.xml
 ```xml
