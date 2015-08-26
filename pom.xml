@@ -4,7 +4,7 @@
 
   <parent>
     <groupId>org.fcrepo</groupId>
-    <artifactId>fcrepo</artifactId>
+    <artifactId>fcrepo-parent</artifactId>
     <version>4.3.1-SNAPSHOT</version>
   </parent>
 
@@ -17,11 +17,23 @@
     <!-- Use ${project_name} instead of ${project.artifactId} to avoid incorrect
       replacements of "fcrepo4" in child modules (for scm, site-distribution, etc -->
     <project_name>fcrepo-message-consumer</project_name>
+    <organization_name>fcrepo4-exts</organization_name>
 
+    <activemq.version>5.10.0</activemq.version>
+    <commons-lang.version>3.3.2</commons-lang.version>
+    <grizzly.version>2.3.16</grizzly.version>
+    <httpclient.version>4.3.3</httpclient.version>
+    <jena.version>2.13.0</jena.version>
+    <jersey.version>2.13</jersey.version>
+    <jetty.version>8.1.14.v20131031</jetty.version>
+    <joda-time.version>2.4</joda-time.version>
     <junit.version>4.11</junit.version>
+    <logback.version>1.1.2</logback.version>
     <mockito.version>1.9.5</mockito.version>
     <powermock.version>1.5.5</powermock.version>
     <solr.version>4.6.0</solr.version>
+    <spring.version>4.1.1.RELEASE</spring.version>
+    <war.plugin.version>2.6</war.plugin.version>
     <!-- default, for execution without custom argLine -->
     <argLine />
   </properties>
@@ -31,15 +43,6 @@
     <module>fcrepo-message-consumer-webapp</module>
     <module>fcrepo-message-consumer-elasticsearch</module>
   </modules>
-
-  <scm>
-    <connection>scm:git:git://github.com/fcrepo4-exts/${project_name}.git
-    </connection>
-    <developerConnection>scm:git:git@github.com:fcrepo4-exts/${project_name}.git
-    </developerConnection>
-    <url>https://github.com/fcrepo4-exts/fcrepo-message-consumer</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <dependencyManagement>
     <dependencies>
@@ -56,6 +59,12 @@
         <groupId>javax.jms</groupId>
         <artifactId>jms-api</artifactId>
         <version>1.1-rev-1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda-time.version}</version>
       </dependency>
 
       <dependency>
@@ -276,6 +285,26 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>reserve-port</id>
+              <phase>pre-integration-test</phase>
+              <goals>
+                <goal>reserve-network-port</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-maven-plugin</artifactId>
+          <version>${jetty.version}</version>
+        </plugin>
+ 
+        <plugin>
           <groupId>com.github.github</groupId>
           <artifactId>site-maven-plugin</artifactId>
           <version>0.12</version>
@@ -352,6 +381,15 @@
             </execution>
           </executions>
         </plugin>
+
+        <plugin>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>${war.plugin.version}</version>
+          <configuration>
+            <failOnMissingWebXml>false</failOnMissingWebXml>
+          </configuration>
+        </plugin>
+
       </plugins>
     </pluginManagement>
     <plugins>

@@ -180,6 +180,7 @@
         <configuration>
           <systemPropertyVariables>
             <fcrepo.dynamic.test.port>${fcrepo.dynamic.test.port}</fcrepo.dynamic.test.port>
+            <jetty.dynamic.stop.port>${jetty.dynamic.stop.port}</jetty.dynamic.stop.port>
             <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
             <fcrepo.test.context.path>${fcrepo.test.context.path}</fcrepo.test.context.path>
           </systemPropertyVariables>
@@ -202,9 +203,12 @@
       <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
+        <version>${jetty.version}</version>
         <configuration>
           <scanIntervalSeconds>2</scanIntervalSeconds>
           <stopKey>STOP</stopKey>
+          <stopPort>${jetty.dynamic.stop.port}</stopPort>
+          <daemon>true</daemon>
           <webApp>
             <contextPath>${fcrepo.test.context.path}</contextPath>
             <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
@@ -227,8 +231,6 @@
                   <maxIdleTime>60000</maxIdleTime>
                 </connector>
               </connectors>
-              <daemon>true</daemon>
-              <stopPort>${jetty.dynamic.stop.port}</stopPort>
               <systemProperties>
                 <systemProperty>
                   <name>fcrepo.dynamic.jms.port</name>
@@ -256,9 +258,6 @@
             <goals>
               <goal>stop</goal>
             </goals>
-            <configuration>
-              <stopPort>${jetty.dynamic.stop.port}</stopPort>
-            </configuration>
           </execution>
         </executions>
       </plugin>
