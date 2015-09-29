@@ -23,6 +23,7 @@
     <commons-lang.version>3.3.2</commons-lang.version>
     <grizzly.version>2.3.16</grizzly.version>
     <httpclient.version>4.3.3</httpclient.version>
+    <fcrepo-buildtools.version>4.3.0</fcrepo-buildtools.version>
     <jena.version>2.13.0</jena.version>
     <jersey.version>2.13</jersey.version>
     <jetty.version>8.1.14.v20131031</jetty.version>
@@ -358,7 +359,7 @@
             <dependency>
               <groupId>org.fcrepo</groupId>
               <artifactId>fcrepo-build-tools</artifactId>
-              <version>${project.version}</version>
+              <version>${fcrepo-buildtools.version}</version>
             </dependency>
           </dependencies>
           <configuration>
