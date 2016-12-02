@@ -38,6 +38,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.graph.Node_URI;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.shared.PrefixMapping;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import com.hp.hpl.jena.sparql.modify.UpdateProcessRemote;
 import com.hp.hpl.jena.sparql.modify.request.QuadDataAcc;
@@ -89,9 +90,12 @@ public class SparqlIndexer extends AsynchIndexer<Model, Void> {
             add.addTriple( triples.nextStatement().asTriple() );
         }
 
+        final UpdateRequest update = new UpdateRequest(new UpdateDataInsert(add));
+        update.setPrefixMapping(PrefixMapping.Standard);
+
         // send update to server
         LOGGER.debug("Sending update request for pid: {}", pid);
-        return exec(new UpdateRequest(new UpdateDataInsert(add)));
+        return exec(update);
     }
 
     /**
